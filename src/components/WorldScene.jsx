@@ -1,5 +1,13 @@
-// props: scene ('grassland' | 'forest' | 'night'), height (default 120)
+import { useId } from 'react';
+
+/**
+ * @param {Object} props
+ * @param {'grassland'|'forest'|'night'} props.scene
+ * @param {number} [props.height=120]
+ */
 export default function WorldScene({ scene, height = 120 }) {
+  const uid = useId();
+
   if (scene === 'grassland') return (
     <svg width="100%" height={height} viewBox="0 0 400 120" preserveAspectRatio="xMidYMid slice">
       {/* 空 */}
@@ -35,12 +43,12 @@ export default function WorldScene({ scene, height = 120 }) {
     <svg width="100%" height={height} viewBox="0 0 400 120" preserveAspectRatio="xMidYMid slice">
       {/* 空（夕暮れ） */}
       <defs>
-        <linearGradient id="forestSky" x1="0" y1="0" x2="0" y2="1">
+        <linearGradient id={`${uid}-forestSky`} x1="0" y1="0" x2="0" y2="1">
           <stop offset="0%" stopColor="#065f46"/>
           <stop offset="100%" stopColor="#14532d"/>
         </linearGradient>
       </defs>
-      <rect width="400" height="120" fill="url(#forestSky)"/>
+      <rect width="400" height="120" fill={`url(#${uid}-forestSky)`}/>
       {/* 木々 */}
       {[30,90,160,230,300,370].map((x,i) => (
         <g key={x}>
@@ -62,18 +70,18 @@ export default function WorldScene({ scene, height = 120 }) {
   return (
     <svg width="100%" height={height} viewBox="0 0 400 120" preserveAspectRatio="xMidYMid slice">
       <defs>
-        <linearGradient id="nightSky" x1="0" y1="0" x2="0" y2="1">
+        <linearGradient id={`${uid}-nightSky`} x1="0" y1="0" x2="0" y2="1">
           <stop offset="0%" stopColor="#0f0c29"/>
           <stop offset="100%" stopColor="#1e1b4b"/>
         </linearGradient>
       </defs>
-      <rect width="400" height="120" fill="url(#nightSky)"/>
+      <rect width="400" height="120" fill={`url(#${uid}-nightSky)`}/>
       {/* 月 */}
       <circle cx="340" cy="35" r="20" fill="#fef9c3"/>
       <circle cx="350" cy="28" r="17" fill="#1e1b4b"/>
       {/* 星 */}
-      {[20,60,100,150,200,250,290,380,30,380].map((x,i) => (
-        <circle key={i} cx={x} cy={[10,25,8,18,30,12,22,15,35,40][i]} r="1.5" fill="white" opacity="0.9"/>
+      {[20,60,100,150,200,250,290,380,30,360].map((x,i) => (
+        <circle key={x} cx={x} cy={[10,25,8,18,30,12,22,15,35,40][i]} r="1.5" fill="white" opacity="0.9"/>
       ))}
       {/* 木シルエット */}
       {[20,80,160,250,330,390].map((x,i) => (
