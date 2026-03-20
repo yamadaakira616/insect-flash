@@ -17,7 +17,7 @@ const SCREEN = {
 export default function App() {
   const [screen, setScreen] = useState(SCREEN.HOME);
   const [selectedLevel, setSelectedLevel] = useState(null);
-  const { state, addCoins, spendCoins, levelUp, saveStars, updateBestCombo, incTotalPlayed, pullGacha } = useGameState();
+  const { state, addCoins, levelUp, saveStars, updateBestCombo, incTotalPlayed, pullGacha } = useGameState();
 
   if (screen === SCREEN.HOME) return (
     <HomeScreen
