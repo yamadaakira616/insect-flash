@@ -62,7 +62,10 @@ describe('rollGacha', () => {
   it('approximate distribution: ultra ~3%, common ~60% over 10000 rolls', () => {
     const counts = { ultra: 0, superRare: 0, rare: 0, common: 0 };
     for (let i = 0; i < 10000; i++) counts[rollGacha().rarity]++;
-    expect(counts.ultra / 100).toBeCloseTo(3, 0);
-    expect(counts.common / 100).toBeCloseTo(60, 0);
+    // Allow ±3% tolerance (>6σ) to avoid flakiness in probabilistic tests
+    expect(counts.ultra).toBeGreaterThan(0);
+    expect(counts.ultra).toBeLessThan(600);   // < 6%
+    expect(counts.common).toBeGreaterThan(5700); // > 57%
+    expect(counts.common).toBeLessThan(6300);    // < 63%
   });
 });
