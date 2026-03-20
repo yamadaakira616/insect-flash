@@ -11,7 +11,6 @@ export default function GachaScreen({ state, onBack, onPull }) {
   const [phase, setPhase] = useState('idle'); // idle | shaking | result
   const [result, setResult] = useState(null);
   const [isNew, setIsNew] = useState(false);
-  const [coinBonus, setCoinBonus] = useState(0);
 
   const canPull = state.coins >= GACHA_COST;
 
@@ -20,10 +19,9 @@ export default function GachaScreen({ state, onBack, onPull }) {
     setPhase('shaking');
     setTimeout(() => {
       const insect = rollGacha();
-      const { isNew: n, coinBonus: b } = onPull(insect);
+      const { isNew: n } = onPull(insect);
       setResult(insect);
       setIsNew(n);
-      setCoinBonus(b);
       setPhase('result');
     }, 1200);
   }
