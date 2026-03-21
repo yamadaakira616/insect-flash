@@ -2,14 +2,15 @@
 
 // レア度別の基本ステータス
 const RARITY_BASE = {
-  common:    { hp: 80,  atk: 18, spd: 28 },
-  rare:      { hp: 130, atk: 32, spd: 22 },
-  superRare: { hp: 200, atk: 52, spd: 14 },
-  ultra:     { hp: 300, atk: 80, spd: 8  },
+  common:    { hp: 80,  atk: 18,  spd: 28 },
+  rare:      { hp: 130, atk: 32,  spd: 22 },
+  superRare: { hp: 200, atk: 52,  spd: 14 },
+  ultra:     { hp: 300, atk: 80,  spd: 8  },
+  legend:    { hp: 500, atk: 120, spd: 5  },
 };
 
 // レア度別育成コスト倍率
-const RARITY_COST_MULT = { common: 1, rare: 2.5, superRare: 6, ultra: 15 };
+const RARITY_COST_MULT = { common: 1, rare: 2.5, superRare: 6, ultra: 15, legend: 40 };
 
 // 昆虫のステータスを取得（育成レベル込み）
 export function getInsectStats(insect, insectLevel = 1) {
@@ -101,6 +102,6 @@ export function generateEnemy(playerInsects, allInsects) {
 // バトル勝利報酬コイン計算
 export function calcBattleReward(enemyRarity, won) {
   if (!won) return 20; // 参加賞
-  const base = { common: 50, rare: 80, superRare: 130, ultra: 200 };
+  const base = { common: 50, rare: 80, superRare: 130, ultra: 200, legend: 500 };
   return base[enemyRarity] ?? 50;
 }

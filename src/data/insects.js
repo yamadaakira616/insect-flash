@@ -1,6 +1,12 @@
 export const DUPLICATE_COINS = 30;
 
 export const INSECTS = [
+  // ===== レジェンドレア (1種) =====
+  { id:'lg01', name:'ダイオウヒラタクワガタ', nameEn:'Dorcus titanus palawanicus',
+    origin:'フィリピン・パラワン島', length:'25〜100mm', rarity:'legend', world:2,
+    description:'世界最大級のヒラタクワガタ。パラワン島産の亜種は体長100mmを超える個体も存在し、驚異的な顎の力を誇る伝説の昆虫。',
+    imagePath:'/assets/insects/lg01.jpg', bgColor:'#0f0a1e', labelColor:'#ffd700' },
+
   // ===== ウルトラ (6種) =====
   { id:'u01', name:'スマトラオオヒラタクワガタ', nameEn:'Dorcus titanus titanus',
     origin:'インドネシア・スマトラ', length:'25〜95mm', rarity:'ultra', world:2,
@@ -399,10 +405,11 @@ export const INSECTS = [
 export function rollGacha() {
   const rand = Math.random() * 100;
   let rarity;
-  if (rand < 3)       rarity = 'ultra';
-  else if (rand < 15) rarity = 'superRare';
-  else if (rand < 40) rarity = 'rare';
-  else                rarity = 'common';
+  if (rand < 0.5)      rarity = 'legend';
+  else if (rand < 3.5) rarity = 'ultra';
+  else if (rand < 15.5) rarity = 'superRare';
+  else if (rand < 40.5) rarity = 'rare';
+  else                  rarity = 'common';
   const pool = INSECTS.filter(i => i.rarity === rarity);
   return pool[Math.floor(Math.random() * pool.length)];
 }

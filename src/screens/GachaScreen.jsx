@@ -4,18 +4,19 @@ import InsectCard from '../components/InsectCard.jsx';
 import { rollGacha, DUPLICATE_COINS } from '../data/insects.js';
 import { GACHA_COST } from '../utils/gameLogic.js';
 
-const RARITY_LABELS = { common:'ノーマル', rare:'レア', superRare:'スーパーレア！', ultra:'🔥 ULTRA!!! 🔥' };
+const RARITY_LABELS = { common:'ノーマル', rare:'レア', superRare:'スーパーレア！', ultra:'🔥 ULTRA!!! 🔥', legend:'👑 LEGEND ✨' };
 const RARITY_COLORS = {
   common:    { bg:'#f3f4f6', text:'#6b7280', glow:'rgba(107,114,128,0.4)',    flash:'#e5e7eb' },
   rare:      { bg:'#dbeafe', text:'#1d4ed8', glow:'rgba(59,130,246,0.5)',     flash:'#bfdbfe' },
   superRare: { bg:'#f3e8ff', text:'#7c3aed', glow:'rgba(139,92,246,0.7)',     flash:'#e9d5ff' },
   ultra:     { bg:'#fef3c7', text:'#d97706', glow:'rgba(245,158,11,0.9)',     flash:'#fde68a' },
+  legend:    { bg:'#0f0a1e', text:'#ffd700', glow:'rgba(255,215,0,1.0)',      flash:'#ffd700' },
 };
 
 // レアリティに応じたルーレット演出の長さ
-const RARITY_DURATION = { common: 1500, rare: 2200, superRare: 3200, ultra: 4500 };
+const RARITY_DURATION = { common: 1500, rare: 2200, superRare: 3200, ultra: 4500, legend: 7000 };
 
-const ROULETTE_SEQUENCE = ['common','rare','superRare','ultra','common','rare','superRare','ultra','common','rare'];
+const ROULETTE_SEQUENCE = ['common','rare','superRare','ultra','common','rare','superRare','ultra','legend','common','rare'];
 
 export default function GachaScreen({ state, onBack, onPull }) {
   // phase: idle | spinning | slowdown | flash | reveal | result
@@ -24,6 +25,7 @@ export default function GachaScreen({ state, onBack, onPull }) {
   const [isNew, setIsNew]     = useState(false);
   const [rouletteIdx, setRouletteIdx] = useState(0);
   const [flashCount, setFlashCount]   = useState(0);
+  const [rainbowIdx, setRainbowIdx]   = useState(0);
   const [screenFlash, setScreenFlash] = useState(false);
   const timerRef = useRef(null);
   const rouletteRef = useRef(null);
@@ -80,11 +82,13 @@ export default function GachaScreen({ state, onBack, onPull }) {
   function startFlash(insect) {
     setPhase('flash');
     let count = 0;
-    const maxFlash = insect.rarity === 'ultra' ? 8 : insect.rarity === 'superRare' ? 5 : insect.rarity === 'rare' ? 3 : 1;
-    const flashInterval = insect.rarity === 'ultra' ? 120 : 150;
+    const maxFlash = insect.rarity === 'legend' ? 14 : insect.rarity === 'ultra' ? 8 : insect.rarity === 'superRare' ? 5 : insect.rarity === 'rare' ? 3 : 1;
+    const flashInterval = insect.rarity === 'legend' ? 90 : insect.rarity === 'ultra' ? 120 : 150;
 
+    const RAINBOW = ['#ff0040','#ff8c00','#ffd700','#00e676','#00b0ff','#7c4dff','#f50057'];
     function doFlash() {
       setScreenFlash(f => !f);
+      if (insect.rarity === 'legend') setRainbowIdx(i => (i + 1) % RAINBOW.length);
       count++;
       if (count < maxFlash * 2) {
         timerRef.current = setTimeout(doFlash, flashInterval);
@@ -103,13 +107,16 @@ export default function GachaScreen({ state, onBack, onPull }) {
 
   const currentRarity = ROULETTE_SEQUENCE[rouletteIdx % ROULETTE_SEQUENCE.length];
   const colors = result ? RARITY_COLORS[result.rarity] : RARITY_COLORS.common;
-  const isHighRare = result && (result.rarity === 'ultra' || result.rarity === 'superRare');
+  const isHighRare = result && (result.rarity === 'ultra' || result.rarity === 'superRare' || result.rarity === 'legend');
+  const isLegend = result?.rarity === 'legend';
 
   return (
     <div
       className="min-h-screen flex flex-col items-center relative overflow-hidden"
       style={{
-        background: phase === 'result'
+        background: phase === 'result' && isLegend
+          ? 'linear-gradient(135deg,#0f0a1e 0%,#1a0533 30%,#0a1628 60%,#0f0a1e 100%)'
+          : phase === 'result'
           ? `linear-gradient(180deg, ${colors.bg} 0%, white 100%)`
           : 'linear-gradient(180deg,#1a0533 0%,#2d1b69 50%,#1a0533 100%)',
         transition: 'background 0.8s ease',
@@ -118,7 +125,12 @@ export default function GachaScreen({ state, onBack, onPull }) {
       {/* 画面フラッシュオーバーレイ */}
       {screenFlash && (
         <div className="fixed inset-0 z-50 pointer-events-none"
-             style={{ background: colors.flash, opacity: 0.7 }}/>
+             style={{
+               background: isLegend
+                 ? `linear-gradient(135deg,${['#ff0040','#ff8c00','#ffd700','#00e676','#00b0ff','#7c4dff','#f50057'][rainbowIdx]},${['#ff8c00','#ffd700','#00e676','#00b0ff','#7c4dff','#f50057','#ff0040'][rainbowIdx]})`
+                 : colors.flash,
+               opacity: 0.75,
+             }}/>
       )}
 
       {/* 星パーティクル背景（演出中） */}
@@ -311,6 +323,25 @@ export default function GachaScreen({ state, onBack, onPull }) {
                   {['⭐','✨','🌟','💫'][i % 4]}
                 </div>
               ))}
+            </div>
+          )}
+
+          {/* レジェンド演出: 虹色の特別エフェクト */}
+          {result.rarity === 'legend' && (
+            <div className="absolute inset-0 pointer-events-none z-0 overflow-hidden">
+              {[...Array(16)].map((_, i) => (
+                <div key={i} className="absolute text-3xl animate-ping"
+                     style={{
+                       left: `${5 + i * 6}%`,
+                       top: `${10 + (i % 4) * 22}%`,
+                       animationDuration: `${0.6 + i * 0.15}s`,
+                       animationDelay: `${i * 0.05}s`,
+                     }}>
+                  {['👑','💎','✨','🌈','⚡','🔥','💫','🌟'][i % 8]}
+                </div>
+              ))}
+              <div className="absolute inset-0 animate-pulse"
+                   style={{ background: 'linear-gradient(45deg,rgba(255,0,64,0.1),rgba(255,215,0,0.1),rgba(0,230,118,0.1),rgba(124,77,255,0.1))', animationDuration: '0.8s' }}/>
             </div>
           )}
 
