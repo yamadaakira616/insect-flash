@@ -2,7 +2,7 @@ import ProfessorMascot from '../components/ProfessorMascot.jsx';
 import { INSECTS } from '../data/insects.js';
 import { GACHA_COST } from '../utils/gameLogic.js';
 
-export default function HomeScreen({ state, onPlay, onEncyclopedia, onGacha }) {
+export default function HomeScreen({ state, onPlay, onEncyclopedia, onGacha, onBattle }) {
   const owned = state.collection.length;
   const total = INSECTS.length;
   const pct = Math.round((owned / total) * 100);
@@ -96,6 +96,14 @@ export default function HomeScreen({ state, onPlay, onEncyclopedia, onGacha }) {
             )}
           </button>
         </div>
+        <button
+          onClick={onBattle}
+          className="w-full py-3 rounded-2xl text-lg font-black text-white shadow active:scale-95 transition-transform"
+          style={{ background: 'linear-gradient(135deg, #7c3aed, #4f46e5)' }}
+        >
+          ⚔️ バトル
+          <div className="text-xs font-normal opacity-80">育てて戦わせよう</div>
+        </button>
       </div>
     </div>
   );

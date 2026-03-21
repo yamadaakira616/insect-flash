@@ -5,6 +5,7 @@ import LevelSelectScreen from './screens/LevelSelectScreen.jsx';
 import GameScreen from './screens/GameScreen.jsx';
 import GachaScreen from './screens/GachaScreen.jsx';
 import EncyclopediaScreen from './screens/EncyclopediaScreen.jsx';
+import BattleScreen from './screens/BattleScreen.jsx';
 
 const SCREEN = {
   HOME: 'HOME',
@@ -12,12 +13,13 @@ const SCREEN = {
   GAME: 'GAME',
   GACHA: 'GACHA',
   ENCYCLOPEDIA: 'ENCYCLOPEDIA',
+  BATTLE: 'BATTLE',
 };
 
 export default function App() {
   const [screen, setScreen] = useState(SCREEN.HOME);
   const [selectedLevel, setSelectedLevel] = useState(null);
-  const { state, addCoins, levelUp, saveStars, updateBestCombo, incTotalPlayed, pullGacha } = useGameState();
+  const { state, addCoins, spendCoins, levelUp, saveStars, updateBestCombo, incLevelPlayCount, pullGacha, trainInsect } = useGameState();
 
   if (screen === SCREEN.HOME) return (
     <HomeScreen
@@ -25,6 +27,7 @@ export default function App() {
       onPlay={() => setScreen(SCREEN.LEVEL_SELECT)}
       onEncyclopedia={() => setScreen(SCREEN.ENCYCLOPEDIA)}
       onGacha={() => setScreen(SCREEN.GACHA)}
+      onBattle={() => setScreen(SCREEN.BATTLE)}
     />
   );
 
@@ -45,7 +48,7 @@ export default function App() {
       onLevelUp={levelUp}
       onSaveStars={saveStars}
       onBestCombo={updateBestCombo}
-      onIncPlayed={incTotalPlayed}
+      onIncPlayed={incLevelPlayCount}
     />
   );
 
@@ -61,6 +64,16 @@ export default function App() {
     <EncyclopediaScreen
       state={state}
       onBack={() => setScreen(SCREEN.HOME)}
+      onTrain={trainInsect}
+      onSpendCoins={spendCoins}
+    />
+  );
+
+  if (screen === SCREEN.BATTLE) return (
+    <BattleScreen
+      state={state}
+      onBack={() => setScreen(SCREEN.HOME)}
+      onEarnCoins={addCoins}
     />
   );
 

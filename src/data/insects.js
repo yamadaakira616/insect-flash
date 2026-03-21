@@ -1,7 +1,7 @@
 export const DUPLICATE_COINS = 30;
 
 export const INSECTS = [
-  // ウルトラ (3)
+  // ===== ウルトラ (6種) =====
   { id:'u01', name:'スマトラオオヒラタクワガタ', nameEn:'Dorcus titanus titanus',
     origin:'インドネシア・スマトラ', length:'25〜95mm', rarity:'ultra', world:2,
     description:'スマトラ島産の世界最大級のヒラタクワガタ。巨大な顎で挟む力が非常に強い。',
@@ -17,7 +17,22 @@ export const INSECTS = [
     description:'世界最大のフタマタクワガタ。V字型の巨大な大顎が圧倒的な存在感を放つ。',
     imagePath:'/assets/insects/u03.jpg', bgColor:'#1e1b4b', labelColor:'#fff' },
 
-  // スーパーレア (9)
+  { id:'u04', name:'オウゴンオニクワガタ', nameEn:'Lamprima adolphinae',
+    origin:'パプアニューギニア', length:'30〜62mm', rarity:'ultra', world:2,
+    description:'黄金色〜緑色に輝く体色が圧倒的に美しい。同種でも個体によって体色が大きく異なる宝石のような甲虫。',
+    imagePath:null, bgColor:'#713f12', labelColor:'#fff' },
+
+  { id:'u05', name:'ネプチューンオオカブト', nameEn:'Dynastes neptunus',
+    origin:'コロンビア・エクアドル', length:'50〜157mm', rarity:'ultra', world:3,
+    description:'アンデス山脈の高地に生息する幻の大型カブトムシ。3本の巨大な角が神話の海神ネプチューンを想起させる。',
+    imagePath:null, bgColor:'#064e3b', labelColor:'#fff' },
+
+  { id:'u06', name:'モーレンカンプオウゴンオニクワガタ', nameEn:'Lamprima moellenkampi',
+    origin:'ニューギニア', length:'28〜65mm', rarity:'ultra', world:2,
+    description:'オウゴンオニクワガタの仲間で最も大型になる種。青みがかった金属光沢が神秘的。',
+    imagePath:null, bgColor:'#1e3a5f', labelColor:'#fff' },
+
+  // ===== スーパーレア (18種) =====
   { id:'s01', name:'オオクワガタ', nameEn:'Dorcus hopei binodulosus',
     origin:'日本', length:'25〜85mm', rarity:'superRare', world:2,
     description:'日本最大のクワガタ。「クワガタの王様」と呼ばれ、樹液が出るクヌギやコナラに集まる。',
@@ -63,7 +78,52 @@ export const INSECTS = [
     description:'日本の清流に生息するホタルの代表種。幻想的な発光パターンは地域によって異なる。',
     imagePath:'/assets/insects/s09.jpg', bgColor:'#0c1a1a', labelColor:'#00ff88' },
 
-  // レア (15)
+  { id:'s10', name:'パラワンオオヒラタクワガタ', nameEn:'Dorcus titanus palawanicus',
+    origin:'フィリピン・パラワン島', length:'45〜106mm', rarity:'superRare', world:2,
+    description:'パラワン島産のヒラタクワガタ最大亜種。鋭く発達した大顎の挟む力は昆虫界トップクラス。',
+    imagePath:null, bgColor:'#1c1917', labelColor:'#fff' },
+
+  { id:'s11', name:'グラントシロカブト', nameEn:'Dynastes granti',
+    origin:'アメリカ（アリゾナ）', length:'40〜117mm', rarity:'superRare', world:3,
+    description:'北アメリカ産最大のカブトムシ。白っぽい体に黒い斑点模様が入る。高山のトネリコの木に集まる。',
+    imagePath:null, bgColor:'#d6d3d1', labelColor:'#1c1917' },
+
+  { id:'s12', name:'ビノクルスミヤマクワガタ', nameEn:'Lucanus binoculatus',
+    origin:'インドネシア', length:'35〜72mm', rarity:'superRare', world:2,
+    description:'大きな複眼が特徴的なミヤマクワガタ。ニューギニア周辺に生息し、独特な体型を持つ。',
+    imagePath:null, bgColor:'#422006', labelColor:'#fff' },
+
+  { id:'s13', name:'アヌビスゾウカブト', nameEn:'Megasoma elephas',
+    origin:'メキシコ・中南米', length:'50〜135mm', rarity:'superRare', world:3,
+    description:'世界最重量級のカブトムシの一種。密な金色の毛に覆われた太い角が特徴的。',
+    imagePath:null, bgColor:'#713f12', labelColor:'#fff' },
+
+  { id:'s14', name:'ラコダールツヤクワガタ', nameEn:'Odontolabis lacordairei',
+    origin:'インド・スリランカ', length:'40〜90mm', rarity:'superRare', world:2,
+    description:'インド亜大陸に生息する美しいツヤクワガタ。漆黒の体に細長い大顎が品格を放つ。',
+    imagePath:null, bgColor:'#1c1917', labelColor:'#fff' },
+
+  { id:'s15', name:'モリモトミヤマクワガタ', nameEn:'Lucanus moriutii',
+    origin:'台湾', length:'35〜74mm', rarity:'superRare', world:2,
+    description:'台湾の高山に生息する大型ミヤマ。日本産のミヤマクワガタに近縁で、力強い大顎が特徴。',
+    imagePath:null, bgColor:'#292524', labelColor:'#fff' },
+
+  { id:'s16', name:'ワラストンツヤクワガタ', nameEn:'Odontolabis wollastoni',
+    origin:'マレーシア', length:'38〜88mm', rarity:'superRare', world:2,
+    description:'ボルネオ産のツヤクワガタ。黒光りする体と特徴的な形状の大顎を持つ。',
+    imagePath:null, bgColor:'#1c1917', labelColor:'#fff' },
+
+  { id:'s17', name:'チャルコソマ・モエレンカンピ', nameEn:'Chalcosoma moellenkampi',
+    origin:'ボルネオ', length:'50〜110mm', rarity:'superRare', world:2,
+    description:'ボルネオ産の巨大な3本角カブトムシ。コーカサスオオカブトと近縁で、密林の王者として君臨する。',
+    imagePath:null, bgColor:'#14532d', labelColor:'#fff' },
+
+  { id:'s18', name:'ヒルスシカクワガタ', nameEn:'Rhaetus westwoodi',
+    origin:'インド・ネパール', length:'40〜80mm', rarity:'superRare', world:2,
+    description:'ヒマラヤ山麓に生息する大型シカクワガタ。独特の曲線を描く大顎が美しく、コレクター垂涎の的。',
+    imagePath:null, bgColor:'#3b1f0a', labelColor:'#fff' },
+
+  // ===== レア (30種) =====
   { id:'r01', name:'ミヤマクワガタ', nameEn:'Lucanus maculifemoratus',
     origin:'日本', length:'27〜79mm', rarity:'rare', world:2,
     description:'日本の山地に生息するクワガタ。頭部の耳状突起と金色の産毛が特徴。夏の夜に活動する。',
@@ -126,7 +186,7 @@ export const INSECTS = [
 
   { id:'r13', name:'ヨーロッパミヤマクワガタ', nameEn:'Lucanus cervus',
     origin:'ヨーロッパ', length:'25〜87mm', rarity:'rare', world:2,
-    description:'ヨーロッパ最大のクワガタ。雄の大顎はシカの角に似ており、英名も"Stag Beetle"（雄鹿の甲虫）。',
+    description:'ヨーロッパ最大のクワガタ。雄の大顎はシカの角に似ており、英名も"Stag Beetle"。',
     imagePath:'/assets/insects/r13.jpg', bgColor:'#78350f', labelColor:'#fff' },
 
   { id:'r14', name:'コーカサスオオカブト', nameEn:'Chalcosoma caucasus',
@@ -139,7 +199,82 @@ export const INSECTS = [
     description:'アマゾン流域に生息する世界最重量級のカブトムシのひとつ。分厚い体に短く太い角を持つ。',
     imagePath:'/assets/insects/r15.jpg', bgColor:'#365314', labelColor:'#fff' },
 
-  // ノーマル (12)
+  { id:'r16', name:'ゴホンヅノカブト', nameEn:'Eupatorus gracilicornis',
+    origin:'タイ・ベトナム', length:'35〜80mm', rarity:'rare', world:2,
+    description:'頭部2本・胸部3本の計5本の角を持つユニークなカブトムシ。東南アジアの山地に生息する。',
+    imagePath:null, bgColor:'#365314', labelColor:'#fff' },
+
+  { id:'r17', name:'ヘラジカオオカブト', nameEn:'Dynastes hyllus',
+    origin:'メキシコ・中米', length:'45〜120mm', rarity:'rare', world:3,
+    description:'メキシコ産のヘラクレスに近縁な大型カブトムシ。青緑色の斑点模様が美しい。',
+    imagePath:null, bgColor:'#064e3b', labelColor:'#fff' },
+
+  { id:'r18', name:'アマミミヤマクワガタ', nameEn:'Lucanus sasakii',
+    origin:'奄美大島', length:'30〜65mm', rarity:'rare', world:2,
+    description:'奄美大島固有のミヤマクワガタ。日本のミヤマクワガタと近縁だが、大顎の形状に違いがある。',
+    imagePath:null, bgColor:'#78350f', labelColor:'#fff' },
+
+  { id:'r19', name:'フォルスターフタマタクワガタ', nameEn:'Hexarthrius forsteri',
+    origin:'スマトラ', length:'30〜80mm', rarity:'rare', world:2,
+    description:'スマトラ産のフタマタクワガタ。パリーフタマタより小型だが、鋭い大顎の形状が独特。',
+    imagePath:null, bgColor:'#422006', labelColor:'#fff' },
+
+  { id:'r20', name:'ハナカマキリ', nameEn:'Hymenopus coronatus',
+    origin:'東南アジア', length:'25〜70mm', rarity:'rare', world:1,
+    description:'蘭の花に擬態した世界一美しいカマキリ。ピンク色の体と花びらのような脚が特徴。',
+    imagePath:null, bgColor:'#fce7f3', labelColor:'#831843' },
+
+  { id:'r21', name:'コノハムシ', nameEn:'Phyllium giganteum',
+    origin:'マレーシア', length:'80〜105mm', rarity:'rare', world:1,
+    description:'葉っぱそっくりの体型を持つ世界最大のコノハムシ。葉の葉脈まで再現した完璧な擬態が驚異的。',
+    imagePath:null, bgColor:'#166534', labelColor:'#fff' },
+
+  { id:'r22', name:'ナナフシ（世界最長種）', nameEn:'Phobaeticus chani',
+    origin:'ボルネオ', length:'350〜565mm', rarity:'rare', world:1,
+    description:'世界最長の昆虫として記録を持つ。足を広げると50cm以上にもなるボルネオ固有種。',
+    imagePath:null, bgColor:'#166534', labelColor:'#fff' },
+
+  { id:'r23', name:'モルフォチョウ', nameEn:'Morpho peleides',
+    origin:'中南米', length:'90〜130mm', rarity:'rare', world:1,
+    description:'熱帯雨林を飛び交う宝石のような青い蝶。翅の青色は色素ではなく光の干渉による構造色。',
+    imagePath:null, bgColor:'#1e3a5f', labelColor:'#fff' },
+
+  { id:'r24', name:'アカアシクワガタ', nameEn:'Dorcus rubrofemoratus',
+    origin:'日本', length:'20〜55mm', rarity:'rare', world:2,
+    description:'赤みがかった脚が名前の由来。日本の山地に生息し、ブナ科の朽木に産卵する。',
+    imagePath:null, bgColor:'#78350f', labelColor:'#fff' },
+
+  { id:'r25', name:'クロカタゾウムシ', nameEn:'Pachyrhynchus infernalis',
+    origin:'フィリピン', length:'15〜22mm', rarity:'rare', world:1,
+    description:'世界で最も硬い昆虫の一つ。鱗粉の金属光沢が宝石のようで、車に踏まれても死なないほどの硬さを持つ。',
+    imagePath:null, bgColor:'#1c1917', labelColor:'#fff' },
+
+  { id:'r26', name:'ギガスアリ', nameEn:'Camponotus gigas',
+    origin:'東南アジア', length:'18〜28mm', rarity:'rare', world:1,
+    description:'世界最大のアリの一種。強力な顎でなんでも噛み切り、熱帯林の生態系で重要な役割を担う。',
+    imagePath:null, bgColor:'#292524', labelColor:'#fff' },
+
+  { id:'r27', name:'ウスバカゲロウ（大型種）', nameEn:'Palpares libelluloides',
+    origin:'南ヨーロッパ・中東', length:'60〜80mm', rarity:'rare', world:1,
+    description:'ウスバカゲロウの仲間で最大級。透き通った翅に美しい斑紋があり、優雅に飛翔する。',
+    imagePath:null, bgColor:'#fef9c3', labelColor:'#713f12' },
+
+  { id:'r28', name:'タイワンタケクマバチ', nameEn:'Xylocopa tranquebarorum',
+    origin:'東南アジア・台湾', length:'20〜28mm', rarity:'rare', world:1,
+    description:'竹に穴を掘って巣を作るクマバチの仲間。全身が青黒く輝き、ハチとは思えない美しさを持つ。',
+    imagePath:null, bgColor:'#1e293b', labelColor:'#fff' },
+
+  { id:'r29', name:'タイタマムシ', nameEn:'Chrysochroa buqueti',
+    origin:'タイ・東南アジア', length:'40〜65mm', rarity:'rare', world:1,
+    description:'タイ産のタマムシ類最大種のひとつ。鮮やかな赤・緑・金の金属光沢が太陽光で輝く宝石。',
+    imagePath:null, bgColor:'#166534', labelColor:'#fff' },
+
+  { id:'r30', name:'ハナカマキリ（白型）', nameEn:'Hymenopus coronatus var.',
+    origin:'スマトラ', length:'25〜65mm', rarity:'rare', world:1,
+    description:'真っ白な体色のハナカマキリ変異型。白い花に完全に溶け込んだ擬態は自然界の奇跡。',
+    imagePath:null, bgColor:'#f0fdf4', labelColor:'#166534' },
+
+  // ===== ノーマル (24種) =====
   { id:'c01', name:'コクワガタ', nameEn:'Dorcus rectus',
     origin:'日本', length:'17〜54mm', rarity:'common', world:1,
     description:'日本全国の雑木林に生息するクワガタ。小型だが飼育しやすく、クワガタ入門種として人気。',
@@ -199,6 +334,66 @@ export const INSECTS = [
     origin:'日本', length:'40〜60mm', rarity:'common', world:1,
     description:'日本で最もよく見られるチョウ。白い羽に黒い紋が入り、キャベツ畑でよく見かける。',
     imagePath:'/assets/insects/c12.jpg', bgColor:'#f0fdf4' },
+
+  { id:'c13', name:'アゲハチョウ', nameEn:'Papilio xuthus',
+    origin:'日本', length:'50〜75mm', rarity:'common', world:1,
+    description:'日本の代表的なアゲハチョウ。黄色と黒の縞模様が美しく、柑橘類の葉に産卵する。',
+    imagePath:null, bgColor:'#fef9c3' },
+
+  { id:'c14', name:'ニホンミツバチ', nameEn:'Apis cerana japonica',
+    origin:'日本', length:'10〜13mm', rarity:'common', world:1,
+    description:'日本固有のミツバチ。西洋ミツバチと違い、スズメバチを熱球で撃退する知恵を持つ。',
+    imagePath:null, bgColor:'#fef3c7' },
+
+  { id:'c15', name:'アブラゼミ', nameEn:'Graptopsaltria nigrofuscata',
+    origin:'日本', length:'55〜62mm', rarity:'common', world:1,
+    description:'日本で最もよく見られるセミ。茶色い不透明な翅が特徴で、夏の夕暮れに大合唱する。',
+    imagePath:null, bgColor:'#fef3c7' },
+
+  { id:'c16', name:'クロアゲハ', nameEn:'Papilio protenor',
+    origin:'日本', length:'70〜100mm', rarity:'common', world:1,
+    description:'全身が黒いアゲハチョウ。光に当たると青紫に光る後翅が美しい。山地の林道でよく見られる。',
+    imagePath:null, bgColor:'#292524', labelColor:'#fff' },
+
+  { id:'c17', name:'シオカラトンボ', nameEn:'Orthetrum albistylum',
+    origin:'日本', length:'48〜56mm', rarity:'common', world:1,
+    description:'水辺に生息する代表的なトンボ。成熟したオスは青白い体色になる。夏の田んぼで多く見られる。',
+    imagePath:null, bgColor:'#e0f2fe' },
+
+  { id:'c18', name:'オオスズメバチ', nameEn:'Vespa mandarinia',
+    origin:'日本', length:'27〜45mm', rarity:'common', world:1,
+    description:'世界最大のスズメバチ。強力な毒と顎で他の昆虫を捕食する。日本では注意が必要な昆虫のひとつ。',
+    imagePath:null, bgColor:'#fef3c7' },
+
+  { id:'c19', name:'ゲンゴロウ', nameEn:'Cybister chinensis',
+    origin:'日本', length:'34〜42mm', rarity:'common', world:1,
+    description:'水中を颯爽と泳ぐ日本最大の水生甲虫。かつては全国の池や田んぼに多く生息したが、今は希少。',
+    imagePath:null, bgColor:'#166534', labelColor:'#fff' },
+
+  { id:'c20', name:'ミンミンゼミ', nameEn:'Hyalessa maculaticollis',
+    origin:'日本', length:'50〜60mm', rarity:'common', world:1,
+    description:'日本のセミの中で最も大きな声で鳴く。透明な翅に緑の斑紋があり、夏の風物詩。',
+    imagePath:null, bgColor:'#dcfce7' },
+
+  { id:'c21', name:'モンキチョウ', nameEn:'Colias erate',
+    origin:'日本', length:'40〜52mm', rarity:'common', world:1,
+    description:'黄色い翅に黒い紋模様を持つ身近なチョウ。草原や農地に生息し、クローバーの花を好む。',
+    imagePath:null, bgColor:'#fef9c3' },
+
+  { id:'c22', name:'エンマコオロギ', nameEn:'Teleogryllus emma',
+    origin:'日本', length:'30〜40mm', rarity:'common', world:1,
+    description:'秋の夜に「コロコロ」と鳴く日本最大のコオロギ。古くから鳴き声が愛でられてきた。',
+    imagePath:null, bgColor:'#292524', labelColor:'#fff' },
+
+  { id:'c23', name:'ヤマトシジミ', nameEn:'Pseudozizeeria maha',
+    origin:'日本', length:'20〜30mm', rarity:'common', world:1,
+    description:'日本で最も身近な小型のチョウ。カタバミの葉を食草とし、街中の空き地でもよく見られる。',
+    imagePath:null, bgColor:'#dbeafe' },
+
+  { id:'c24', name:'ルリタテハ', nameEn:'Kaniska canace',
+    origin:'日本', length:'50〜65mm', rarity:'common', world:1,
+    description:'茶色の翅に鮮やかな青紫の帯が走るタテハチョウ。翅の裏が枯れ葉に擬態している。',
+    imagePath:null, bgColor:'#dbeafe' },
 ];
 
 export function rollGacha() {

@@ -1,5 +1,6 @@
 import { useState, useEffect, useCallback, useRef } from 'react';
 import { generateFlashProblem, generateChoices, getLevelConfig, QUESTIONS_PER_LEVEL, COINS_PER_CORRECT, starsCoins } from '../utils/gameLogic';
+import { getLevelCoinMultiplier } from '../hooks/useGameState.js';
 import { playFlash, playCorrect, playWrong, playLevelUp, playCombo, playCountdown, playGo } from '../utils/sound';
 import Confetti from '../components/Confetti';
 
@@ -18,6 +19,10 @@ function StarRow({ count }) {
 export default function GameScreen({ state, maxLevel, onBack, onEarnCoins, onLevelUp, onSaveStars, onBestCombo, onIncPlayed }) {
   const { level, coins } = state;
   const config = getLevelConfig(level);
+  // コイン減衰: 同じレベルを繰り返すほど獲得コインが減る
+  const levelPlayCount = state.levelPlayCount?.[String(level)] ?? 0;
+  const coinMultiplier = getLevelCoinMultiplier(levelPlayCount);
+  const isFirstPlay = levelPlayCount === 0;
 
   const [phase, setPhase]               = useState(Phase.COUNTDOWN);
   const [countdown, setCountdown]       = useState(3);
@@ -144,7 +149,8 @@ export default function GameScreen({ state, maxLevel, onBack, onEarnCoins, onLev
       setMaxCombo(m => Math.max(m, newCombo));
       const comboBonus = Math.min(newCombo - 1, 4) * 5;
       const speedBonus = answerTimer >= 7 ? 10 : answerTimer >= 4 ? 5 : 0;
-      const total = COINS_PER_CORRECT + comboBonus + speedBonus;
+      const rawTotal = COINS_PER_CORRECT + comboBonus + speedBonus;
+      const total = Math.max(1, Math.round(rawTotal * coinMultiplier));
       onEarnCoins(total);
       setEarnedCoins(e => e + total);
       setCorrectCount(c => {
@@ -175,9 +181,9 @@ export default function GameScreen({ state, maxLevel, onBack, onEarnCoins, onLev
         const stars = calcStars(finalCorrect);
         onSaveStars(level, stars);
         onBestCombo(Math.max(maxCombo, combo + (ok ? 1 : 0)));
-        onIncPlayed();
         if (stars >= 1) {
-          onEarnCoins(starsCoins(stars));
+          const starBonus = Math.max(1, Math.round(starsCoins(stars) * coinMultiplier));
+          onEarnCoins(starBonus);
           playLevelUp();
           // BUG-05: レベル再プレイ時は最大レベルを上書きしない
           if (level < 50 && level >= (maxLevel ?? level)) onLevelUp();
@@ -185,6 +191,7 @@ export default function GameScreen({ state, maxLevel, onBack, onEarnCoins, onLev
         } else {
           setPhase(Phase.RESULT);
         }
+        onIncPlayed(level);
       } else {
         setQuestionNum(n => n + 1);
         startQuestion(false); // カウントダウンなし
@@ -282,6 +289,12 @@ export default function GameScreen({ state, maxLevel, onBack, onEarnCoins, onLev
       <div className="flex gap-2 flex-wrap justify-center">
         <span className="bg-yellow-100 border-2 border-yellow-400 rounded-full px-3 py-1 font-bold text-sm">⭐ Lv.{level}</span>
         <span className="bg-gray-100 border-2 border-gray-300 rounded-full px-3 py-1 font-bold text-sm">{questionNum}/{QUESTIONS_PER_LEVEL}</span>
+        {!isFirstPlay && (
+          <span className="rounded-full px-3 py-1 font-bold text-xs text-white"
+                style={{ background: coinMultiplier >= 0.75 ? '#f97316' : coinMultiplier >= 0.5 ? '#ef4444' : '#7f1d1d' }}>
+            🪙 ×{Math.round(coinMultiplier * 100)}%
+          </span>
+        )}
         {combo >= 2 && (
           <span className="rounded-full px-3 py-1 font-bold text-sm text-white animate-pulse-scale"
                 style={{ background:'linear-gradient(135deg,#f97316,#ef4444)' }}>
@@ -289,6 +302,12 @@ export default function GameScreen({ state, maxLevel, onBack, onEarnCoins, onLev
           </span>
         )}
       </div>
+      {/* 初回プレイ以外はコイン減衰の説明を表示 */}
+      {!isFirstPlay && phase === 'countdown' && (
+        <div className="text-xs text-center px-4 py-1 rounded-full bg-red-50 border border-red-200 text-red-600 font-bold">
+          このレベルは{levelPlayCount + 1}回目。コイン{Math.round(coinMultiplier * 100)}%！上のレベルは100%だよ
+        </div>
+      )}
 
       {/* メインエリア */}
       <div className="flex-1 flex flex-col items-center justify-center gap-6 w-full">

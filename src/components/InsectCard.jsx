@@ -28,8 +28,8 @@ function InsectSilhouette({ size = 80 }) {
   );
 }
 
-// props: insect (InsectData), owned (bool), onClick (optional)
-export default function InsectCard({ insect, owned, onClick }) {
+// props: insect (InsectData), owned (bool), onClick (optional), insectLevel (number)
+export default function InsectCard({ insect, owned, onClick, insectLevel }) {
   const rarity = RARITY_LABELS[insect.rarity] ?? RARITY_LABELS.common;
   const [imgError, setImgError] = useState(false);
 
@@ -89,6 +89,9 @@ export default function InsectCard({ insect, owned, onClick }) {
           <div className="text-xs opacity-70" style={{ color: insect.labelColor || '#1c1917' }}>
             {insect.origin}
           </div>
+        )}
+        {owned && insectLevel && insectLevel > 1 && (
+          <div className="text-xs font-black" style={{ color: '#d97706' }}>Lv.{insectLevel}</div>
         )}
       </div>
     </div>
