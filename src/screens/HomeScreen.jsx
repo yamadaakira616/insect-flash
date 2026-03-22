@@ -46,6 +46,23 @@ export default function HomeScreen({ state, onPlay, onEncyclopedia, onGacha, onB
         <div className="text-right text-xs text-green-600 mt-1">{pct}%</div>
       </div>
 
+      {/* Level display */}
+      <div className="w-full max-w-sm mb-3">
+        <div className="bg-white rounded-2xl px-4 py-3 shadow flex items-center gap-3">
+          <div className="text-3xl font-black text-green-700 leading-none">Lv.{state.level ?? 1}</div>
+          <div className="flex-1">
+            <div className="text-xs font-bold text-gray-500 mb-1">算数レベル</div>
+            <div className="w-full bg-green-100 rounded-full h-2.5 overflow-hidden">
+              <div
+                className="h-full rounded-full transition-all duration-500"
+                style={{ width: `${((state.level ?? 1) / 50) * 100}%`, background: 'linear-gradient(90deg, #4ade80, #16a34a)' }}
+              />
+            </div>
+          </div>
+          <div className="text-xs text-gray-400 font-bold whitespace-nowrap">{state.level ?? 1}/50</div>
+        </div>
+      </div>
+
       {/* Stats row */}
       <div className="flex gap-3 w-full max-w-sm mb-4">
         <div className="flex-1 bg-white rounded-xl p-3 text-center shadow">
