@@ -441,6 +441,37 @@ export const INSECTS = [
     origin:'日本', length:'50〜65mm', rarity:'common', world:1,
     description:'茶色の翅に鮮やかな青紫の帯が走るタテハチョウ。翅の裏が枯れ葉に擬態している。',
     imagePath:'/assets/insects/c24.jpg', bgColor:'#dbeafe' },
+
+  // ===== ボス専用 (6種) — ガチャに出ない・バトルステージの敵専用 =====
+  { id:'bos01', name:'オオミズアオ', nameEn:'Actias aliena',
+    origin:'日本', length:'80〜120mm（翅開長）', rarity:'boss', world:1,
+    description:'日本が誇る幻の月の蛾。翡翠色の大きな翅と長い尾状突起が月光に映える幻想的な美しさを持つ。成虫は口が退化しており、幼虫時代に蓄えた栄養だけで一生を終える。都市化で数が激減した幻の存在。',
+    imagePath:'/assets/insects/bos01.jpg', bgColor:'#064e3b', labelColor:'#a7f3d0' },
+
+  { id:'bos02', name:'タランチュラホーク', nameEn:'Pepsis grossa',
+    origin:'北アメリカ〜南アメリカ', length:'45〜50mm', rarity:'boss', world:3,
+    description:'世界最大のクモバチ。シュミット刺痛指数で最高クラスの痛みを誇る毒針を持ち、タランチュラを麻痺させて生きたまま卵の餌にする。金属光沢の青黒い体とオレンジの翅が圧倒的な威圧感を放つ死の刺客。',
+    imagePath:'/assets/insects/bos02.jpg', bgColor:'#1e1b4b', labelColor:'#fb923c' },
+
+  { id:'bos03', name:'ランタンフライ', nameEn:'Fulgora laternaria',
+    origin:'中南米・アマゾン', length:'80〜100mm', rarity:'boss', world:3,
+    description:'ピーナッツ型の奇怪な頭部が天敵を幻惑する「提灯虫」。頭の模様は爬虫類の顔に擬態しており、脅かされると後翅の目玉模様を広げる二重の防衛戦術を持つ。アマゾンが生んだ最も異形の昆虫。',
+    imagePath:'/assets/insects/bos03.jpg', bgColor:'#1a1000', labelColor:'#fbbf24' },
+
+  { id:'bos04', name:'ラジャブルックトリバネアゲハ', nameEn:'Trogonoptera brookiana',
+    origin:'ボルネオ・マレーシア', length:'150〜190mm（翅開長）', rarity:'boss', world:2,
+    description:'ボルネオの密林に舞う「森の王者の蝶」。漆黒の翅に輝くエメラルドグリーンの紋様は息をのむ美しさ。ボルネオの白人統治者（ラジャ）ジェームス・ブルックの名を冠する王者の蝶。絶滅危惧種として厳重保護。',
+    imagePath:'/assets/insects/bos04.jpg', bgColor:'#0f1f0a', labelColor:'#4ade80' },
+
+  { id:'bos05', name:'ウォレスオオハナバチ', nameEn:'Megachile pluto',
+    origin:'インドネシア（モルッカ諸島）', length:'38〜45mm', rarity:'boss', world:2,
+    description:'世界最大のハチ。翅開長が63mmに達し「飛ぶブルドッグ」と呼ばれる。1858年にアルフレッド・ウォレスが発見後、130年以上にわたって行方不明となり「絶滅」と信じられていたが2019年に奇跡の再発見。昆虫界最大の謎と言われた幻の巨人。',
+    imagePath:'/assets/insects/bos05.jpg', bgColor:'#1c1507', labelColor:'#fbbf24' },
+
+  { id:'bos06', name:'ゴクラクトリバネアゲハ', nameEn:'Ornithoptera paradisea',
+    origin:'パプアニューギニア', length:'120〜190mm（翅開長）', rarity:'boss', world:2,
+    description:'「楽園の鳥翼蝶」の名を持つ昆虫界の至宝。雄の後翅は燃えるような黄金と緑のグラデーションで輝き、鳥のように羽ばたいて飛翔する。ワシントン条約最高レベルの保護対象。ニューギニアの密林に潜む、人類が手の届かない楽園の支配者。',
+    imagePath:'/assets/insects/bos06.jpg', bgColor:'#0f0a1e', labelColor:'#ffd700' },
 ];
 
 export function rollGacha() {

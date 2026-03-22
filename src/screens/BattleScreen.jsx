@@ -7,54 +7,63 @@ const RARITY_LABEL = { common:'ノーマル', rare:'レア', superRare:'SR', ult
 const RARITY_COLOR = { common:'#6b7280', rare:'#2563eb', superRare:'#7c3aed', ultra:'#d97706', legend:'#ffd700' };
 
 // バトルステージ定義（弱い順）
-// rewardInsectId: 初回クリアで入手できるバトル限定昆虫
+// requiredPlayerLevel: 解放に必要なプレーヤーレベル（算数レベル）
+// 解放条件: requiredPlayerLevel 達成 + 前の全ステージクリア
 const BATTLE_STAGES = [
   {
     id: 'b1', label: 'はじめのいっぽ', stars: 1,
-    insectId: 'c05', level: 2,
+    insectId: 'bos01', level: 2,
     winReward: 3, loseReward: 1,
-    hint: 'Lv1でも勝てる！', requiredLevel: 1,
+    hint: '算数Lv1からOK！',
+    requiredPlayerLevel: 1,
     bg: '#ecfccb',
     rewardInsectId: 'bt01',
   },
   {
     id: 'b2', label: 'もりのたたかい', stars: 2,
-    insectId: 'r01', level: 4,
+    insectId: 'bos02', level: 4,
     winReward: 5, loseReward: 1,
-    hint: 'Lv3があれば勝てる', requiredLevel: 1,
-    bg: '#dbeafe',
+    hint: '算数Lv5以上 + ステージ1クリアで解放',
+    requiredPlayerLevel: 5,
+    bg: '#fef3c7',
     rewardInsectId: 'bt02',
   },
   {
-    id: 'b3', label: 'やまのはおう', stars: 3,
-    insectId: 's01', level: 6,
+    id: 'b3', label: 'げんそうのもり', stars: 3,
+    insectId: 'bos03', level: 6,
     winReward: 8, loseReward: 2,
-    hint: 'Lv5が目安', requiredLevel: 4,
-    bg: '#f3e8ff',
+    hint: '算数Lv10以上 + 前ステージ全クリアで解放',
+    requiredPlayerLevel: 10,
+    bg: '#1e3a5f',
+    darkText: true,
     rewardInsectId: 'bt03',
   },
   {
     id: 'b4', label: 'せかいのきょうじん', stars: 4,
-    insectId: 'u01', level: 8,
+    insectId: 'bos04', level: 8,
     winReward: 12, loseReward: 2,
-    hint: 'Lv7以上が必要', requiredLevel: 6,
-    bg: '#fef3c7',
+    hint: '算数Lv20以上 + 前ステージ全クリアで解放',
+    requiredPlayerLevel: 20,
+    bg: '#713f12',
+    darkText: true,
     rewardInsectId: 'bt04',
   },
   {
-    id: 'b5', label: 'でんせつのつよさ', stars: 5,
-    insectId: 'u03', level: 9,
+    id: 'b5', label: 'そらのじょおう', stars: 5,
+    insectId: 'bos05', level: 9,
     winReward: 15, loseReward: 3,
-    hint: 'Lv9が必要', requiredLevel: 8,
-    bg: '#1e1b4b',
+    hint: '算数Lv35以上 + 前ステージ全クリアで解放',
+    requiredPlayerLevel: 35,
+    bg: '#0f172a',
     darkText: true,
     rewardInsectId: 'bt05',
   },
   {
     id: 'boss', label: '👑 ラスボス', stars: 6,
-    insectId: 'lg01', level: 10,
+    insectId: 'bos06', level: 10,
     winReward: 20, loseReward: 3,
-    hint: 'MAX Lv10のむしで挑め！', requiredLevel: 10,
+    hint: '算数Lv50（最高）+ 全ステージクリアで解放！',
+    requiredPlayerLevel: 50,
     bg: '#0f0a1e',
     darkText: true,
     isBoss: true,
@@ -123,9 +132,7 @@ export default function BattleScreen({ state, onBack, onEarnCoins, onSpendBattle
   const timerRef = useRef(null);
 
   const myInsects = INSECTS.filter(i => state.collection.includes(i.id) && i.rarity !== 'battle');
-  const bestLevel = myInsects.length > 0
-    ? Math.max(...myInsects.map(i => state.insectLevels?.[i.id] ?? 1))
-    : 0;
+  const playerLevel = state.level ?? 1;
   const battlePoints = state.battlePoints ?? 0;
   const clearedStages = state.clearedStages ?? [];
 
@@ -229,10 +236,11 @@ export default function BattleScreen({ state, onBack, onEarnCoins, onSpendBattle
           </div>
         ) : (
           <div className="flex-1 overflow-y-auto px-3 pb-4 space-y-2">
-            {BATTLE_STAGES.map(stage => {
-              const levelLocked = bestLevel < stage.requiredLevel;
+            {BATTLE_STAGES.map((stage, stageIndex) => {
+              const levelLocked = playerLevel < stage.requiredPlayerLevel;
+              const prevLocked = BATTLE_STAGES.slice(0, stageIndex).some(s => !clearedStages.includes(s.id));
               const pointLocked = battlePoints <= 0;
-              const locked = levelLocked || pointLocked;
+              const locked = levelLocked || prevLocked || pointLocked;
               const cleared = clearedStages.includes(stage.id);
               const rewardInsect = INSECTS.find(i => i.id === stage.rewardInsectId);
               const enemyInsect = INSECTS.find(i => i.id === stage.insectId);
@@ -258,14 +266,15 @@ export default function BattleScreen({ state, onBack, onEarnCoins, onSpendBattle
                       <div className="flex items-center gap-2 flex-wrap">
                         <span className="font-black text-sm" style={{ color: textColor }}>{stage.label}</span>
                         {cleared && <span className="text-xs bg-teal-500/30 text-teal-300 px-2 py-0.5 rounded-full">✅ クリア済</span>}
-                        {levelLocked && <span className="text-xs bg-gray-500/30 text-gray-300 px-2 py-0.5 rounded-full">🔒 Lv{stage.requiredLevel}〜</span>}
-                        {pointLocked && !levelLocked && <span className="text-xs bg-red-500/30 text-red-300 px-2 py-0.5 rounded-full">⚔️ PT不足</span>}
+                        {levelLocked && <span className="text-xs bg-gray-500/30 text-gray-300 px-2 py-0.5 rounded-full">📚 算数Lv{stage.requiredPlayerLevel}〜</span>}
+                        {prevLocked && !levelLocked && <span className="text-xs bg-orange-500/30 text-orange-300 px-2 py-0.5 rounded-full">🔒 前ステージ全クリア</span>}
+                        {pointLocked && !levelLocked && !prevLocked && <span className="text-xs bg-red-500/30 text-red-300 px-2 py-0.5 rounded-full">⚔️ PT不足</span>}
                       </div>
                       <div className="flex items-center gap-2 mt-0.5">
                         <StarRow count={stage.stars} size={13} color={stage.darkText ? '#fbbf24' : '#f59e0b'}/>
                       </div>
                       <div className="text-xs mt-0.5" style={{ color: stage.darkText ? 'rgba(255,255,255,0.6)' : '#6b7280' }}>
-                        {levelLocked ? `🔒 Lv${stage.requiredLevel}のむしが必要` : pointLocked ? '問題を解いてPTをためよう' : stage.hint}
+                        {levelLocked ? `📚 算数Lv${stage.requiredPlayerLevel}まで問題を解こう` : prevLocked ? '前のステージをすべてクリアしよう' : pointLocked ? '問題を解いてPTをためよう' : stage.hint}
                       </div>
                       {rewardInsect && (
                         <div className="flex items-center gap-1 mt-1">
