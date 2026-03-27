@@ -108,6 +108,7 @@ export function useGameState() {
   }
 
   function updateBookPage(pageIndex, placed) {
+    if (pageIndex < 0 || pageIndex >= 5) return;
     setState(s => {
       const newPages = [...s.bookPages];
       newPages[pageIndex] = placed;

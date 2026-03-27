@@ -1,4 +1,6 @@
 import { describe, it, expect, beforeEach } from 'vitest';
+import { renderHook, act } from '@testing-library/react';
+import { useGameState } from '../hooks/useGameState.js';
 
 // Mock localStorage
 const localStorageMock = (() => {
@@ -49,5 +51,44 @@ describe('game state logic', () => {
     const levelStars = { 1: 3, 2: 2, 5: 1 };
     const total = Object.values(levelStars).reduce((a, b) => a + b, 0);
     expect(total).toBe(6);
+  });
+});
+
+describe('useGameState - updateBookPage', () => {
+  beforeEach(() => {
+    localStorageMock.clear();
+  });
+
+  it('updates bookPages[0] when called with a valid pageIndex', () => {
+    const { result } = renderHook(() => useGameState());
+    const stickers = [{ stickerId: 'ss-ame-chan', x: 0.5, y: 0.5, scale: 1 }];
+
+    act(() => {
+      result.current.updateBookPage(0, stickers);
+    });
+
+    expect(result.current.state.bookPages[0]).toEqual(stickers);
+  });
+
+  it('does not change state when pageIndex is -1 (out-of-range)', () => {
+    const { result } = renderHook(() => useGameState());
+    const before = result.current.state.bookPages;
+
+    act(() => {
+      result.current.updateBookPage(-1, []);
+    });
+
+    expect(result.current.state.bookPages).toEqual(before);
+  });
+
+  it('does not change state when pageIndex is 5 (out-of-range)', () => {
+    const { result } = renderHook(() => useGameState());
+    const before = result.current.state.bookPages;
+
+    act(() => {
+      result.current.updateBookPage(5, []);
+    });
+
+    expect(result.current.state.bookPages).toEqual(before);
   });
 });
