@@ -11,7 +11,7 @@ const localStorageMock = (() => {
 })();
 Object.defineProperty(global, 'localStorage', { value: localStorageMock });
 
-import { DUPLICATE_COINS } from '../data/insects.js';
+import { DUPLICATE_COINS } from '../data/stickers.js';
 
 describe('game state logic', () => {
   it('DUPLICATE_COINS is 30', () => {
