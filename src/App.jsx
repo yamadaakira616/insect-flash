@@ -5,7 +5,7 @@ import LevelSelectScreen from './screens/LevelSelectScreen.jsx';
 import GameScreen from './screens/GameScreen.jsx';
 import GachaScreen from './screens/GachaScreen.jsx';
 import EncyclopediaScreen from './screens/EncyclopediaScreen.jsx';
-import BattleScreen from './screens/BattleScreen.jsx';
+import StickerBookScreen from './screens/StickerBookScreen.jsx';
 
 const SCREEN = {
   HOME: 'HOME',
@@ -13,13 +13,13 @@ const SCREEN = {
   GAME: 'GAME',
   GACHA: 'GACHA',
   ENCYCLOPEDIA: 'ENCYCLOPEDIA',
-  BATTLE: 'BATTLE',
+  STICKER_BOOK: 'STICKER_BOOK',
 };
 
 export default function App() {
   const [screen, setScreen] = useState(SCREEN.HOME);
   const [selectedLevel, setSelectedLevel] = useState(null);
-  const { state, addCoins, spendCoins, levelUp, saveStars, updateBestCombo, incLevelPlayCount, pullGacha, trainInsect, earnBattlePoint, spendBattlePoint, clearStageAndEarnInsect } = useGameState();
+  const { state, addCoins, spendCoins, levelUp, saveStars, updateBestCombo, incLevelPlayCount, pullGacha, updateBookPage } = useGameState();
 
   if (screen === SCREEN.HOME) return (
     <HomeScreen
@@ -27,7 +27,7 @@ export default function App() {
       onPlay={() => setScreen(SCREEN.LEVEL_SELECT)}
       onEncyclopedia={() => setScreen(SCREEN.ENCYCLOPEDIA)}
       onGacha={() => setScreen(SCREEN.GACHA)}
-      onBattle={() => setScreen(SCREEN.BATTLE)}
+      onStickerBook={() => setScreen(SCREEN.STICKER_BOOK)}
     />
   );
 
@@ -48,7 +48,7 @@ export default function App() {
       onLevelUp={levelUp}
       onSaveStars={saveStars}
       onBestCombo={updateBestCombo}
-      onIncPlayed={lvl => { incLevelPlayCount(lvl); earnBattlePoint(); }}
+      onIncPlayed={lvl => incLevelPlayCount(lvl)}
     />
   );
 
@@ -64,18 +64,14 @@ export default function App() {
     <EncyclopediaScreen
       state={state}
       onBack={() => setScreen(SCREEN.HOME)}
-      onTrain={trainInsect}
-      onSpendCoins={spendCoins}
     />
   );
 
-  if (screen === SCREEN.BATTLE) return (
-    <BattleScreen
+  if (screen === SCREEN.STICKER_BOOK) return (
+    <StickerBookScreen
       state={state}
       onBack={() => setScreen(SCREEN.HOME)}
-      onEarnCoins={addCoins}
-      onSpendBattlePoint={spendBattlePoint}
-      onClearStage={clearStageAndEarnInsect}
+      onUpdatePage={updateBookPage}
     />
   );
 
