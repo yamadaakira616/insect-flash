@@ -1,5 +1,23 @@
 @import "tailwindcss";
 
+/* ===== シールのポップアニメーション ===== */
+@keyframes cardPop {
+  0%   { transform: scale(1); }
+  40%  { transform: scale(1.22) rotate(3deg); }
+  70%  { transform: scale(0.95) rotate(-1deg); }
+  100% { transform: scale(1) rotate(0deg); }
+}
+
+/* 8方向パーティクル */
+@keyframes pop0 { from { opacity:1; transform:translate(-50%,-50%) scale(1); } to { opacity:0; transform:translate(calc(-50% - 45px), calc(-50% - 50px)) scale(0.3); } }
+@keyframes pop1 { from { opacity:1; transform:translate(-50%,-50%) scale(1); } to { opacity:0; transform:translate(-50%, calc(-50% - 65px)) scale(0.3); } }
+@keyframes pop2 { from { opacity:1; transform:translate(-50%,-50%) scale(1); } to { opacity:0; transform:translate(calc(-50% + 45px), calc(-50% - 50px)) scale(0.3); } }
+@keyframes pop3 { from { opacity:1; transform:translate(-50%,-50%) scale(1); } to { opacity:0; transform:translate(calc(-50% - 65px), calc(-50% - 15px)) scale(0.3); } }
+@keyframes pop4 { from { opacity:1; transform:translate(-50%,-50%) scale(1); } to { opacity:0; transform:translate(calc(-50% + 65px), calc(-50% - 15px)) scale(0.3); } }
+@keyframes pop5 { from { opacity:1; transform:translate(-50%,-50%) scale(1); } to { opacity:0; transform:translate(calc(-50% - 40px), calc(-50% + 30px)) scale(0.3); } }
+@keyframes pop6 { from { opacity:1; transform:translate(-50%,-50%) scale(1); } to { opacity:0; transform:translate(calc(-50% + 40px), calc(-50% + 30px)) scale(0.3); } }
+@keyframes pop7 { from { opacity:1; transform:translate(-50%,-50%) scale(1); } to { opacity:0; transform:translate(-50%, calc(-50% + 40px)) scale(0.3); } }
+
 @keyframes confettiFall {
   to { transform: translateY(110vh) rotate(720deg); opacity: 0; }
 }
@@ -10,6 +28,27 @@
 @keyframes silhouettePulse {
   0%, 100% { opacity: 0; }
   50%       { opacity: 0.4; }
+}
+
+/* ===== シートめくり演出 ===== */
+/* 上半分がめくれ落ちる（フリップクロック風） */
+@keyframes sheetFlipTop {
+  0%   { transform: perspective(400px) rotateX(0deg);   opacity: 1; }
+  100% { transform: perspective(400px) rotateX(-90deg); opacity: 0.6; }
+}
+@keyframes sheetFlipBottom {
+  0%   { transform: perspective(400px) rotateX(90deg);  opacity: 0.6; }
+  100% { transform: perspective(400px) rotateX(0deg);   opacity: 1; }
+}
+/* 前の数字が上へめくれる */
+.sheet-flip-out {
+  animation: sheetFlipTop 0.18s ease-in forwards;
+  transform-origin: center bottom;
+}
+/* 新しい数字が下からめくれて現れる */
+.sheet-flip-in {
+  animation: sheetFlipBottom 0.18s ease-out forwards;
+  transform-origin: center top;
 }
 
 @media (prefers-reduced-motion: reduce) {

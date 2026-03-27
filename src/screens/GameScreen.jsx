@@ -198,25 +198,36 @@ export default function GameScreen({ state, maxLevel, onBack, onEarnCoins, onLev
     const reward = calcPlayReward(finalCorrect);
     const isPerfect = finalCorrect === QUESTIONS_PER_LEVEL;
     return (
-      <div className="flex flex-col items-center justify-center min-h-screen gap-5 p-6 text-center">
+      <div className="flex flex-col items-center justify-center min-h-screen gap-5 p-6 text-center"
+           style={{ background:'linear-gradient(180deg,#fce7f3 0%,#fdf2f8 100%)' }}>
         <Confetti active={true} />
-        <div className="text-9xl animate-bounce-in">{isPerfect ? '🌟' : '🎉'}</div>
-        <h2 className="text-4xl font-black text-yellow-500" style={{ textShadow:'3px 3px 0 #f97316' }}>
+        <div className="text-9xl animate-bounce-in">{isPerfect ? '🌟' : '💕'}</div>
+        <h2 className="text-4xl font-black" style={{ color:'#db2777', textShadow:'3px 3px 0 #f9a8d4' }}>
           {isPerfect ? 'パーフェクト！' : 'クリア！'}
         </h2>
         <StarRow count={stars} />
-        <div className="bg-white/60 rounded-2xl p-4 w-full max-w-xs space-y-2">
-          <div className="flex justify-between font-bold"><span>せいかい</span><span>{finalCorrect}/{QUESTIONS_PER_LEVEL}もん</span></div>
-          <div className="flex justify-between font-bold"><span>さいこうコンボ</span><span>🔥 x{maxCombo}</span></div>
-          <div className="border-t border-gray-300 pt-2 flex justify-between font-black text-yellow-600 text-xl">
+        <div className="rounded-2xl p-4 w-full max-w-xs space-y-2"
+             style={{ background:'rgba(255,255,255,0.8)', border:'2px solid #fbcfe8' }}>
+          <div className="flex justify-between font-bold" style={{ color:'#9d174d' }}>
+            <span>せいかい</span><span>{finalCorrect}/{QUESTIONS_PER_LEVEL}もん</span>
+          </div>
+          <div className="flex justify-between font-bold" style={{ color:'#9d174d' }}>
+            <span>さいこうコンボ</span><span>🔥 x{maxCombo}</span>
+          </div>
+          <div className="pt-2 flex justify-between font-black text-xl"
+               style={{ borderTop:'1px solid #fbcfe8', color:'#be185d' }}>
             <span>🪙 コイン</span><span>+{reward}</span>
           </div>
         </div>
-        {isPerfect && <p className="font-black text-orange-500 text-sm animate-pulse">🎊 5問全部せいかい！最高の{reward}コイン！！</p>}
-        {level < 50 && <p className="font-bold text-green-600">Lv.{level} → Lv.{level + 1}!</p>}
+        {isPerfect && (
+          <p className="font-black text-sm animate-pulse" style={{ color:'#db2777' }}>
+            🎊 5問全部せいかい！最高の{reward}コイン！！
+          </p>
+        )}
+        {level < 50 && <p className="font-bold" style={{ color:'#16a34a' }}>Lv.{level} → Lv.{level + 1}!</p>}
         <button onClick={onBack}
           className="px-10 py-4 text-xl font-black text-white rounded-3xl active:scale-95 transition-transform"
-          style={{ background:'linear-gradient(135deg,#f97316,#ef4444)', boxShadow:'0 6px 0 #b91c1c' }}>
+          style={{ background:'linear-gradient(135deg,#f472b6,#ec4899)', boxShadow:'0 6px 0 #be185d' }}>
           つぎへ！
         </button>
       </div>
@@ -226,14 +237,15 @@ export default function GameScreen({ state, maxLevel, onBack, onEarnCoins, onLev
   // ===== RESULT (failed) =====
   if (phase === Phase.RESULT) {
     return (
-      <div className="flex flex-col items-center justify-center min-h-screen gap-5 p-6 text-center">
-        <div className="text-7xl">😢</div>
-        <h2 className="text-3xl font-black">もう一回！</h2>
-        <p className="text-gray-500">{correctCountRef.current}/{QUESTIONS_PER_LEVEL}もんせいかい</p>
-        <p className="text-gray-400 text-sm">3もん以上せいかいでクリア！</p>
+      <div className="flex flex-col items-center justify-center min-h-screen gap-5 p-6 text-center"
+           style={{ background:'linear-gradient(180deg,#fce7f3 0%,#fdf2f8 100%)' }}>
+        <div className="text-7xl">🥺</div>
+        <h2 className="text-3xl font-black" style={{ color:'#db2777' }}>もう一回！</h2>
+        <p style={{ color:'#9ca3af' }}>{correctCountRef.current}/{QUESTIONS_PER_LEVEL}もんせいかい</p>
+        <p className="text-sm" style={{ color:'#d1d5db' }}>3もん以上せいかいでクリア！</p>
         <button onClick={onBack}
           className="px-10 py-4 text-xl font-black text-white rounded-3xl active:scale-95 transition-transform"
-          style={{ background:'linear-gradient(135deg,#6366f1,#a855f7)', boxShadow:'0 6px 0 #4f46e5' }}>
+          style={{ background:'linear-gradient(135deg,#c084fc,#a855f7)', boxShadow:'0 6px 0 #7e22ce' }}>
           もどる
         </button>
       </div>
@@ -242,18 +254,14 @@ export default function GameScreen({ state, maxLevel, onBack, onEarnCoins, onLev
 
   // ===== メイン =====
   return (
-    <div className="flex flex-col items-center min-h-screen p-4 gap-3">
+    <div className="flex flex-col items-center min-h-screen p-4 gap-3"
+         style={{ background:'linear-gradient(180deg,#fce7f3 0%,#fdf2f8 50%,#f5f0ff 100%)' }}>
       <Confetti active={showConfetti} />
 
       {showInsectFlash && (
         <div className="fixed inset-0 pointer-events-none flex items-center justify-center z-40">
-          <div style={{ opacity: 0.15, animation: 'silhouettePulse 0.5s ease' }}>
-            <svg width="200" height="200" viewBox="0 0 80 80">
-              <ellipse cx="40" cy="45" rx="18" ry="22" fill="black"/>
-              <ellipse cx="40" cy="28" rx="10" ry="10" fill="black"/>
-              <line x1="34" y1="20" x2="22" y2="8" stroke="black" strokeWidth="2"/>
-              <line x1="46" y1="20" x2="58" y2="8" stroke="black" strokeWidth="2"/>
-            </svg>
+          <div className="text-8xl" style={{ opacity: 0.2, animation: 'silhouettePulse 0.5s ease' }}>
+            💕
           </div>
         </div>
       )}
@@ -281,17 +289,23 @@ export default function GameScreen({ state, maxLevel, onBack, onEarnCoins, onLev
            aria-valuemax={QUESTIONS_PER_LEVEL}
            aria-label="もんだいのしんちょく">
         <div className="h-full rounded-full transition-all duration-500"
-             style={{ width:`${((questionNum-1)/QUESTIONS_PER_LEVEL)*100}%`, background:'linear-gradient(90deg,#f97316,#eab308)' }}/>
+             style={{ width:`${((questionNum-1)/QUESTIONS_PER_LEVEL)*100}%`, background:'linear-gradient(90deg,#f9a8d4,#ec4899)' }}/>
       </div>
 
       {/* バッジ */}
       <div className="flex gap-2 flex-wrap justify-center">
-        <span className="bg-yellow-100 border-2 border-yellow-400 rounded-full px-3 py-1 font-bold text-sm">⭐ Lv.{level}</span>
-        <span className="bg-gray-100 border-2 border-gray-300 rounded-full px-3 py-1 font-bold text-sm">{questionNum}/{QUESTIONS_PER_LEVEL}</span>
+        <span className="rounded-full px-3 py-1 font-bold text-sm"
+              style={{ background:'#fce7f3', border:'2px solid #f9a8d4', color:'#be185d' }}>
+          ✨ Lv.{level}
+        </span>
+        <span className="rounded-full px-3 py-1 font-bold text-sm"
+              style={{ background:'white', border:'2px solid #fbcfe8', color:'#9d174d' }}>
+          {questionNum}/{QUESTIONS_PER_LEVEL}
+        </span>
         {combo >= 2 && (
           <span className="rounded-full px-3 py-1 font-bold text-sm text-white animate-pulse-scale"
-                style={{ background:'linear-gradient(135deg,#f97316,#ef4444)' }}>
-            🔥コンボ x{combo}
+                style={{ background:'linear-gradient(135deg,#f472b6,#ec4899)' }}>
+            💕コンボ x{combo}
           </span>
         )}
       </div>
@@ -304,7 +318,7 @@ export default function GameScreen({ state, maxLevel, onBack, onEarnCoins, onLev
           <div className="flex flex-col items-center gap-4">
             <p className="text-xl font-bold text-gray-500">{config.count}つの数字を足してね！</p>
             <div key={countdown} className="text-9xl font-black animate-pop"
-                 style={{ color: countdown===1?'#ef4444':countdown===2?'#f97316':'#3b82f6' }}>
+                 style={{ color: countdown===1?'#e11d48':countdown===2?'#db2777':'#a855f7' }}>
               {countdown > 0 ? countdown : 'GO!'}
             </div>
           </div>
@@ -318,28 +332,29 @@ export default function GameScreen({ state, maxLevel, onBack, onEarnCoins, onLev
               {problem.numbers.map((_, i) => (
                 <div key={i} className="w-4 h-4 rounded-full transition-all duration-100"
                      style={{
-                       background: i < flashIdx ? '#10b981'
-                                 : i === flashIdx && phase === Phase.FLASH ? '#f97316'
-                                 : '#e5e7eb',
+                       background: i < flashIdx ? '#ec4899'
+                                 : i === flashIdx && phase === Phase.FLASH ? '#f9a8d4'
+                                 : '#fce7f3',
                        transform: i === flashIdx && phase === Phase.FLASH ? 'scale(1.3)' : 'scale(1)',
                      }}/>
               ))}
             </div>
 
-            {/* 数字表示ボックス */}
-            <div className="w-64 h-48 rounded-3xl flex items-center justify-center shadow-xl"
-                 style={{ background:'rgba(255,255,255,0.9)' }}>
+            {/* 数字表示ボックス（シートめくり演出） */}
+            <div className="w-64 h-48 rounded-3xl flex items-center justify-center shadow-xl overflow-hidden"
+                 style={{ background:'rgba(255,255,255,0.9)', perspective:'600px' }}>
               {phase === Phase.FLASH ? (
-                <div key={`${questionNum}-${flashIdx}`} className="font-black animate-pop tabular-nums"
+                <div key={`${questionNum}-${flashIdx}`} className="font-black sheet-flip-in tabular-nums"
                      style={{
                        fontSize: config.digits===1 ? '7rem' : config.digits===2 ? '5rem' : '3.5rem',
-                       color:'#1e3a5f',
-                       textShadow:'3px 3px 0 rgba(30,58,95,0.15)',
+                       color:'#831843',
+                       textShadow:'3px 3px 0 rgba(251,207,232,0.8)',
+                       display:'inline-block',
                      }}>
                   {problem.numbers[flashIdx]}
                 </div>
               ) : (
-                <div className="text-5xl text-gray-200">···</div>
+                <div className="text-5xl text-gray-200 sheet-flip-out">···</div>
               )}
             </div>
 
@@ -358,7 +373,7 @@ export default function GameScreen({ state, maxLevel, onBack, onEarnCoins, onLev
                 <div className="h-full rounded-full transition-all duration-1000"
                      style={{
                        width:`${answerTimer * 10}%`,
-                       background: answerTimer>6 ? '#22c55e' : answerTimer>3 ? '#f97316' : '#ef4444',
+                       background: answerTimer>6 ? '#f9a8d4' : answerTimer>3 ? '#f472b6' : '#e11d48',
                      }}/>
               </div>
             )}
@@ -367,7 +382,7 @@ export default function GameScreen({ state, maxLevel, onBack, onEarnCoins, onLev
             <div key={shakeKey}
                  className={`grid grid-cols-2 gap-4 w-full max-w-xs ${isCorrect===false ? 'animate-shake' : ''}`}>
               {choices.map(c => {
-                let bg='white', border='#93c5fd', color='#1e40af';
+                let bg='white', border='#fbcfe8', color='#be185d';
                 if (selected === c) {
                   if (isCorrect) { bg='#22c55e'; border='#16a34a'; color='white'; }
                   else           { bg='#ef4444'; border='#b91c1c'; color='white'; }
@@ -393,7 +408,7 @@ export default function GameScreen({ state, maxLevel, onBack, onEarnCoins, onLev
               <div role="alert" aria-live="assertive"
                    className={`text-3xl font-black animate-bounce-in ${isCorrect ? 'text-green-500' : 'text-red-500'}`}>
                 {isCorrect
-                  ? combo >= 3 ? `🔥 ${combo}れんぞく！` : '🎉 せいかい！'
+                  ? combo >= 3 ? `💕 ${combo}れんぞく！` : '🎉 せいかい！'
                   : `😢 こたえは ${problem?.answer}`}
               </div>
             )}

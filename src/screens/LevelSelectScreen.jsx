@@ -2,9 +2,9 @@ import { getLevelConfig, TOTAL_LEVELS } from '../utils/gameLogic';
 import WorldScene from '../components/WorldScene';
 
 const WORLD_COLORS = {
-  1: { bg: '#ecfccb', accent: '#16a34a', name: '草はらワールド 🌿' },
-  2: { bg: '#d1fae5', accent: '#059669', name: 'もりワールド 🌲' },
-  3: { bg: '#e0f2fe', accent: '#0ea5e9', name: 'よるのもりワールド 🌙' },
+  1: { bg: '#fce7f3', accent: '#db2777', name: 'はなのせかい 🌸' },
+  2: { bg: '#f5f3ff', accent: '#7c3aed', name: 'まほうのせかい 🦄' },
+  3: { bg: '#eff6ff', accent: '#2563eb', name: 'ほしのせかい 🌙' },
 };
 const SCENE_NAMES = { 1: 'grassland', 2: 'forest', 3: 'night' };
 
@@ -13,10 +13,10 @@ export default function LevelSelectScreen({ state, onSelect, onBack }) {
   const worlds = [1,2,3];
 
   return (
-    <div style={{ minHeight:'100svh', padding:16, paddingBottom:32 }}>
+    <div style={{ minHeight:'100svh', padding:16, paddingBottom:32, background:'linear-gradient(180deg,#fce7f3 0%,#fdf2f8 100%)' }}>
       <div style={{ display:'flex', alignItems:'center', gap:12, marginBottom:16, paddingTop:8 }}>
         <button onClick={onBack} aria-label="もどる" style={{ fontSize:24, background:'none', border:'none', cursor:'pointer', padding:8 }}>←</button>
-        <h2 style={{ margin:0, fontSize:22, fontWeight:900 }}>🗺️ レベルえらび</h2>
+        <h2 style={{ margin:0, fontSize:22, fontWeight:900, color:'#9d174d' }}>🗺️ レベルえらび</h2>
       </div>
 
       {worlds.map(world => {
