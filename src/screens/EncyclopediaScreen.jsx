@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { STICKERS, SERIES } from '../data/stickers.js';
 
 const SERIES_COLORS = {
@@ -12,6 +12,11 @@ const SERIES_COLORS = {
 export default function EncyclopediaScreen({ state, onBack }) {
   const [tab, setTab] = useState('normal');
   const [detail, setDetail] = useState(null);
+  const closeButtonRef = useRef(null);
+
+  useEffect(() => {
+    if (detail) closeButtonRef.current?.focus();
+  }, [detail]);
 
   const stickers = STICKERS.filter(s => s.series === tab);
   const owned = id => state.collection.includes(id);
@@ -58,37 +63,50 @@ export default function EncyclopediaScreen({ state, onBack }) {
       {/* Grid */}
       <div className="flex-1 overflow-y-auto p-3">
         <div className="grid grid-cols-3 gap-3">
-          {stickers.map(sticker => (
-            <button
-              key={sticker.id}
-              onClick={() => owned(sticker.id) && setDetail(sticker)}
-              className="rounded-2xl overflow-hidden shadow active:scale-95 transition-transform"
-              style={{
-                background: owned(sticker.id) ? 'white' : '#f3f4f6',
-                border: '2px solid #fbcfe8',
-                aspectRatio: '1',
-              }}
-            >
-              {owned(sticker.id) ? (
-                <div className="flex flex-col items-center p-2 h-full">
-                  <img
-                    src={sticker.imagePath}
-                    alt={sticker.name}
-                    style={{ flex: 1, width: '100%', objectFit: 'contain' }}
-                  />
-                  <div className="text-xs font-bold text-center mt-1 leading-tight"
-                       style={{ color: '#9d174d', fontSize: '0.6rem' }}>
-                    {sticker.name}
-                  </div>
+          {stickers.map(sticker => {
+            const isOwned = owned(sticker.id);
+            const cardStyle = {
+              background: isOwned ? 'white' : '#f3f4f6',
+              border: '2px solid #fbcfe8',
+              aspectRatio: '1',
+            };
+            const cardContent = isOwned ? (
+              <div className="flex flex-col items-center p-2 h-full">
+                <img
+                  src={sticker.imagePath}
+                  alt={sticker.name}
+                  style={{ flex: 1, width: '100%', objectFit: 'contain' }}
+                />
+                <div className="text-xs font-bold text-center mt-1 leading-tight"
+                     style={{ color: '#9d174d', fontSize: '0.6rem' }}>
+                  {sticker.name}
                 </div>
-              ) : (
-                <div className="flex flex-col items-center justify-center h-full gap-1">
-                  <div className="text-3xl" style={{ filter: 'grayscale(1) opacity(0.3)' }}>🩷</div>
-                  <div className="text-xs font-bold" style={{ color: '#d1d5db' }}>？？？</div>
-                </div>
-              )}
-            </button>
-          ))}
+              </div>
+            ) : (
+              <div className="flex flex-col items-center justify-center h-full gap-1">
+                <div className="text-3xl" style={{ filter: 'grayscale(1) opacity(0.3)' }}>🩷</div>
+                <div className="text-xs font-bold" style={{ color: '#d1d5db' }}>？？？</div>
+              </div>
+            );
+            return isOwned ? (
+              <button
+                key={sticker.id}
+                onClick={() => setDetail(sticker)}
+                className="rounded-2xl overflow-hidden shadow active:scale-95 transition-transform"
+                style={cardStyle}
+              >
+                {cardContent}
+              </button>
+            ) : (
+              <div
+                key={sticker.id}
+                className="rounded-2xl overflow-hidden shadow"
+                style={cardStyle}
+              >
+                {cardContent}
+              </div>
+            );
+          })}
         </div>
       </div>
 
@@ -97,6 +115,7 @@ export default function EncyclopediaScreen({ state, onBack }) {
         <div
           role="dialog"
           aria-modal="true"
+          tabIndex="-1"
           className="fixed inset-0 flex items-end justify-center z-50"
           style={{ background: 'rgba(0,0,0,0.5)' }}
           onClick={() => setDetail(null)}
@@ -115,7 +134,7 @@ export default function EncyclopediaScreen({ state, onBack }) {
                   {SERIES.find(s => s.id === detail.series)?.label}
                 </div>
               </div>
-              <button onClick={() => setDetail(null)} aria-label="とじる" className="text-2xl opacity-70">✕</button>
+              <button ref={closeButtonRef} onClick={() => setDetail(null)} aria-label="とじる" className="text-2xl opacity-70">✕</button>
             </div>
             <div className="flex justify-center mb-4">
               <img
