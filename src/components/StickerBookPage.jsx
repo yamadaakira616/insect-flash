@@ -18,15 +18,14 @@ export default function StickerBookPage({ pageIndex, placed, collection, onUpdat
   const placedRef = useRef(placed);
   placedRef.current = placed;
 
-  // drag state lives in a ref (avoids stale closures in global listeners)
+  // drag state lives in refs (avoids stale closures in global listeners)
   const dragRef = useRef(null);
-  // mirror to state only for rendering the ghost
   const [ghostPos, setGhostPos] = useState(null);
 
   const [selected, setSelected] = useState(null);
   const longPressTimer = useRef(null);
 
-  // pinch state
+  // pinch/rotate state
   const pinchRef = useRef(null);
 
   const onUpdateRef = useRef(onUpdate);
@@ -58,7 +57,7 @@ export default function StickerBookPage({ pageIndex, placed, collection, onUpdat
         const cur = placedRef.current;
         if (d.fromTray) {
           if (cur.length < MAX_PER_PAGE) {
-            onUpdateRef.current([...cur, { stickerId: d.stickerId, x, y, scale: 1.0 }]);
+            onUpdateRef.current([...cur, { stickerId: d.stickerId, x, y, scale: 1.0, rotation: 0 }]);
           }
         } else {
           onUpdateRef.current(cur.map((item, i) =>
@@ -69,7 +68,11 @@ export default function StickerBookPage({ pageIndex, placed, collection, onUpdat
 
       dragRef.current = null;
       setGhostPos(null);
-      setSelected(null);
+      if (!d.fromTray) {
+        // keep selected after drop so user can adjust
+      } else {
+        setSelected(null);
+      }
     }
 
     window.addEventListener('pointermove', onMove, { passive: false });
@@ -102,47 +105,92 @@ export default function StickerBookPage({ pageIndex, placed, collection, onUpdat
       setSelected(null);
     }, 600);
 
-    const info = {
+    dragRef.current = {
       stickerId: placed[placedIndex].stickerId,
       fromTray: false,
       placedIndex,
       currentX: e.clientX,
       currentY: e.clientY,
     };
-    dragRef.current = info;
     setGhostPos({ x: e.clientX, y: e.clientY });
     setSelected(placedIndex);
   }
 
-  // ─── Pinch to scale ──────────────────────────────────────────────────────
-  function handleTouchStart(e, placedIndex) {
+  // ─── Two-finger pinch (scale) + rotate ───────────────────────────────────
+  function getTwoFingerInfo(touches) {
+    const dx = touches[0].clientX - touches[1].clientX;
+    const dy = touches[0].clientY - touches[1].clientY;
+    return {
+      dist: Math.hypot(dx, dy),
+      angle: Math.atan2(dy, dx),
+    };
+  }
+
+  function handleCanvasTouchStart(e) {
     if (e.touches.length === 2) {
-      const dx = e.touches[0].clientX - e.touches[1].clientX;
-      const dy = e.touches[0].clientY - e.touches[1].clientY;
+      e.preventDefault();
+      // find which placed sticker is under the first touch
+      const rect = pageRef.current?.getBoundingClientRect();
+      if (!rect) return;
+      const tx = e.touches[0].clientX;
+      const ty = e.touches[0].clientY;
+      let hitIndex = -1;
+      for (let i = placedRef.current.length - 1; i >= 0; i--) {
+        const item = placedRef.current[i];
+        const size = 64 * (item.scale ?? 1);
+        const cx = rect.left + item.x * rect.width;
+        const cy = rect.top  + item.y * rect.height;
+        if (
+          tx >= cx - size / 2 && tx <= cx + size / 2 &&
+          ty >= cy - size / 2 && ty <= cy + size / 2
+        ) {
+          hitIndex = i;
+          break;
+        }
+      }
+      const info = getTwoFingerInfo(e.touches);
       pinchRef.current = {
-        placedIndex,
-        dist: Math.hypot(dx, dy),
-        scale: placedRef.current[placedIndex]?.scale ?? 1,
+        placedIndex: hitIndex,
+        startDist: info.dist,
+        startAngle: info.angle,
+        startScale: hitIndex >= 0 ? (placedRef.current[hitIndex]?.scale ?? 1) : 1,
+        startRotation: hitIndex >= 0 ? (placedRef.current[hitIndex]?.rotation ?? 0) : 0,
       };
+      if (hitIndex >= 0) setSelected(hitIndex);
     }
   }
-  function handleTouchMove(e) {
-    if (e.touches.length !== 2 || !pinchRef.current) return;
-    e.preventDefault();
-    const dx = e.touches[0].clientX - e.touches[1].clientX;
-    const dy = e.touches[0].clientY - e.touches[1].clientY;
-    const dist = Math.hypot(dx, dy);
-    const newScale = Math.max(0.3, Math.min(3.0, pinchRef.current.scale * (dist / pinchRef.current.dist)));
-    const idx = pinchRef.current.placedIndex;
-    onUpdateRef.current(placedRef.current.map((item, i) => i === idx ? { ...item, scale: newScale } : item));
-  }
-  function handleTouchEnd() { pinchRef.current = null; }
 
-  // ─── Scale slider ────────────────────────────────────────────────────────
+  function handleCanvasTouchMove(e) {
+    if (e.touches.length !== 2 || !pinchRef.current || pinchRef.current.placedIndex < 0) return;
+    e.preventDefault();
+    const info = getTwoFingerInfo(e.touches);
+    const scaleFactor = info.dist / pinchRef.current.startDist;
+    const newScale = Math.max(0.3, Math.min(3.0, pinchRef.current.startScale * scaleFactor));
+    const angleDelta = info.angle - pinchRef.current.startAngle;
+    const newRotation = pinchRef.current.startRotation + (angleDelta * 180 / Math.PI);
+    const idx = pinchRef.current.placedIndex;
+    onUpdateRef.current(placedRef.current.map((item, i) =>
+      i === idx ? { ...item, scale: newScale, rotation: newRotation } : item
+    ));
+  }
+
+  function handleCanvasTouchEnd() {
+    pinchRef.current = null;
+  }
+
+  // ─── Control bar handlers ─────────────────────────────────────────────────
   function handleScaleChange(val) {
     if (selected === null) return;
     onUpdateRef.current(placed.map((item, i) => i === selected ? { ...item, scale: val } : item));
   }
+
+  function handleRotate(delta) {
+    if (selected === null) return;
+    onUpdateRef.current(placed.map((item, i) =>
+      i === selected ? { ...item, rotation: ((item.rotation ?? 0) + delta + 360) % 360 } : item
+    ));
+  }
+
   function handleDeleteSelected() {
     if (selected === null) return;
     onUpdateRef.current(placed.filter((_, i) => i !== selected));
@@ -158,27 +206,22 @@ export default function StickerBookPage({ pageIndex, placed, collection, onUpdat
       {/* 選択中コントロールバー */}
       {selectedItem && (
         <div style={{
-          display: 'flex', alignItems: 'center', gap: 8,
-          padding: '6px 12px', background: 'white',
+          display: 'flex', alignItems: 'center', gap: 6,
+          padding: '6px 10px', background: 'white',
           borderBottom: '2px solid #fbcfe8', flexShrink: 0,
+          flexWrap: 'wrap',
         }}>
-          <span style={{ fontSize: '0.8rem', color: '#ec4899', fontWeight: 800, whiteSpace: 'nowrap' }}>🔍 おおきさ</span>
+          <span style={{ fontSize: '0.75rem', color: '#ec4899', fontWeight: 800, whiteSpace: 'nowrap' }}>🔍</span>
           <input
             type="range" min={0.3} max={3.0} step={0.05}
             value={selectedItem.scale ?? 1.0}
             onChange={e => handleScaleChange(parseFloat(e.target.value))}
-            style={{ flex: 1, accentColor: '#ec4899' }}
+            style={{ flex: 1, minWidth: 60, accentColor: '#ec4899' }}
           />
-          <button onClick={handleDeleteSelected} style={{
-            border: 'none', background: '#fce7f3', color: '#9d174d',
-            borderRadius: 8, padding: '4px 10px', fontSize: '0.8rem',
-            fontWeight: 800, cursor: 'pointer', whiteSpace: 'nowrap',
-          }}>🗑️ けす</button>
-          <button onClick={() => setSelected(null)} style={{
-            border: 'none', background: '#f3f4f6', color: '#6b7280',
-            borderRadius: 8, padding: '4px 8px', fontSize: '0.8rem',
-            fontWeight: 700, cursor: 'pointer',
-          }}>✕</button>
+          <button onClick={() => handleRotate(-15)} style={btnStyle}>↺</button>
+          <button onClick={() => handleRotate(15)} style={btnStyle}>↻</button>
+          <button onClick={handleDeleteSelected} style={{ ...btnStyle, background: '#fce7f3', color: '#9d174d' }}>🗑️</button>
+          <button onClick={() => setSelected(null)} style={{ ...btnStyle, background: '#f3f4f6', color: '#6b7280' }}>✕</button>
         </div>
       )}
 
@@ -194,14 +237,15 @@ export default function StickerBookPage({ pageIndex, placed, collection, onUpdat
           touchAction: 'none',
           userSelect: 'none',
         }}
-        onTouchStart={e => { if (e.touches.length === 2) e.preventDefault(); }}
-        onTouchMove={handleTouchMove}
-        onTouchEnd={handleTouchEnd}
+        onTouchStart={handleCanvasTouchStart}
+        onTouchMove={handleCanvasTouchMove}
+        onTouchEnd={handleCanvasTouchEnd}
       >
         {placed.map((item, i) => {
           const sticker = stickerMap[item.stickerId];
           if (!sticker) return null;
           const size = 64 * (item.scale ?? 1);
+          const rotation = item.rotation ?? 0;
           const isSel = selected === i;
           return (
             <div
@@ -214,16 +258,16 @@ export default function StickerBookPage({ pageIndex, placed, collection, onUpdat
                 cursor: 'grab',
                 borderRadius: 12,
                 zIndex: isSel ? 10 : 1,
+                transform: `rotate(${rotation}deg)`,
                 filter: isSel
                   ? 'drop-shadow(0 0 8px #ec4899) drop-shadow(0 0 16px rgba(236,72,153,0.5))'
                   : 'drop-shadow(0 2px 4px rgba(0,0,0,0.18))',
               }}
               onPointerDown={e => handlePlacedPointerDown(e, i)}
-              onTouchStart={e => handleTouchStart(e, i)}
             >
               <img
                 src={sticker.imagePath} alt={sticker.name}
-                style={{ width: '100%', height: '100%', objectFit: 'cover', pointerEvents: 'none' }}
+                style={{ width: '100%', height: '100%', objectFit: 'contain', pointerEvents: 'none' }}
                 draggable={false}
               />
             </div>
@@ -253,12 +297,11 @@ export default function StickerBookPage({ pageIndex, placed, collection, onUpdat
           pointerEvents: 'none',
           opacity: 0.82,
           zIndex: 9999,
-          clipPath: 'url(#heart-clip)',
           filter: 'drop-shadow(0 6px 14px rgba(0,0,0,0.4))',
         }}>
           <img
             src={ghostSticker.imagePath} alt={ghostSticker.name}
-            style={{ width: '100%', height: '100%', objectFit: 'cover' }}
+            style={{ width: '100%', height: '100%', objectFit: 'contain' }}
             draggable={false}
           />
         </div>
@@ -279,12 +322,12 @@ export default function StickerBookPage({ pageIndex, placed, collection, onUpdat
             ガチャでシールを集めよう！
           </div>
         ) : (
-          collection.map(id => {
+          collection.map((id, idx) => {
             const sticker = stickerMap[id];
             if (!sticker) return null;
             return (
               <div
-                key={id}
+                key={`${id}-${idx}`}
                 style={{
                   flexShrink: 0, width: 68, height: 68,
                   cursor: 'grab',
@@ -296,7 +339,7 @@ export default function StickerBookPage({ pageIndex, placed, collection, onUpdat
               >
                 <img
                   src={sticker.imagePath} alt={sticker.name}
-                  style={{ width: '100%', height: '100%', objectFit: 'cover' }}
+                  style={{ width: '100%', height: '100%', objectFit: 'contain' }}
                   draggable={false}
                 />
               </div>
@@ -307,3 +350,9 @@ export default function StickerBookPage({ pageIndex, placed, collection, onUpdat
     </div>
   );
 }
+
+const btnStyle = {
+  border: 'none', background: '#fce7f3', color: '#9d174d',
+  borderRadius: 8, padding: '4px 10px', fontSize: '0.85rem',
+  fontWeight: 800, cursor: 'pointer', whiteSpace: 'nowrap',
+};
