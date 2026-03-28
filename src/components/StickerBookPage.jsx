@@ -1,5 +1,5 @@
 // src/components/StickerBookPage.jsx
-import { useRef, useState, useEffect } from 'react';
+import { useRef, useState, useEffect, useCallback } from 'react';
 import { STICKERS } from '../data/stickers.js';
 
 const MAX_PER_PAGE = 20;
@@ -18,20 +18,24 @@ export default function StickerBookPage({ pageIndex, placed, collection, onUpdat
   const placedRef = useRef(placed);
   placedRef.current = placed;
 
-  // drag state lives in refs (avoids stale closures in global listeners)
-  const dragRef = useRef(null);
-  const [ghostPos, setGhostPos] = useState(null);
-
-  const [selected, setSelected] = useState(null);
-  const longPressTimer = useRef(null);
-
-  // pinch/rotate state
-  const pinchRef = useRef(null);
-
   const onUpdateRef = useRef(onUpdate);
   onUpdateRef.current = onUpdate;
 
-  // ─── Global pointer listeners (mounted once) ─────────────────────────────
+  // ─── State ──────────────────────────────────────────────────────────────
+  // Tray: which sticker is "picked up" (tapped in tray, ready to place)
+  const [pickedStickerId, setPickedStickerId] = useState(null);
+  // Canvas: which placed sticker is selected (for control bar)
+  const [selected, setSelected] = useState(null);
+
+  // Drag state (for moving placed stickers on canvas)
+  const dragRef = useRef(null);
+  const [ghostPos, setGhostPos] = useState(null);
+  const longPressTimer = useRef(null);
+
+  // Pinch/rotate state
+  const pinchRef = useRef(null);
+
+  // ─── Global pointer listeners for dragging placed stickers ──────────────
   useEffect(() => {
     function onMove(e) {
       if (!dragRef.current) return;
@@ -55,24 +59,13 @@ export default function StickerBookPage({ pageIndex, placed, collection, onUpdat
         const x = Math.max(0, Math.min(1, (e.clientX - rect.left) / rect.width));
         const y = Math.max(0, Math.min(1, (e.clientY - rect.top)  / rect.height));
         const cur = placedRef.current;
-        if (d.fromTray) {
-          if (cur.length < MAX_PER_PAGE) {
-            onUpdateRef.current([...cur, { stickerId: d.stickerId, x, y, scale: 1.0, rotation: 0 }]);
-          }
-        } else {
-          onUpdateRef.current(cur.map((item, i) =>
-            i === d.placedIndex ? { ...item, x, y } : item
-          ));
-        }
+        onUpdateRef.current(cur.map((item, i) =>
+          i === d.placedIndex ? { ...item, x, y } : item
+        ));
       }
 
       dragRef.current = null;
       setGhostPos(null);
-      if (!d.fromTray) {
-        // keep selected after drop so user can adjust
-      } else {
-        setSelected(null);
-      }
     }
 
     window.addEventListener('pointermove', onMove, { passive: false });
@@ -83,19 +76,42 @@ export default function StickerBookPage({ pageIndex, placed, collection, onUpdat
     };
   }, []);
 
-  // ─── Drag start: tray ────────────────────────────────────────────────────
-  function handleTrayPointerDown(e, stickerId) {
-    e.preventDefault();
-    clearTimeout(longPressTimer.current);
-    dragRef.current = { stickerId, fromTray: true, placedIndex: -1, currentX: e.clientX, currentY: e.clientY };
-    setGhostPos({ x: e.clientX, y: e.clientY });
-    setSelected(null);
+  // ─── Tray: tap to pick up a sticker ─────────────────────────────────────
+  function handleTrayTap(stickerId) {
+    if (pickedStickerId === stickerId) {
+      setPickedStickerId(null); // deselect
+    } else {
+      setPickedStickerId(stickerId);
+      setSelected(null);
+    }
   }
 
-  // ─── Drag start: placed sticker ──────────────────────────────────────────
+  // ─── Canvas: tap to place the picked sticker ───────────────────────────
+  function handleCanvasTap(e) {
+    // Only place if we have a picked sticker from tray
+    if (!pickedStickerId) return;
+    if (placedRef.current.length >= MAX_PER_PAGE) return;
+
+    const rect = pageRef.current?.getBoundingClientRect();
+    if (!rect) return;
+
+    const x = Math.max(0, Math.min(1, (e.clientX - rect.left) / rect.width));
+    const y = Math.max(0, Math.min(1, (e.clientY - rect.top)  / rect.height));
+
+    onUpdateRef.current([
+      ...placedRef.current,
+      { stickerId: pickedStickerId, x, y, scale: 1.0, rotation: 0 },
+    ]);
+    // Keep picked so user can place multiple
+  }
+
+  // ─── Placed sticker: tap to select, drag to move ───────────────────────
   function handlePlacedPointerDown(e, placedIndex) {
     e.preventDefault();
     e.stopPropagation();
+
+    // If user tapped while holding a tray sticker, cancel pick
+    setPickedStickerId(null);
 
     // long-press → delete
     longPressTimer.current = setTimeout(() => {
@@ -109,6 +125,8 @@ export default function StickerBookPage({ pageIndex, placed, collection, onUpdat
       stickerId: placed[placedIndex].stickerId,
       fromTray: false,
       placedIndex,
+      startX: e.clientX,
+      startY: e.clientY,
       currentX: e.clientX,
       currentY: e.clientY,
     };
@@ -116,20 +134,20 @@ export default function StickerBookPage({ pageIndex, placed, collection, onUpdat
     setSelected(placedIndex);
   }
 
-  // ─── Two-finger pinch (scale) + rotate ───────────────────────────────────
+  // ─── Two-finger pinch (scale) + rotate ──────────────────────────────────
   function getTwoFingerInfo(touches) {
     const dx = touches[0].clientX - touches[1].clientX;
     const dy = touches[0].clientY - touches[1].clientY;
-    return {
-      dist: Math.hypot(dx, dy),
-      angle: Math.atan2(dy, dx),
-    };
+    return { dist: Math.hypot(dx, dy), angle: Math.atan2(dy, dx) };
   }
 
   function handleCanvasTouchStart(e) {
     if (e.touches.length === 2) {
       e.preventDefault();
-      // find which placed sticker is under the first touch
+      clearTimeout(longPressTimer.current);
+      dragRef.current = null;
+      setGhostPos(null);
+
       const rect = pageRef.current?.getBoundingClientRect();
       if (!rect) return;
       const tx = e.touches[0].clientX;
@@ -140,10 +158,8 @@ export default function StickerBookPage({ pageIndex, placed, collection, onUpdat
         const size = 64 * (item.scale ?? 1);
         const cx = rect.left + item.x * rect.width;
         const cy = rect.top  + item.y * rect.height;
-        if (
-          tx >= cx - size / 2 && tx <= cx + size / 2 &&
-          ty >= cy - size / 2 && ty <= cy + size / 2
-        ) {
+        if (tx >= cx - size / 2 && tx <= cx + size / 2 &&
+            ty >= cy - size / 2 && ty <= cy + size / 2) {
           hitIndex = i;
           break;
         }
@@ -164,8 +180,9 @@ export default function StickerBookPage({ pageIndex, placed, collection, onUpdat
     if (e.touches.length !== 2 || !pinchRef.current || pinchRef.current.placedIndex < 0) return;
     e.preventDefault();
     const info = getTwoFingerInfo(e.touches);
-    const scaleFactor = info.dist / pinchRef.current.startDist;
-    const newScale = Math.max(0.3, Math.min(3.0, pinchRef.current.startScale * scaleFactor));
+    const newScale = Math.max(0.3, Math.min(3.0,
+      pinchRef.current.startScale * (info.dist / pinchRef.current.startDist)
+    ));
     const angleDelta = info.angle - pinchRef.current.startAngle;
     const newRotation = pinchRef.current.startRotation + (angleDelta * 180 / Math.PI);
     const idx = pinchRef.current.placedIndex;
@@ -174,11 +191,9 @@ export default function StickerBookPage({ pageIndex, placed, collection, onUpdat
     ));
   }
 
-  function handleCanvasTouchEnd() {
-    pinchRef.current = null;
-  }
+  function handleCanvasTouchEnd() { pinchRef.current = null; }
 
-  // ─── Control bar handlers ─────────────────────────────────────────────────
+  // ─── Control bar handlers ───────────────────────────────────────────────
   function handleScaleChange(val) {
     if (selected === null) return;
     onUpdateRef.current(placed.map((item, i) => i === selected ? { ...item, scale: val } : item));
@@ -199,6 +214,7 @@ export default function StickerBookPage({ pageIndex, placed, collection, onUpdat
 
   const selectedItem = selected !== null ? placed[selected] : null;
   const ghostSticker = ghostPos && dragRef.current ? stickerMap[dragRef.current.stickerId] : null;
+  const pickedSticker = pickedStickerId ? stickerMap[pickedStickerId] : null;
 
   return (
     <div style={{ display: 'flex', flexDirection: 'column', height: '100%' }}>
@@ -209,9 +225,8 @@ export default function StickerBookPage({ pageIndex, placed, collection, onUpdat
           display: 'flex', alignItems: 'center', gap: 6,
           padding: '6px 10px', background: 'white',
           borderBottom: '2px solid #fbcfe8', flexShrink: 0,
-          flexWrap: 'wrap',
         }}>
-          <span style={{ fontSize: '0.75rem', color: '#ec4899', fontWeight: 800, whiteSpace: 'nowrap' }}>🔍</span>
+          <span style={{ fontSize: '0.75rem', color: '#ec4899', fontWeight: 800 }}>🔍</span>
           <input
             type="range" min={0.3} max={3.0} step={0.05}
             value={selectedItem.scale ?? 1.0}
@@ -220,8 +235,27 @@ export default function StickerBookPage({ pageIndex, placed, collection, onUpdat
           />
           <button onClick={() => handleRotate(-15)} style={btnStyle}>↺</button>
           <button onClick={() => handleRotate(15)} style={btnStyle}>↻</button>
-          <button onClick={handleDeleteSelected} style={{ ...btnStyle, background: '#fce7f3', color: '#9d174d' }}>🗑️</button>
-          <button onClick={() => setSelected(null)} style={{ ...btnStyle, background: '#f3f4f6', color: '#6b7280' }}>✕</button>
+          <button onClick={handleDeleteSelected}
+            style={{ ...btnStyle, background: '#fce7f3', color: '#9d174d' }}>🗑️</button>
+          <button onClick={() => setSelected(null)}
+            style={{ ...btnStyle, background: '#f3f4f6', color: '#6b7280' }}>✕</button>
+        </div>
+      )}
+
+      {/* ピック中バナー */}
+      {pickedSticker && (
+        <div style={{
+          display: 'flex', alignItems: 'center', gap: 8,
+          padding: '8px 12px', background: '#fef3c7',
+          borderBottom: '2px solid #fbbf24', flexShrink: 0,
+        }}>
+          <img src={pickedSticker.imagePath} alt={pickedSticker.name}
+            style={{ width: 36, height: 36, objectFit: 'contain' }} />
+          <span style={{ fontSize: '0.85rem', fontWeight: 800, color: '#92400e' }}>
+            「{pickedSticker.name}」をえらび中 — 上のエリアをタップしてはろう！
+          </span>
+          <button onClick={() => setPickedStickerId(null)}
+            style={{ ...btnStyle, background: '#fef3c7', color: '#92400e', marginLeft: 'auto' }}>✕</button>
         </div>
       )}
 
@@ -236,7 +270,10 @@ export default function StickerBookPage({ pageIndex, placed, collection, onUpdat
           overflow: 'hidden',
           touchAction: 'none',
           userSelect: 'none',
+          cursor: pickedStickerId ? 'crosshair' : 'default',
+          minHeight: 200,
         }}
+        onClick={handleCanvasTap}
         onTouchStart={handleCanvasTouchStart}
         onTouchMove={handleCanvasTouchMove}
         onTouchEnd={handleCanvasTouchEnd}
@@ -274,7 +311,7 @@ export default function StickerBookPage({ pageIndex, placed, collection, onUpdat
           );
         })}
 
-        {placed.length === 0 && (
+        {placed.length === 0 && !pickedStickerId && (
           <div style={{
             position: 'absolute', inset: 0,
             display: 'flex', flexDirection: 'column',
@@ -282,12 +319,24 @@ export default function StickerBookPage({ pageIndex, placed, collection, onUpdat
             color: '#d1d5db', fontWeight: 'bold', pointerEvents: 'none',
           }}>
             <div style={{ fontSize: '2.5rem' }}>🩷</div>
-            <div style={{ fontSize: '0.9rem' }}>下のシールをドラッグしてはろう！</div>
+            <div style={{ fontSize: '0.9rem' }}>下のシールをタップしてえらんでね！</div>
+          </div>
+        )}
+
+        {placed.length === 0 && pickedStickerId && (
+          <div style={{
+            position: 'absolute', inset: 0,
+            display: 'flex', flexDirection: 'column',
+            alignItems: 'center', justifyContent: 'center', gap: 8,
+            color: '#f59e0b', fontWeight: 'bold', pointerEvents: 'none',
+          }}>
+            <div style={{ fontSize: '2.5rem' }}>👆</div>
+            <div style={{ fontSize: '0.9rem' }}>ここをタップしてシールをはろう！</div>
           </div>
         )}
       </div>
 
-      {/* ドラッグ中ゴースト（viewport固定） */}
+      {/* ドラッグ中ゴースト */}
       {ghostSticker && ghostPos && (
         <div style={{
           position: 'fixed',
@@ -309,13 +358,13 @@ export default function StickerBookPage({ pageIndex, placed, collection, onUpdat
 
       {/* シールトレイ */}
       <div style={{
-        height: 96, overflowX: 'auto',
-        display: 'flex', alignItems: 'center', gap: 10,
-        padding: '8px 14px',
+        overflowX: 'auto',
+        display: 'flex', alignItems: 'center', gap: 8,
+        padding: '8px 12px',
         background: 'white',
         borderTop: '2px solid #fbcfe8',
-        touchAction: 'pan-x',
         flexShrink: 0,
+        minHeight: 88,
       }}>
         {collection.length === 0 ? (
           <div style={{ color: '#9ca3af', fontSize: '0.8rem', whiteSpace: 'nowrap' }}>
@@ -325,21 +374,25 @@ export default function StickerBookPage({ pageIndex, placed, collection, onUpdat
           collection.map((id, idx) => {
             const sticker = stickerMap[id];
             if (!sticker) return null;
+            const isPicked = pickedStickerId === id;
             return (
               <div
                 key={`${id}-${idx}`}
+                onClick={() => handleTrayTap(id)}
                 style={{
-                  flexShrink: 0, width: 68, height: 68,
-                  cursor: 'grab',
-                  touchAction: 'none',
+                  flexShrink: 0, width: 64, height: 64,
+                  cursor: 'pointer',
                   borderRadius: 12,
+                  border: isPicked ? '3px solid #f59e0b' : '3px solid transparent',
+                  background: isPicked ? '#fef9c3' : 'transparent',
                   filter: 'drop-shadow(0 2px 4px rgba(0,0,0,0.15))',
+                  transition: 'all 0.15s',
+                  transform: isPicked ? 'scale(1.1)' : 'scale(1)',
                 }}
-                onPointerDown={e => handleTrayPointerDown(e, id)}
               >
                 <img
                   src={sticker.imagePath} alt={sticker.name}
-                  style={{ width: '100%', height: '100%', objectFit: 'contain' }}
+                  style={{ width: '100%', height: '100%', objectFit: 'contain', pointerEvents: 'none' }}
                   draggable={false}
                 />
               </div>
