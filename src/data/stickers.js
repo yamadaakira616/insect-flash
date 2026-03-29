@@ -3,11 +3,12 @@ export const DUPLICATE_COINS = 30;
 const B = import.meta.env.BASE_URL;
 
 export const SERIES = [
-  { id: 'normal',      label: 'ノーマル',       rate: 75 },
+  { id: 'normal',      label: 'ノーマル',       rate: 74 },
   { id: 'bonbon-drop', label: 'ボンボンドロップ', rate: 10 },
   { id: 'marshmallow', label: 'マシュマロ',       rate: 8  },
   { id: 'shaka-shaka', label: 'シャカシャカ',     rate: 5  },
   { id: 'water-seal',  label: 'ウォーター',       rate: 2  },
+  { id: 'oshiri',      label: 'おしりシール',     rate: 1  },
 ];
 
 export const STICKERS = [
@@ -92,6 +93,26 @@ export const STICKERS = [
   { id:'nm-panda',         name:'パンダペインター',        series:'normal', imagePath:B+'assets/normal/poppy-the-panda-painter.png' },
   { id:'nm-bear2',         name:'くま２',                  series:'normal', imagePath:B+'assets/normal/barnby-the-bear-2.png' },
   { id:'nm-jungle-frog2',  name:'ジャングルフロッグ２',    series:'normal', imagePath:B+'assets/normal/kipo-the-jungle-frog.png' },
+
+  // ===== ノーマル 追加分 (12枚) =====
+  { id:'nm-sweet-treats',    name:'スウィーツパック',        series:'normal', imagePath:B+'assets/normal/sweet-treats.png' },
+  { id:'nm-fantasy-dreams',  name:'ファンタジードリームス',  series:'normal', imagePath:B+'assets/normal/fantasy-dreams.png' },
+  { id:'nm-beauty-fashion',  name:'ビューティー＆ファッション', series:'normal', imagePath:B+'assets/normal/beauty-fashion.png' },
+  { id:'nm-flower-garden',   name:'フラワーガーデン',        series:'normal', imagePath:B+'assets/normal/flower-garden.png' },
+  { id:'nm-cake-chef',       name:'ケーキちゃん',            series:'normal', imagePath:B+'assets/normal/cake-chef.png' },
+  { id:'nm-pudding',         name:'プリンちゃん',            series:'normal', imagePath:B+'assets/normal/pudding.png' },
+  { id:'nm-donut',           name:'ドーナツちゃん',          series:'normal', imagePath:B+'assets/normal/donut.png' },
+  { id:'nm-ice-cream-sundae',name:'パフェちゃん',            series:'normal', imagePath:B+'assets/normal/ice-cream-sundae.png' },
+  { id:'nm-sweet-dreams',    name:'スウィートドリームス',    series:'normal', imagePath:B+'assets/normal/sweet-dreams.png' },
+  { id:'nm-tea-party',       name:'ティーパーティー',        series:'normal', imagePath:B+'assets/normal/tea-party.png' },
+  { id:'nm-magical-parade',  name:'マジカルパレード',        series:'normal', imagePath:B+'assets/normal/magical-parade.png' },
+  { id:'nm-garden-charm',    name:'ガーデンチャーム',        series:'normal', imagePath:B+'assets/normal/garden-charm.png' },
+
+  // ===== おしりシール (4枚) =====
+  { id:'os-shiba',   name:'柴犬のお尻',       series:'oshiri', imagePath:B+'assets/oshiri/shiba-oshiri.png' },
+  { id:'os-mike',    name:'三毛尻シール',     series:'oshiri', imagePath:B+'assets/oshiri/mike-oshiri.png' },
+  { id:'os-usagi',   name:'うさぎのもちもち', series:'oshiri', imagePath:B+'assets/oshiri/usagi-oshiri.png' },
+  { id:'os-penguin', name:'ペンギンのぽてっと',series:'oshiri', imagePath:B+'assets/oshiri/penguin-oshiri.png' },
 ];
 
 export function rollGacha() {

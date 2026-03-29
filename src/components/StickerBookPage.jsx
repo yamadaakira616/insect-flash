@@ -3,12 +3,13 @@ import { useRef, useState, useEffect, useCallback } from 'react';
 import { STICKERS } from '../data/stickers.js';
 
 const MAX_PER_PAGE = 20;
-const BACKGROUNDS = [
-  'linear-gradient(135deg, #fff0f5, #fce7f3)',
-  'linear-gradient(135deg, #f0fdf4, #dcfce7)',
-  'linear-gradient(135deg, #eff6ff, #dbeafe)',
-  'linear-gradient(135deg, #fefce8, #fef9c3)',
-  'linear-gradient(135deg, #f5f3ff, #ede9fe)',
+// シール帳ページの外枠カラー（ページごとに変わる）
+const PAGE_COLORS = [
+  { border: '#f9a8d4', bg: '#fdf2f8', dot: '#fce7f3' }, // ピンク
+  { border: '#86efac', bg: '#f0fdf4', dot: '#dcfce7' }, // グリーン
+  { border: '#93c5fd', bg: '#eff6ff', dot: '#dbeafe' }, // ブルー
+  { border: '#fcd34d', bg: '#fefce8', dot: '#fef9c3' }, // イエロー
+  { border: '#c4b5fd', bg: '#f5f3ff', dot: '#ede9fe' }, // パープル
 ];
 
 const stickerMap = Object.fromEntries(STICKERS.map(s => [s.id, s]));
@@ -215,16 +216,17 @@ export default function StickerBookPage({ pageIndex, placed, collection, onUpdat
   const selectedItem = selected !== null ? placed[selected] : null;
   const ghostSticker = ghostPos && dragRef.current ? stickerMap[dragRef.current.stickerId] : null;
   const pickedSticker = pickedStickerId ? stickerMap[pickedStickerId] : null;
+  const pageColor = PAGE_COLORS[pageIndex % PAGE_COLORS.length];
 
   return (
-    <div style={{ display: 'flex', flexDirection: 'column', height: '100%' }}>
+    <div style={{ display: 'flex', flexDirection: 'column', height: '100%', gap: 6 }}>
 
       {/* 選択中コントロールバー */}
       {selectedItem && (
         <div style={{
           display: 'flex', alignItems: 'center', gap: 6,
-          padding: '6px 10px', background: 'white',
-          borderBottom: '2px solid #fbcfe8', flexShrink: 0,
+          padding: '5px 10px', background: 'white',
+          borderRadius: 10, border: '2px solid #fbcfe8', flexShrink: 0,
         }}>
           <span style={{ fontSize: '0.75rem', color: '#ec4899', fontWeight: 800 }}>🔍</span>
           <input
@@ -246,94 +248,118 @@ export default function StickerBookPage({ pageIndex, placed, collection, onUpdat
       {pickedSticker && (
         <div style={{
           display: 'flex', alignItems: 'center', gap: 8,
-          padding: '8px 12px', background: '#fef3c7',
-          borderBottom: '2px solid #fbbf24', flexShrink: 0,
+          padding: '6px 12px', background: '#fef3c7',
+          borderRadius: 10, border: '2px solid #fbbf24', flexShrink: 0,
         }}>
           <img src={pickedSticker.imagePath} alt={pickedSticker.name}
-            style={{ width: 36, height: 36, objectFit: 'contain' }} />
-          <span style={{ fontSize: '0.85rem', fontWeight: 800, color: '#92400e' }}>
-            「{pickedSticker.name}」をえらび中 — 上のエリアをタップしてはろう！
+            style={{ width: 32, height: 32, objectFit: 'contain' }} />
+          <span style={{ fontSize: '0.8rem', fontWeight: 800, color: '#92400e' }}>
+            「{pickedSticker.name}」— シール帳をタップしてはろう！
           </span>
           <button onClick={() => setPickedStickerId(null)}
             style={{ ...btnStyle, background: '#fef3c7', color: '#92400e', marginLeft: 'auto' }}>✕</button>
         </div>
       )}
 
-      {/* キャンバス */}
-      <div
-        ref={pageRef}
-        style={{
-          flex: 1,
-          position: 'relative',
-          background: BACKGROUNDS[pageIndex % BACKGROUNDS.length],
-          borderRadius: 16,
-          overflow: 'hidden',
-          touchAction: 'none',
-          userSelect: 'none',
-          cursor: pickedStickerId ? 'crosshair' : 'default',
-          minHeight: 200,
-        }}
-        onClick={handleCanvasTap}
-        onTouchStart={handleCanvasTouchStart}
-        onTouchMove={handleCanvasTouchMove}
-        onTouchEnd={handleCanvasTouchEnd}
-      >
-        {placed.map((item, i) => {
-          const sticker = stickerMap[item.stickerId];
-          if (!sticker) return null;
-          const size = 64 * (item.scale ?? 1);
-          const rotation = item.rotation ?? 0;
-          const isSel = selected === i;
-          return (
-            <div
-              key={`${item.stickerId}-${i}`}
-              style={{
-                position: 'absolute',
-                left: `calc(${item.x * 100}% - ${size / 2}px)`,
-                top:  `calc(${item.y * 100}% - ${size / 2}px)`,
-                width: size, height: size,
-                cursor: 'grab',
-                borderRadius: 12,
-                zIndex: isSel ? 10 : 1,
-                transform: `rotate(${rotation}deg)`,
-                filter: isSel
-                  ? 'drop-shadow(0 0 8px #ec4899) drop-shadow(0 0 16px rgba(236,72,153,0.5))'
-                  : 'drop-shadow(0 2px 4px rgba(0,0,0,0.18))',
-              }}
-              onPointerDown={e => handlePlacedPointerDown(e, i)}
-            >
-              <img
-                src={sticker.imagePath} alt={sticker.name}
-                style={{ width: '100%', height: '100%', objectFit: 'contain', pointerEvents: 'none' }}
-                draggable={false}
-              />
+      {/* シール帳ページ（外枠＋内キャンバス） */}
+      <div style={{
+        flex: 1,
+        minHeight: 0,
+        background: pageColor.border,
+        borderRadius: 20,
+        padding: 10,
+        boxShadow: '0 4px 20px rgba(0,0,0,0.12), inset 0 1px 0 rgba(255,255,255,0.6)',
+        position: 'relative',
+      }}>
+        {/* ページ番号 */}
+        <div style={{
+          position: 'absolute', bottom: 14, right: 18,
+          fontSize: '0.65rem', fontWeight: 800,
+          color: pageColor.border, background: 'white',
+          borderRadius: 20, padding: '2px 8px',
+          opacity: 0.8, zIndex: 2, pointerEvents: 'none',
+        }}>
+          {pageIndex + 1}
+        </div>
+
+        {/* 内キャンバス（ドット方眼） */}
+        <div
+          ref={pageRef}
+          style={{
+            height: '100%',
+            position: 'relative',
+            background: pageColor.bg,
+            backgroundImage: `radial-gradient(circle, ${pageColor.dot} 1.2px, transparent 1.2px)`,
+            backgroundSize: '22px 22px',
+            borderRadius: 13,
+            overflow: 'hidden',
+            touchAction: 'none',
+            userSelect: 'none',
+            cursor: pickedStickerId ? 'crosshair' : 'default',
+            boxShadow: 'inset 0 2px 8px rgba(0,0,0,0.06)',
+          }}
+          onClick={handleCanvasTap}
+          onTouchStart={handleCanvasTouchStart}
+          onTouchMove={handleCanvasTouchMove}
+          onTouchEnd={handleCanvasTouchEnd}
+        >
+          {placed.map((item, i) => {
+            const sticker = stickerMap[item.stickerId];
+            if (!sticker) return null;
+            const size = 64 * (item.scale ?? 1);
+            const rotation = item.rotation ?? 0;
+            const isSel = selected === i;
+            return (
+              <div
+                key={`${item.stickerId}-${i}`}
+                style={{
+                  position: 'absolute',
+                  left: `calc(${item.x * 100}% - ${size / 2}px)`,
+                  top:  `calc(${item.y * 100}% - ${size / 2}px)`,
+                  width: size, height: size,
+                  cursor: 'grab',
+                  borderRadius: 12,
+                  zIndex: isSel ? 10 : 1,
+                  transform: `rotate(${rotation}deg)`,
+                  filter: isSel
+                    ? 'drop-shadow(0 0 8px #ec4899) drop-shadow(0 0 16px rgba(236,72,153,0.5))'
+                    : 'drop-shadow(0 2px 4px rgba(0,0,0,0.18))',
+                }}
+                onPointerDown={e => handlePlacedPointerDown(e, i)}
+              >
+                <img
+                  src={sticker.imagePath} alt={sticker.name}
+                  style={{ width: '100%', height: '100%', objectFit: 'contain', pointerEvents: 'none' }}
+                  draggable={false}
+                />
+              </div>
+            );
+          })}
+
+          {placed.length === 0 && !pickedStickerId && (
+            <div style={{
+              position: 'absolute', inset: 0,
+              display: 'flex', flexDirection: 'column',
+              alignItems: 'center', justifyContent: 'center', gap: 8,
+              color: '#d1d5db', fontWeight: 'bold', pointerEvents: 'none',
+            }}>
+              <div style={{ fontSize: '2.5rem' }}>🩷</div>
+              <div style={{ fontSize: '0.9rem' }}>下のシールをタップしてえらんでね！</div>
             </div>
-          );
-        })}
+          )}
 
-        {placed.length === 0 && !pickedStickerId && (
-          <div style={{
-            position: 'absolute', inset: 0,
-            display: 'flex', flexDirection: 'column',
-            alignItems: 'center', justifyContent: 'center', gap: 8,
-            color: '#d1d5db', fontWeight: 'bold', pointerEvents: 'none',
-          }}>
-            <div style={{ fontSize: '2.5rem' }}>🩷</div>
-            <div style={{ fontSize: '0.9rem' }}>下のシールをタップしてえらんでね！</div>
-          </div>
-        )}
-
-        {placed.length === 0 && pickedStickerId && (
-          <div style={{
-            position: 'absolute', inset: 0,
-            display: 'flex', flexDirection: 'column',
-            alignItems: 'center', justifyContent: 'center', gap: 8,
-            color: '#f59e0b', fontWeight: 'bold', pointerEvents: 'none',
-          }}>
-            <div style={{ fontSize: '2.5rem' }}>👆</div>
-            <div style={{ fontSize: '0.9rem' }}>ここをタップしてシールをはろう！</div>
-          </div>
-        )}
+          {placed.length === 0 && pickedStickerId && (
+            <div style={{
+              position: 'absolute', inset: 0,
+              display: 'flex', flexDirection: 'column',
+              alignItems: 'center', justifyContent: 'center', gap: 8,
+              color: '#f59e0b', fontWeight: 'bold', pointerEvents: 'none',
+            }}>
+              <div style={{ fontSize: '2.5rem' }}>👆</div>
+              <div style={{ fontSize: '0.9rem' }}>ここをタップしてシールをはろう！</div>
+            </div>
+          )}
+        </div>
       </div>
 
       {/* ドラッグ中ゴースト */}
@@ -359,12 +385,13 @@ export default function StickerBookPage({ pageIndex, placed, collection, onUpdat
       {/* シールトレイ */}
       <div style={{
         overflowX: 'auto',
-        display: 'flex', alignItems: 'center', gap: 8,
-        padding: '8px 12px',
+        display: 'flex', alignItems: 'center', gap: 6,
+        padding: '6px 10px',
         background: 'white',
-        borderTop: '2px solid #fbcfe8',
+        borderRadius: 14,
+        border: `2px solid ${pageColor.border}`,
         flexShrink: 0,
-        minHeight: 88,
+        minHeight: 72,
       }}>
         {collection.length === 0 ? (
           <div style={{ color: '#9ca3af', fontSize: '0.8rem', whiteSpace: 'nowrap' }}>
@@ -380,14 +407,14 @@ export default function StickerBookPage({ pageIndex, placed, collection, onUpdat
                 key={`${id}-${idx}`}
                 onClick={() => handleTrayTap(id)}
                 style={{
-                  flexShrink: 0, width: 64, height: 64,
+                  flexShrink: 0, width: 52, height: 52,
                   cursor: 'pointer',
-                  borderRadius: 12,
+                  borderRadius: 10,
                   border: isPicked ? '3px solid #f59e0b' : '3px solid transparent',
                   background: isPicked ? '#fef9c3' : 'transparent',
                   filter: 'drop-shadow(0 2px 4px rgba(0,0,0,0.15))',
                   transition: 'all 0.15s',
-                  transform: isPicked ? 'scale(1.1)' : 'scale(1)',
+                  transform: isPicked ? 'scale(1.12)' : 'scale(1)',
                 }}
               >
                 <img

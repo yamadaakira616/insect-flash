@@ -16,7 +16,7 @@ export default function StickerBookScreen({ state, onBack, onUpdatePage }) {
   return (
     <div
       style={{
-        minHeight: '100svh',
+        height: '100svh',
         display: 'flex',
         flexDirection: 'column',
         background: 'linear-gradient(180deg, #fce7f3 0%, #fdf2f8 100%)',
