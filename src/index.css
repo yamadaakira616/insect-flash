@@ -1,5 +1,11 @@
 @import "tailwindcss";
 
+/* ===== トップ画面シールフロートアニメーション ===== */
+@keyframes stickerFloat {
+  0%, 100% { transform: translateY(0px) rotate(var(--rot)); }
+  50%       { transform: translateY(-9px) rotate(var(--rot)); }
+}
+
 /* ===== シールのポップアニメーション ===== */
 @keyframes cardPop {
   0%   { transform: scale(1); }

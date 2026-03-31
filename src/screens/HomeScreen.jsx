@@ -1,6 +1,28 @@
-import ProfessorMascot from '../components/ProfessorMascot.jsx';
 import { STICKERS } from '../data/stickers.js';
 import { GACHA_COST } from '../utils/gameLogic.js';
+
+const stickerMap = Object.fromEntries(STICKERS.map(s => [s.id, s]));
+
+// トップ画面に浮かべるシール（上段・中段・下段 各5枚）
+const SHOWCASE = [
+  // 上段
+  { id: 'nm-quokka',       x: '1%',  y: '2%',  size: 68, rotate: -12, delay: '0s'   },
+  { id: 'sp-velvet-bunny', x: '22%', y: '0%',  size: 64, rotate:   7, delay: '0.4s' },
+  { id: 'nm-mendako',      x: '43%', y: '2%',  size: 66, rotate:  -5, delay: '0.8s' },
+  { id: 'nm-kitsune',      x: '64%', y: '0%',  size: 62, rotate:  14, delay: '0.2s' },
+  { id: 'bd-ghost',        x: '83%', y: '3%',  size: 60, rotate:  -8, delay: '1.1s' },
+  // 中段
+  { id: 'ss-ame-chan',     x: '0%',  y: '40%', size: 58, rotate:  11, delay: '0.6s' },
+  { id: 'mm-cream-soda',   x: '20%', y: '38%', size: 62, rotate: -14, delay: '0.9s' },
+  { id: 'ws-neko-chan',    x: '41%', y: '41%', size: 60, rotate:   6, delay: '0.1s' },
+  { id: 'sp-velvet-cat',   x: '62%', y: '38%', size: 58, rotate: -10, delay: '1.3s' },
+  { id: 'os-axolotl',      x: '82%', y: '40%', size: 56, rotate:  13, delay: '0.5s' },
+  // 下段
+  { id: 'nm-axolotl',      x: '7%',  y: '74%', size: 58, rotate:  -7, delay: '0.7s' },
+  { id: 'bd-crystal',      x: '29%', y: '72%', size: 60, rotate:   9, delay: '1.0s' },
+  { id: 'sp-puni-animals', x: '52%', y: '74%', size: 58, rotate: -11, delay: '0.3s' },
+  { id: 'nm-kappa',        x: '76%', y: '72%', size: 56, rotate:   4, delay: '1.4s' },
+];
 
 export default function HomeScreen({ state, onPlay, onEncyclopedia, onGacha, onStickerBook }) {
   const owned = state.collection.length;
@@ -23,20 +45,45 @@ export default function HomeScreen({ state, onPlay, onEncyclopedia, onGacha, onS
         🩷 かわいいシールずかん
       </h1>
 
-      {/* マスコット + ふきだし */}
-      <div className="flex flex-col items-center gap-2 my-4">
-        <ProfessorMascot size={140} mood={owned === total ? 'excited' : 'happy'} />
-        <div
-          className="rounded-2xl px-4 py-2 shadow text-sm font-bold max-w-xs text-center relative"
-          style={{ background: 'white', color: '#9d174d' }}
-        >
-          <span className="absolute -top-2 left-1/2 -translate-x-1/2 text-lg">💬</span>
-          {greeting}
-        </div>
+      {/* シールショーケース */}
+      <div style={{ position: 'relative', width: '100%', maxWidth: 420, height: 185, flexShrink: 0, margin: '8px 0' }}>
+        {SHOWCASE.map((s) => {
+          const sticker = stickerMap[s.id];
+          if (!sticker) return null;
+          return (
+            <img
+              key={s.id}
+              src={sticker.imagePath}
+              alt={sticker.name}
+              style={{
+                position: 'absolute',
+                left: s.x,
+                top: s.y,
+                width: s.size,
+                height: s.size,
+                objectFit: 'contain',
+                '--rot': `${s.rotate}deg`,
+                animation: `stickerFloat 3s ease-in-out infinite`,
+                animationDelay: s.delay,
+                filter: 'drop-shadow(0 3px 8px rgba(0,0,0,0.18))',
+                pointerEvents: 'none',
+              }}
+            />
+          );
+        })}
+      </div>
+
+      {/* ふきだし */}
+      <div
+        className="rounded-2xl px-4 py-2 shadow text-sm font-bold max-w-xs text-center relative"
+        style={{ background: 'white', color: '#9d174d', border: '2px solid #fbcfe8', flexShrink: 0 }}
+      >
+        <span className="absolute -top-2 left-1/2 -translate-x-1/2 text-lg">💬</span>
+        {greeting}
       </div>
 
       {/* シール収集進捗 */}
-      <div className="w-full max-w-sm rounded-2xl p-4 shadow mb-4"
+      <div className="w-full max-w-sm rounded-2xl p-4 shadow mb-2"
            style={{ background: 'white', border: '2px solid #fbcfe8' }}>
         <div className="flex justify-between text-sm font-bold mb-2" style={{ color: '#be185d' }}>
           <span>🩷 シールずかん</span>
@@ -52,7 +99,7 @@ export default function HomeScreen({ state, onPlay, onEncyclopedia, onGacha, onS
       </div>
 
       {/* レベル表示 */}
-      <div className="w-full max-w-sm mb-3">
+      <div className="w-full max-w-sm mb-2">
         <div className="rounded-2xl px-4 py-3 shadow flex items-center gap-3"
              style={{ background: 'white', border: '2px solid #fbcfe8' }}>
           <div className="text-3xl font-black leading-none" style={{ color: '#db2777' }}>
@@ -77,7 +124,7 @@ export default function HomeScreen({ state, onPlay, onEncyclopedia, onGacha, onS
       </div>
 
       {/* スタッツ行 */}
-      <div className="flex gap-3 w-full max-w-sm mb-4">
+      <div className="flex gap-3 w-full max-w-sm mb-3">
         {[
           { icon: '🪙', val: state.coins,      label: 'コイン' },
           { icon: '⭐', val: state.totalStars, label: 'ほし' },
