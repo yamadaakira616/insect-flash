@@ -233,6 +233,12 @@ export default function StickerBookPage({ pageIndex, placed, collection, onUpdat
     setSelected(null);
   }
 
+  // ─── Bulk scale: 全シール一括サイズ変更 ─────────────────────────────────
+  function handleBulkScale(val) {
+    if (placed.length === 0) return;
+    onUpdateRef.current(placed.map(item => ({ ...item, scale: val })));
+  }
+
   const selectedItem = selected !== null ? placed[selected] : null;
   const ghostSticker = ghostPos && dragRef.current ? stickerMap[dragRef.current.stickerId] : null;
   const pickedSticker = pickedStickerId ? stickerMap[pickedStickerId] : null;
@@ -283,14 +289,26 @@ export default function StickerBookPage({ pageIndex, placed, collection, onUpdat
 
       {/* 自動整列ボタン */}
       {placed.length > 0 && (
-        <div style={{ display: 'flex', justifyContent: 'flex-end', flexShrink: 0 }}>
+        <div style={{
+          display: 'flex', alignItems: 'center', gap: 6,
+          padding: '5px 10px', background: 'white',
+          borderRadius: 10, border: '2px solid #ede9fe', flexShrink: 0,
+        }}>
           <button onClick={handleAutoArrange} style={{
             ...btnStyle,
             background: '#ede9fe', color: '#6d28d9',
-            border: '2px solid #c4b5fd', fontSize: '0.78rem', padding: '4px 12px',
+            border: '2px solid #c4b5fd', fontSize: '0.78rem', padding: '4px 10px', flexShrink: 0,
           }}>
-            📐 じどうならべ
+            📐 ならべる
           </button>
+          <span style={{ fontSize: '0.75rem', color: '#7c3aed', fontWeight: 800, flexShrink: 0 }}>🔍</span>
+          <input
+            type="range" min={0.3} max={3.0} step={0.05}
+            defaultValue={1.0}
+            onChange={e => handleBulkScale(parseFloat(e.target.value))}
+            style={{ flex: 1, minWidth: 60, accentColor: '#7c3aed' }}
+          />
+          <span style={{ fontSize: '0.7rem', color: '#7c3aed', fontWeight: 800, flexShrink: 0 }}>まとめてサイズ</span>
         </div>
       )}
 
