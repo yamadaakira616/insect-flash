@@ -177,3 +177,10 @@ export function rollGacha() {
   const pool = STICKERS.filter(s => s.series === selectedSeries);
   return pool[Math.floor(Math.random() * pool.length)];
 }
+
+// LEGENDガチャ：special / oshiri から確定で1枚
+export function rollGachaLegend() {
+  const highRare = ['special', 'oshiri'];
+  const pool = STICKERS.filter(s => highRare.includes(s.series));
+  return pool[Math.floor(Math.random() * pool.length)];
+}

@@ -1,30 +1,31 @@
 import { useState, useEffect, useRef } from 'react';
 import Confetti from '../components/Confetti.jsx';
-import { rollGacha, DUPLICATE_COINS, SERIES } from '../data/stickers.js';
+import { rollGacha, rollGachaLegend, DUPLICATE_COINS, SERIES } from '../data/stickers.js';
 import { GACHA_COST } from '../utils/gameLogic.js';
 import { playGachaTick, playGachaSlowTick, playGachaReveal, playGachaFlash } from '../utils/sound.js';
 
 // ===== エフェクト定義 =====
-const FX_PLAIN     = 0; // 普通のフラッシュ
-const FX_CUTIN     = 1; // パチンコカットイン
-const FX_REACH     = 2; // リーチ演出
-const FX_BEAM      = 3; // 神光ビーム
-const FX_EXPLOSION = 4; // パーティクル爆発
-const FX_RAINBOW   = 5; // レインボースイープ
-const FX_COSMIC    = 6; // コズミックポータル
+const FX_PLAIN     = 0; // 普通
+const FX_CUTIN     = 1; // カットイン（まあまあレア）
+const FX_REACH     = 2; // リーチ（レア）
+const FX_BEAM      = 3; // ビーム（かなりレア）
+const FX_EXPLOSION = 4; // 爆発（超レア）
+const FX_RAINBOW   = 5; // レインボー（超超レア）
+const FX_COSMIC    = 6; // コズミック（激レア）
+const FX_LEGEND    = 7; // LEGEND確定（0.8%）★special/oshiri確定
 
 // シリーズ別エフェクト確率 [PLAIN, CUTIN, REACH, BEAM, EXPLOSION, RAINBOW, COSMIC]
+// ノーマルは滅多にエフェクトが出ない。レア度が上がるほどエフェクトが出やすい。
 const EFFECT_WEIGHTS = {
-  'normal':      [60, 20, 15,  3,  1,  1,  0],
-  'bonbon-drop': [30, 25, 25, 10,  7,  3,  0],
-  'marshmallow': [15, 20, 25, 18, 15,  6,  1],
-  'shaka-shaka': [ 5, 10, 15, 22, 25, 17,  6],
-  'water-seal':  [ 2,  5, 10, 13, 22, 28, 20],
-  'oshiri':      [ 2,  3,  5,  8, 17, 28, 37],
-  'special':     [ 1,  2,  4,  6, 12, 25, 50],
+  'normal':      [96,  2,  1,  1,  0,  0,  0],  // 4%のみ演出あり
+  'bonbon-drop': [88,  6,  4,  2,  0,  0,  0],  // 12%
+  'marshmallow': [76,  9,  9,  4,  2,  0,  0],  // 24%
+  'shaka-shaka': [52, 16, 16, 10,  5,  1,  0],  // 48%
+  'water-seal':  [28, 18, 22, 18, 10,  4,  0],  // 72%
+  'oshiri':      [12, 15, 20, 24, 18, 11,  0],  // 88%
+  'special':     [ 8, 12, 18, 24, 20, 15,  3],  // 92%（COSMICはLEGEND経由が主）
 };
 
-// サウンドマッピング
 const REVEAL_SFX = {
   'normal': 'common', 'bonbon-drop': 'rare', 'marshmallow': 'rare',
   'shaka-shaka': 'superRare', 'water-seal': 'ultra', 'oshiri': 'ultra', 'special': 'legend',
@@ -41,40 +42,33 @@ function weightedRandom(weights) {
 }
 
 function pickEffect(series) {
-  // 5% アップセットチャンス：低レアでも豪華エフェクトが出ることがある
-  if (Math.random() < 0.05) {
-    return weightedRandom([0, 0, 5, 15, 25, 30, 25]);
-  }
   return weightedRandom(EFFECT_WEIGHTS[series] ?? EFFECT_WEIGHTS['normal']);
 }
 
-// ルーレット表示シーケンス
 const ROULETTE_SEQ = [
   'normal','bonbon-drop','marshmallow','shaka-shaka','water-seal',
   'normal','bonbon-drop','marshmallow','normal','bonbon-drop','normal',
 ];
 
 const SERIES_COLORS = {
-  'normal':      { bg:'#fce7f3', text:'#9d174d', glow:'rgba(236,72,153,0.5)',   flash:'#fbcfe8' },
-  'bonbon-drop': { bg:'#f5f3ff', text:'#6d28d9', glow:'rgba(139,92,246,0.6)',   flash:'#ede9fe' },
-  'marshmallow': { bg:'#fdf4ff', text:'#86198f', glow:'rgba(168,85,247,0.7)',   flash:'#f0abfc' },
-  'shaka-shaka': { bg:'#fef3c7', text:'#d97706', glow:'rgba(245,158,11,0.9)',   flash:'#fde68a' },
-  'water-seal':  { bg:'#e0f2fe', text:'#0369a1', glow:'rgba(14,165,233,0.9)',   flash:'#bae6fd' },
-  'oshiri':      { bg:'#fff1f2', text:'#be123c', glow:'rgba(244,63,94,0.9)',    flash:'#ffe4e6' },
-  'special':     { bg:'#faf5ff', text:'#7e22ce', glow:'rgba(168,85,247,1)',     flash:'#e9d5ff' },
+  'normal':      { bg:'#fce7f3', text:'#9d174d', glow:'rgba(236,72,153,0.5)',  flash:'#fbcfe8' },
+  'bonbon-drop': { bg:'#f5f3ff', text:'#6d28d9', glow:'rgba(139,92,246,0.6)',  flash:'#ede9fe' },
+  'marshmallow': { bg:'#fdf4ff', text:'#86198f', glow:'rgba(168,85,247,0.7)',  flash:'#f0abfc' },
+  'shaka-shaka': { bg:'#fef3c7', text:'#d97706', glow:'rgba(245,158,11,0.9)',  flash:'#fde68a' },
+  'water-seal':  { bg:'#e0f2fe', text:'#0369a1', glow:'rgba(14,165,233,0.9)',  flash:'#bae6fd' },
+  'oshiri':      { bg:'#fff1f2', text:'#be123c', glow:'rgba(244,63,94,0.9)',   flash:'#ffe4e6' },
+  'special':     { bg:'#faf5ff', text:'#7e22ce', glow:'rgba(168,85,247,1)',    flash:'#e9d5ff' },
 };
 
 const SERIES_LABELS = Object.fromEntries(SERIES.map(s => [s.id, s.label]));
 
-// シリーズ別スピン時間 (ms)
 const SPIN_DURATION = {
   'normal': 1500, 'bonbon-drop': 2200, 'marshmallow': 2800,
   'shaka-shaka': 3500, 'water-seal': 4500, 'oshiri': 5000, 'special': 5500,
 };
 
-const RAINBOW = ['#ef4444','#f97316','#eab308','#22c55e','#3b82f6','#8b5cf6','#ec4899'];
+const RAINBOW_COLORS = ['#ef4444','#f97316','#eab308','#22c55e','#3b82f6','#8b5cf6','#ec4899'];
 
-// パーティクル20個の方向を生成
 function genParticles() {
   return Array.from({ length: 20 }, (_, i) => {
     const angle = (i / 20) * Math.PI * 2;
@@ -89,25 +83,29 @@ function genParticles() {
   });
 }
 
+// ===== メインコンポーネント =====
 export default function GachaScreen({ state, onBack, onPull }) {
-  const [phase, setPhase]             = useState('idle');
-  const [result, setResult]           = useState(null);
-  const [isNew, setIsNew]             = useState(false);
-  const [effect, setEffect]           = useState(FX_PLAIN);
-  const [rouletteIdx, setRouletteIdx] = useState(0);
-  const [screenFlash, setScreenFlash] = useState(false);
-  // カットイン: 0=非表示 1=外側（初期位置） 2=閉じた状態 3=開く（外へ出る）
-  const [cutinStep, setCutinStep]     = useState(0);
+  // phase: idle | legend | cutin | spinning | reach | flash | reveal | result
+  const [phase, setPhase]               = useState('idle');
+  const [result, setResult]             = useState(null);
+  const [isNew, setIsNew]               = useState(false);
+  const [effect, setEffect]             = useState(FX_PLAIN);
+  const [isLegend, setIsLegend]         = useState(false);
+  const [rouletteIdx, setRouletteIdx]   = useState(0);
+  const [screenFlash, setScreenFlash]   = useState(false);
+  // cutinStep: 0=非表示 1=外側初期位置 2=閉じた 3=外へ出る
+  const [cutinStep, setCutinStep]       = useState(0);
   const [reachPulsing, setReachPulsing] = useState(false);
-  const [particles, setParticles]     = useState([]);
-  const [shaking, setShaking]         = useState(false);
-  const [beamOn, setBeamOn]           = useState(false);
-  const [rainbowOn, setRainbowOn]     = useState(false);
-  const [cosmicAngle, setCosmicAngle] = useState(0);
+  const [particles, setParticles]       = useState([]);
+  const [shaking, setShaking]           = useState(false);
+  const [beamOn, setBeamOn]             = useState(false);
+  const [rainbowOn, setRainbowOn]       = useState(false);
+  const [cosmicAngle, setCosmicAngle]   = useState(0);
+  const [legendStep, setLegendStep]     = useState(0); // 0=暗転 1=テキスト表示
 
-  const timerRef   = useRef(null);
-  const roulRef    = useRef(null);
-  const cosmicRef  = useRef(null);
+  const timerRef  = useRef(null);
+  const roulRef   = useRef(null);
+  const cosmicRef = useRef(null);
 
   const canPull = state.coins >= GACHA_COST;
 
@@ -120,38 +118,59 @@ export default function GachaScreen({ state, onBack, onPull }) {
   // ===== ガチャスタート =====
   function handlePull() {
     if (!canPull || phase !== 'idle') return;
-    const sticker = rollGacha();
-    const fx = pickEffect(sticker.series);
+
+    // 0.8%でLEGEND確定（special/oshiri確定）
+    const legend = Math.random() < 0.008;
+    const sticker = legend ? rollGachaLegend() : rollGacha();
+    const fx = legend ? FX_LEGEND : pickEffect(sticker.series);
+
     setResult(sticker);
     setEffect(fx);
+    setIsLegend(legend);
     setParticles([]);
     setShaking(false);
     setBeamOn(false);
     setRainbowOn(false);
     setReachPulsing(false);
     setCutinStep(0);
+    setLegendStep(0);
 
-    if (fx === FX_CUTIN || fx === FX_COSMIC) {
+    if (legend) {
+      doLegend(sticker);
+    } else if (fx === FX_CUTIN || fx === FX_COSMIC) {
       doCutin(sticker, fx);
     } else {
       doSpin(sticker, fx);
     }
   }
 
+  // ===== LEGEND演出（暗転→金テキスト→カットイン→スピン→COSMIC） =====
+  function doLegend(sticker) {
+    setPhase('legend');
+    setLegendStep(0); // 暗転
+    timerRef.current = setTimeout(() => {
+      setLegendStep(1); // テキスト出現
+      timerRef.current = setTimeout(() => {
+        // LEGENDはカットイン→COSMICへ
+        doCutin(sticker, FX_LEGEND);
+      }, 2200);
+    }, 400);
+  }
+
   // ===== カットイン演出 =====
   function doCutin(sticker, fx) {
     setPhase('cutin');
-    setCutinStep(1); // パネルを外側（初期位置）にレンダリング
+    setCutinStep(1); // 外側（初期位置）でレンダリング
     timerRef.current = setTimeout(() => {
-      setCutinStep(2); // パネルを中央へスライドイン
+      setCutinStep(2); // 中央へスライドイン
       timerRef.current = setTimeout(() => {
-        setCutinStep(3); // パネルを外へスライドアウト
+        setCutinStep(3); // 外へスライドアウト
         timerRef.current = setTimeout(() => {
           setCutinStep(0);
           doSpin(sticker, fx);
         }, 500);
       }, 1300);
-    }, 50); // 初回レンダリングを待つ
+    }, 50);
   }
 
   // ===== スピン =====
@@ -167,7 +186,6 @@ export default function GachaScreen({ state, onBack, onPull }) {
       const elapsed = Date.now() - start;
       const prog = elapsed / total;
 
-      // REACHエフェクト: スピンの65%でリーチ突入
       if (fx === FX_REACH && !reachFired && prog >= 0.65) {
         reachFired = true;
         clearInterval(roulRef.current);
@@ -201,27 +219,26 @@ export default function GachaScreen({ state, onBack, onPull }) {
     roulRef.current = setTimeout(tick, speed);
   }
 
-  function findStop(series, curIdx) {
-    const fwd = ROULETTE_SEQ.findIndex((s, i) => i >= curIdx && s === series);
+  function findStop(series, cur) {
+    const fwd = ROULETTE_SEQ.findIndex((s, i) => i >= cur && s === series);
     const fallback = ROULETTE_SEQ.findIndex(s => s === series);
-    return fwd >= 0 ? fwd : fallback >= 0 ? fallback : curIdx;
+    return fwd >= 0 ? fwd : fallback >= 0 ? fallback : cur;
   }
 
-  // ===== リーチ演出 =====
-  function doReach(sticker, fx, curIdx) {
+  // ===== リーチ =====
+  function doReach(sticker, fx, cur) {
     setPhase('reach');
     setReachPulsing(true);
     let ticks = 0;
     function slowTick() {
       ticks++;
-      const ni = (curIdx + ticks) % ROULETTE_SEQ.length;
+      const ni = (cur + ticks) % ROULETTE_SEQ.length;
       setRouletteIdx(ni);
       playGachaSlowTick();
       if (ticks < 4) {
         timerRef.current = setTimeout(slowTick, 400 + ticks * 200);
       } else {
-        const fi = findStop(sticker.series, ni);
-        setRouletteIdx(fi);
+        setRouletteIdx(findStop(sticker.series, ni));
         timerRef.current = setTimeout(() => {
           setReachPulsing(false);
           doFlash(sticker, fx);
@@ -231,37 +248,36 @@ export default function GachaScreen({ state, onBack, onPull }) {
     slowTick();
   }
 
-  // ===== フラッシュ/演出 =====
+  // ===== フラッシュ/エフェクト =====
   function doFlash(sticker, fx) {
     setPhase('flash');
+    const actualFx = fx === FX_LEGEND ? FX_COSMIC : fx;
 
-    if (fx === FX_EXPLOSION) setParticles(genParticles());
-    if (fx === FX_RAINBOW)   { setRainbowOn(true); }
-    if (fx === FX_BEAM)      setBeamOn(true);
-    if (fx === FX_COSMIC)    { setBeamOn(true); startCosmicSpin(); }
-    if (fx >= FX_BEAM)       setShaking(true);
+    if (actualFx === FX_EXPLOSION) setParticles(genParticles());
+    if (actualFx === FX_RAINBOW)   setRainbowOn(true);
+    if (actualFx === FX_BEAM || actualFx === FX_COSMIC) setBeamOn(true);
+    if (actualFx === FX_COSMIC)    startCosmicSpin();
+    if (actualFx >= FX_BEAM)       setShaking(true);
 
-    const flashCounts = [1, 3, 4, 6, 0, 0, 0]; // PLAIN=1, CUTIN=3, REACH=4, BEAM=6, 以降は独自演出
-    const maxFlash = flashCounts[fx] ?? 1;
+    const flashCounts = [1, 3, 4, 6, 0, 0, 0];
+    const maxFlash = flashCounts[actualFx] ?? 1;
 
     if (maxFlash === 0) {
-      // レインボー・爆発・コズミックは独自タイミング
-      const holdMs = fx === FX_RAINBOW ? 1400 : fx === FX_EXPLOSION ? 700 : 500;
-      timerRef.current = setTimeout(() => doReveal(sticker, fx), holdMs);
+      const holdMs = actualFx === FX_RAINBOW ? 1400 : actualFx === FX_EXPLOSION ? 700 : 500;
+      timerRef.current = setTimeout(() => doReveal(sticker, actualFx), holdMs);
       return;
     }
 
     let count = 0;
-    const interval = 110;
     function step() {
       setScreenFlash(f => !f);
       playGachaFlash();
       count++;
       if (count < maxFlash * 2) {
-        timerRef.current = setTimeout(step, interval);
+        timerRef.current = setTimeout(step, 110);
       } else {
         setScreenFlash(false);
-        doReveal(sticker, fx);
+        doReveal(sticker, actualFx);
       }
     }
     step();
@@ -291,78 +307,150 @@ export default function GachaScreen({ state, onBack, onPull }) {
     }, 900);
   }
 
-  // ===== 再引き時のリセット =====
+  // ===== リセット =====
   function resetToIdle() {
     setPhase('idle');
     setResult(null);
     setIsNew(false);
+    setIsLegend(false);
     setParticles([]);
     setShaking(false);
     setBeamOn(false);
     setRainbowOn(false);
     setReachPulsing(false);
     setCutinStep(0);
+    setLegendStep(0);
     setScreenFlash(false);
   }
 
-  // ===== 表示用データ =====
-  const currentSeries = ROULETTE_SEQ[rouletteIdx % ROULETTE_SEQ.length];
+  // ===== 描画用データ =====
   const colors = result ? (SERIES_COLORS[result.series] ?? SERIES_COLORS.normal) : SERIES_COLORS.normal;
   const isHighRare = result && ['water-seal','oshiri','special','shaka-shaka'].includes(result.series);
 
   const bgColor = phase === 'result'
     ? `linear-gradient(180deg, ${colors.bg} 0%, #fdf2f8 100%)`
-    : effect === FX_COSMIC
+    : phase === 'legend'
+    ? 'linear-gradient(180deg,#000000 0%,#0a0020 100%)'
+    : effect === FX_COSMIC || effect === FX_LEGEND
     ? 'linear-gradient(180deg,#070718 0%,#120830 50%,#070718 100%)'
     : 'linear-gradient(180deg,#2d0a3e 0%,#4a1260 50%,#2d0a3e 100%)';
 
-  // カットインパネルのtransform
-  const cutinInLeft  = cutinStep === 2 ? 'translateX(0)'    : 'translateX(-101%)';
-  const cutinInRight = cutinStep === 2 ? 'translateX(0)'    : 'translateX(101%)';
-  const cutinTrans   = cutinStep === 1 ? 'none' : 'transform 0.4s cubic-bezier(0.25,0.46,0.45,0.94)';
+  const cutinLeft  = cutinStep === 2 ? 'translateX(0)' : 'translateX(-101%)';
+  const cutinRight = cutinStep === 2 ? 'translateX(0)' : 'translateX(101%)';
+  const cutinTrans = cutinStep === 1 ? 'none' : 'transform 0.4s cubic-bezier(0.25,0.46,0.45,0.94)';
 
   return (
     <div
       className={`min-h-screen flex flex-col items-center relative overflow-hidden${shaking ? ' gacha-shake' : ''}`}
       style={{ background: bgColor, transition: 'background 0.8s ease' }}
     >
+
+      {/* ===== LEGEND 暗転演出 ===== */}
+      {phase === 'legend' && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center"
+             style={{ background: 'rgba(0,0,0,0.97)' }}>
+          {legendStep === 0 && (
+            <div style={{ animation: 'legendFadeIn 0.5s ease forwards' }}>
+              <div style={{ fontSize: '1.2rem', color: '#888', fontWeight: 700, textAlign: 'center', letterSpacing: '0.3em' }}>
+                ✦ ✦ ✦
+              </div>
+            </div>
+          )}
+          {legendStep === 1 && (
+            <div className="flex flex-col items-center gap-6"
+                 style={{ animation: 'legendTextIn 0.6s cubic-bezier(0.175,0.885,0.32,1.275) forwards' }}>
+              {/* 星の装飾 */}
+              <div style={{ display: 'flex', gap: 12 }}>
+                {['✦','★','✦','★','✦'].map((s, i) => (
+                  <span key={i} style={{
+                    fontSize: '1.4rem', color: 'gold',
+                    filter: 'drop-shadow(0 0 8px gold)',
+                    animation: `legendStar 0.8s ease ${i * 0.1}s infinite alternate`,
+                  }}>{s}</span>
+                ))}
+              </div>
+              {/* LEGENDテキスト */}
+              <div style={{
+                fontSize: '3.5rem', fontWeight: 900, color: 'gold',
+                textShadow: '0 0 20px gold, 0 0 60px gold, 0 0 120px rgba(255,200,0,0.5)',
+                letterSpacing: '0.12em',
+                WebkitTextStroke: '1px #ff8c00',
+                animation: 'legendGlow 1s ease-in-out infinite alternate',
+              }}>LEGEND</div>
+              {/* サブテキスト */}
+              <div style={{
+                fontSize: '1rem', color: '#fbbf24', fontWeight: 700,
+                letterSpacing: '0.2em',
+                animation: 'legendPulse 0.7s ease-in-out infinite',
+              }}>★ 超大当たり確定 ★</div>
+              {/* 流れ星 */}
+              {[...Array(6)].map((_, i) => (
+                <div key={i} style={{
+                  position: 'absolute',
+                  width: 2, height: 60,
+                  background: 'linear-gradient(180deg,transparent,gold,transparent)',
+                  left: `${10 + i * 16}%`,
+                  top: '-10%',
+                  animation: `legendStar2 ${1.2 + i * 0.2}s linear ${i * 0.3}s infinite`,
+                  transform: 'rotate(15deg)',
+                }}/>
+              ))}
+            </div>
+          )}
+        </div>
+      )}
+
       {/* ===== カットインパネル ===== */}
       {cutinStep > 0 && (
         <>
-          {/* 左パネル */}
           <div className="fixed inset-y-0 left-0 z-40 pointer-events-none flex items-center justify-end pr-5"
                style={{
                  width: '50%',
-                 background: 'linear-gradient(135deg,#0a001a,#2a005a)',
-                 transform: cutinInLeft,
+                 background: isLegend
+                   ? 'linear-gradient(135deg,#000000,#1a0040)'
+                   : 'linear-gradient(135deg,#0a001a,#2a005a)',
+                 transform: cutinLeft,
                  transition: cutinTrans,
-                 borderRight: '3px solid gold',
-                 boxShadow: '4px 0 30px rgba(255,215,0,0.4)',
+                 borderRight: `3px solid ${isLegend ? 'gold' : '#a855f7'}`,
+                 boxShadow: `4px 0 30px ${isLegend ? 'rgba(255,215,0,0.5)' : 'rgba(168,85,247,0.4)'}`,
                }}>
-            <span style={{ fontSize: 64, filter: 'drop-shadow(0 0 20px gold)' }}>⚡</span>
+            <span style={{
+              fontSize: 64,
+              filter: `drop-shadow(0 0 20px ${isLegend ? 'gold' : '#a855f7'})`,
+            }}>{isLegend ? '👑' : '⚡'}</span>
           </div>
-          {/* 右パネル */}
           <div className="fixed inset-y-0 right-0 z-40 pointer-events-none flex items-center justify-start pl-5"
                style={{
                  width: '50%',
-                 background: 'linear-gradient(225deg,#0a001a,#2a005a)',
-                 transform: cutinInRight,
+                 background: isLegend
+                   ? 'linear-gradient(225deg,#000000,#1a0040)'
+                   : 'linear-gradient(225deg,#0a001a,#2a005a)',
+                 transform: cutinRight,
                  transition: cutinTrans,
-                 borderLeft: '3px solid gold',
-                 boxShadow: '-4px 0 30px rgba(255,215,0,0.4)',
+                 borderLeft: `3px solid ${isLegend ? 'gold' : '#a855f7'}`,
+                 boxShadow: `-4px 0 30px ${isLegend ? 'rgba(255,215,0,0.5)' : 'rgba(168,85,247,0.4)'}`,
                }}>
-            <span style={{ fontSize: 64, filter: 'drop-shadow(0 0 20px gold)', transform: 'scaleX(-1)', display:'inline-block' }}>⚡</span>
+            <span style={{
+              fontSize: 64,
+              filter: `drop-shadow(0 0 20px ${isLegend ? 'gold' : '#a855f7'})`,
+              transform: 'scaleX(-1)', display: 'inline-block',
+            }}>{isLegend ? '👑' : '⚡'}</span>
           </div>
-          {/* カットインテキスト（閉じた状態） */}
           {cutinStep === 2 && (
             <div className="fixed inset-0 z-50 flex items-center justify-center pointer-events-none">
               <div style={{
-                fontSize: '2.8rem', fontWeight: 900, color: 'gold',
-                textShadow: '0 0 20px gold, 0 0 60px gold, 0 0 120px rgba(255,200,0,0.4)',
+                fontSize: isLegend ? '3rem' : '2.8rem',
+                fontWeight: 900,
+                color: isLegend ? 'gold' : '#e879f9',
+                textShadow: isLegend
+                  ? '0 0 20px gold, 0 0 60px gold, 0 0 120px rgba(255,200,0,0.4)'
+                  : '0 0 20px #a855f7, 0 0 60px #a855f7',
                 animation: 'cutinTextAnim 1s ease-in-out infinite',
                 letterSpacing: '0.08em',
-                WebkitTextStroke: '1px #ff8c00',
-              }}>🎰 カットイン！！</div>
+                WebkitTextStroke: isLegend ? '1px #ff8c00' : 'none',
+              }}>
+                {isLegend ? '👑 LEGEND PULL！！' : '🎰 カットイン！！'}
+              </div>
             </div>
           )}
         </>
@@ -371,11 +459,9 @@ export default function GachaScreen({ state, onBack, onPull }) {
       {/* ===== レインボーオーバーレイ ===== */}
       {rainbowOn && (
         <div className="fixed inset-0 z-30 pointer-events-none overflow-hidden flex">
-          {RAINBOW.map((color, i) => (
+          {RAINBOW_COLORS.map((color, i) => (
             <div key={i} style={{
-              flex: 1,
-              background: color,
-              opacity: 0.75,
+              flex: 1, background: color, opacity: 0.75,
               animation: `rbStripe 0.35s ease ${i * 0.06}s both`,
             }}/>
           ))}
@@ -393,39 +479,35 @@ export default function GachaScreen({ state, onBack, onPull }) {
       {beamOn && !rainbowOn && (
         <div className="fixed inset-0 z-20 pointer-events-none flex justify-center">
           <div style={{
-            width: 100,
-            background: `linear-gradient(180deg,transparent 0%,${colors.flash} 25%,rgba(255,255,255,0.95) 50%,${colors.flash} 75%,transparent 100%)`,
+            width: isLegend ? 140 : 100,
+            background: isLegend
+              ? 'linear-gradient(180deg,transparent 0%,rgba(255,215,0,0.4) 25%,rgba(255,255,255,0.95) 50%,rgba(255,215,0,0.4) 75%,transparent 100%)'
+              : `linear-gradient(180deg,transparent 0%,${colors.flash} 25%,rgba(255,255,255,0.95) 50%,${colors.flash} 75%,transparent 100%)`,
             animation: 'beamPulseAnim 0.3s ease-in-out infinite alternate',
-          }}/>
-          {/* 横放射 */}
-          <div style={{
-            position: 'absolute', top: '50%', left: 0, right: 0, height: 3,
-            background: `linear-gradient(90deg,transparent,${colors.glow},transparent)`,
-            transform: 'translateY(-50%)',
-            animation: 'beamHorizAnim 0.4s ease-in-out infinite alternate',
           }}/>
         </div>
       )}
 
       {/* ===== コズミックリング ===== */}
-      {effect === FX_COSMIC && (phase === 'flash' || phase === 'reveal') && (
+      {(effect === FX_COSMIC || effect === FX_LEGEND) && (phase === 'flash' || phase === 'reveal') && (
         <div className="fixed inset-0 z-10 pointer-events-none flex items-center justify-center">
-          {[{ r:130,c:'#a855f7' },{ r:190,c:'#6366f1' },{ r:250,c:'#3b82f6' },{ r:310,c:'#06b6d4' }].map(({ r, c }, i) => (
+          {[{ r:130,c:'#a855f7' },{ r:190,c:'#6366f1' },{ r:250,c:'#3b82f6' },{ r:310,c:'gold' }].map(({ r, c }, i) => (
             <div key={i} style={{
               position: 'absolute',
               width: r * 2, height: r * 2, borderRadius: '50%',
-              border: `${2.5 - i * 0.4}px solid ${c}`,
+              border: `${2.5 - i * 0.4}px solid ${isLegend && i === 3 ? 'gold' : c}`,
               opacity: 0.7 - i * 0.1,
               transform: `rotate(${cosmicAngle * (i % 2 === 0 ? 1 : -1) + i * 45}deg)`,
-              boxShadow: `0 0 15px ${c}, inset 0 0 15px ${c}22`,
+              boxShadow: `0 0 15px ${c}`,
             }}/>
           ))}
-          {/* 射出星 */}
           {[...Array(10)].map((_, i) => (
             <div key={i} style={{
               position: 'absolute',
-              width: 2, height: 16,
-              background: 'linear-gradient(180deg,white,transparent)',
+              width: 2, height: isLegend ? 24 : 16,
+              background: isLegend
+                ? 'linear-gradient(180deg,gold,transparent)'
+                : 'linear-gradient(180deg,white,transparent)',
               left: `${8 + i * 9}%`, top: '-3%',
               animation: `starShootAnim 0.9s linear ${i * 0.12}s infinite`,
             }}/>
@@ -435,7 +517,8 @@ export default function GachaScreen({ state, onBack, onPull }) {
 
       {/* ===== パーティクル爆発 ===== */}
       {particles.length > 0 && (
-        <div className="fixed inset-0 z-30 pointer-events-none" style={{ display:'flex', alignItems:'center', justifyContent:'center' }}>
+        <div className="fixed inset-0 z-30 pointer-events-none"
+             style={{ display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
           {particles.map(p => (
             <div key={p.id} style={{
               position: 'absolute',
@@ -460,10 +543,10 @@ export default function GachaScreen({ state, onBack, onPull }) {
       {/* ===== 画面フラッシュ ===== */}
       {screenFlash && (
         <div className="fixed inset-0 z-50 pointer-events-none"
-             style={{ background: colors.flash, opacity: 0.85 }}/>
+             style={{ background: isLegend ? 'rgba(255,215,0,0.5)' : colors.flash, opacity: 0.85 }}/>
       )}
 
-      {/* ===== 星パーティクル背景（スピン中） ===== */}
+      {/* ===== 背景星パーティクル ===== */}
       {(phase === 'spinning' || phase === 'flash' || phase === 'reach') && (
         <div className="fixed inset-0 pointer-events-none z-0 overflow-hidden">
           {[...Array(24)].map((_, i) => (
@@ -491,7 +574,7 @@ export default function GachaScreen({ state, onBack, onPull }) {
         <span className="ml-auto font-bold" style={{ color: phase === 'result' ? '#9d174d' : '#fce7f3' }}>🪙 {state.coins}</span>
       </div>
 
-      {/* ===== IDLE フェーズ ===== */}
+      {/* ===== IDLE ===== */}
       {phase === 'idle' && (
         <div className="flex flex-col items-center flex-1 justify-center gap-8 z-10">
           <div className="relative">
@@ -523,7 +606,6 @@ export default function GachaScreen({ state, onBack, onPull }) {
               ))}
             </svg>
           </div>
-
           <button
             onClick={handlePull}
             disabled={!canPull}
@@ -531,30 +613,26 @@ export default function GachaScreen({ state, onBack, onPull }) {
             style={{
               background: canPull ? 'linear-gradient(135deg,#fb7185,#f43f5e,#e11d48)' : '#9ca3af',
               boxShadow: canPull ? '0 8px 32px rgba(244,63,94,0.6), 0 0 0 3px #f9a8d4' : 'none',
-            }}
-          >
+            }}>
             🎀 ガチャを引く！
             <div className="text-sm font-normal opacity-80">{GACHA_COST}コイン</div>
           </button>
-
           {!canPull && (
             <p className="text-yellow-300 font-bold text-sm">コインが足りません（あと{GACHA_COST - state.coins}コイン）</p>
           )}
         </div>
       )}
 
-      {/* ===== CUTIN フェーズ（カットイン中） ===== */}
+      {/* ===== CUTIN フェーズ ===== */}
       {phase === 'cutin' && (
         <div className="flex flex-col items-center flex-1 justify-center z-10">
           <div style={{ fontSize: '5rem', animation: 'gachaSpin 0.5s linear infinite' }}>🎰</div>
         </div>
       )}
 
-      {/* ===== SPINNING / REACH / FLASH フェーズ ===== */}
+      {/* ===== SPINNING / REACH / FLASH ===== */}
       {(phase === 'spinning' || phase === 'reach' || phase === 'flash') && (
         <div className="flex flex-col items-center flex-1 justify-center gap-6 z-10 w-full px-4">
-
-          {/* リーチテキスト */}
           {phase === 'reach' && (
             <div style={{
               fontSize: '2.8rem', fontWeight: 900, color: '#fbbf24',
@@ -563,15 +641,9 @@ export default function GachaScreen({ state, onBack, onPull }) {
               letterSpacing: '0.05em',
             }}>⚡ REACH！！</div>
           )}
-
           <div className="font-black text-2xl text-white" style={{ opacity: 0.9 }}>
-            {phase === 'reach'
-              ? '💫 もしかして…！？'
-              : phase === 'flash'
-              ? '💕 シールが出るよ！💕'
-              : '🎀 ガチャ中...'}
+            {phase === 'reach' ? '💫 もしかして…！？' : phase === 'flash' ? '💕 シールが出るよ！💕' : '🎀 ガチャ中...'}
           </div>
-
           {/* ルーレット */}
           <div className="relative w-80 overflow-hidden rounded-3xl border-4"
                style={{
@@ -588,8 +660,7 @@ export default function GachaScreen({ state, onBack, onPull }) {
               <div className="flex flex-col items-center gap-2">
                 {ROULETTE_SEQ.map((s, i) => {
                   const active = i === rouletteIdx % ROULETTE_SEQ.length;
-                  const diff = Math.abs(i - rouletteIdx % ROULETTE_SEQ.length);
-                  if (diff > 1) return null;
+                  if (Math.abs(i - rouletteIdx % ROULETTE_SEQ.length) > 1) return null;
                   const sc = SERIES_COLORS[s] ?? SERIES_COLORS.normal;
                   return (
                     <div key={i}
@@ -608,42 +679,56 @@ export default function GachaScreen({ state, onBack, onPull }) {
               </div>
             </div>
           </div>
-
-          {/* カプセルアイコン */}
           <div style={{
             fontSize: '5rem',
-            animation: phase === 'reach'
-              ? 'bounceSlow 1.2s ease-in-out infinite'
-              : 'bounceKf 0.7s ease-in-out infinite',
+            animation: phase === 'reach' ? 'bounceSlow 1.2s ease-in-out infinite' : 'bounceKf 0.7s ease-in-out infinite',
           }}>🎀</div>
         </div>
       )}
 
-      {/* ===== REVEAL フェーズ ===== */}
+      {/* ===== REVEAL ===== */}
       {phase === 'reveal' && result && (
         <div className="flex flex-col items-center flex-1 justify-center gap-6 z-10">
-          <div style={{ fontSize: '4rem', animation: 'gachaSpin 0.4s linear infinite' }}>🌟</div>
+          <div style={{ fontSize: '4rem', animation: 'gachaSpin 0.4s linear infinite' }}>
+            {isLegend ? '👑' : '🌟'}
+          </div>
           <div className="font-black text-4xl"
-               style={{ color: colors.text, animation: 'pulseAnim 0.45s ease-in-out infinite' }}>
-            {SERIES_LABELS[result.series]}
+               style={{ color: isLegend ? 'gold' : colors.text, animation: 'pulseAnim 0.45s ease-in-out infinite' }}>
+            {isLegend ? '★ LEGEND ★' : SERIES_LABELS[result.series]}
           </div>
           <div className="w-40 h-40 rounded-3xl" style={{
             background: colors.bg,
-            boxShadow: `0 0 40px ${colors.glow}, 0 0 80px ${colors.glow}`,
+            boxShadow: isLegend
+              ? '0 0 40px gold, 0 0 80px rgba(255,215,0,0.5)'
+              : `0 0 40px ${colors.glow}, 0 0 80px ${colors.glow}`,
             animation: 'pulseAnim 0.4s ease-in-out infinite',
           }}/>
         </div>
       )}
 
-      {/* ===== RESULT フェーズ ===== */}
+      {/* ===== RESULT ===== */}
       {phase === 'result' && result && (
         <div className="flex flex-col items-center flex-1 gap-4 px-4 pt-2 pb-6 z-10 w-full max-w-sm mx-auto">
+
+          {/* LEGENDバナー */}
+          {isLegend && (
+            <div className="w-full text-center py-2 rounded-2xl font-black text-lg"
+                 style={{
+                   background: 'linear-gradient(135deg,#1a0040,#3d0080)',
+                   color: 'gold',
+                   boxShadow: '0 0 20px rgba(255,215,0,0.5)',
+                   letterSpacing: '0.1em',
+                   animation: 'scaleInAnim 0.4s cubic-bezier(0.175,0.885,0.32,1.275)',
+                 }}>
+              👑 LEGEND PULL 👑
+            </div>
+          )}
 
           {/* レアリティバナー */}
           <div className="w-full text-center py-3 rounded-2xl font-black text-2xl"
                style={{
                  background: colors.bg, color: colors.text,
-                 boxShadow: `0 0 20px ${colors.glow}`,
+                 boxShadow: isLegend ? `0 0 30px gold, 0 0 20px ${colors.glow}` : `0 0 20px ${colors.glow}`,
                  animation: 'scaleInAnim 0.4s cubic-bezier(0.175,0.885,0.32,1.275)',
                }}>
             {SERIES_LABELS[result.series]}
@@ -652,14 +737,17 @@ export default function GachaScreen({ state, onBack, onPull }) {
           {/* ハイレア装飾 */}
           {isHighRare && (
             <div className="absolute inset-0 pointer-events-none z-0 overflow-hidden">
-              {[...Array(8)].map((_, i) => (
+              {[...Array(isLegend ? 12 : 8)].map((_, i) => (
                 <div key={i} className="absolute"
                      style={{
-                       left: `${10 + i * 12}%`, top: `${20 + (i % 3) * 25}%`,
+                       left: `${10 + i * (isLegend ? 8 : 12)}%`,
+                       top: `${20 + (i % 3) * 25}%`,
                        fontSize: '1.8rem',
                        animation: `pingKf ${1 + i * 0.2}s cubic-bezier(0,0,0.2,1) ${i * 0.1}s infinite`,
                      }}>
-                  {['⭐','✨','🌟','💫'][i % 4]}
+                  {isLegend
+                    ? ['👑','✨','⭐','💎','🌟','💫'][i % 6]
+                    : ['⭐','✨','🌟','💫'][i % 4]}
                 </div>
               ))}
             </div>
@@ -671,12 +759,16 @@ export default function GachaScreen({ state, onBack, onPull }) {
             {isHighRare && (
               <div className="absolute inset-0 rounded-3xl"
                    style={{
-                     background: colors.glow, filter: 'blur(18px)',
-                     transform: 'scale(1.12)', animation: 'pulseAnim 1.2s ease-in-out infinite',
+                     background: isLegend ? 'rgba(255,215,0,0.4)' : colors.glow,
+                     filter: 'blur(18px)', transform: 'scale(1.12)',
+                     animation: 'pulseAnim 1.2s ease-in-out infinite',
                    }}/>
             )}
             <div className="rounded-3xl overflow-hidden shadow-xl"
-                 style={{ width: 160, height: 160, background: colors.bg }}>
+                 style={{
+                   width: 160, height: 160, background: colors.bg,
+                   boxShadow: isLegend ? '0 0 0 3px gold' : 'none',
+                 }}>
               <img src={result.imagePath} alt={result.name}
                    style={{ width: '100%', height: '100%', objectFit: 'contain' }}/>
             </div>
@@ -685,7 +777,6 @@ export default function GachaScreen({ state, onBack, onPull }) {
           <h3 className="text-2xl font-black text-center">{result.name}</h3>
           <p className="text-sm text-gray-500">{SERIES_LABELS[result.series]}</p>
 
-          {/* 入手結果 */}
           {isNew ? (
             <div className="w-full bg-green-50 border-2 border-green-400 rounded-2xl p-4 text-center"
                  style={{ animation: 'slideUpAnim 0.4s ease 0.2s both' }}>
@@ -702,26 +793,22 @@ export default function GachaScreen({ state, onBack, onPull }) {
             </div>
           )}
 
-          {/* アクションボタン */}
           <div className="w-full flex flex-col gap-2 mt-2">
             {state.coins >= GACHA_COST ? (
-              <button
-                onClick={resetToIdle}
-                className="w-full py-4 rounded-2xl text-white font-black text-lg active:scale-95 transition-transform"
-                style={{ background: 'linear-gradient(135deg,#f472b6,#ec4899)', boxShadow: '0 4px 20px rgba(236,72,153,0.5)' }}>
+              <button onClick={resetToIdle}
+                      className="w-full py-4 rounded-2xl text-white font-black text-lg active:scale-95 transition-transform"
+                      style={{ background: 'linear-gradient(135deg,#f472b6,#ec4899)', boxShadow: '0 4px 20px rgba(236,72,153,0.5)' }}>
                 🎀 もう一度引く！
               </button>
             ) : (
-              <button
-                onClick={onBack}
-                className="w-full py-4 rounded-2xl text-white font-black text-lg active:scale-95 transition-transform"
-                style={{ background: 'linear-gradient(135deg,#f97316,#ea580c)' }}>
+              <button onClick={onBack}
+                      className="w-full py-4 rounded-2xl text-white font-black text-lg active:scale-95 transition-transform"
+                      style={{ background: 'linear-gradient(135deg,#f97316,#ea580c)' }}>
                 コインをためよう！
               </button>
             )}
-            <button
-              onClick={onBack}
-              className="w-full py-3 rounded-xl font-bold text-gray-600 bg-gray-100 active:scale-95 transition-transform">
+            <button onClick={onBack}
+                    className="w-full py-3 rounded-xl font-bold text-gray-600 bg-gray-100 active:scale-95 transition-transform">
               ホームにもどる
             </button>
           </div>
@@ -729,7 +816,6 @@ export default function GachaScreen({ state, onBack, onPull }) {
       )}
 
       <style>{`
-        /* ===== ガチャエフェクト用ローカルアニメーション ===== */
         @keyframes scaleInAnim {
           from { transform: scale(0.5); opacity: 0; }
           to   { transform: scale(1);   opacity: 1; }
@@ -743,6 +829,29 @@ export default function GachaScreen({ state, onBack, onPull }) {
         @keyframes slideUpAnim {
           from { transform: translateY(20px); opacity: 0; }
           to   { transform: translateY(0);    opacity: 1; }
+        }
+        @keyframes legendFadeIn {
+          from { opacity: 0; } to { opacity: 1; }
+        }
+        @keyframes legendTextIn {
+          from { transform: scale(0.4) translateY(30px); opacity: 0; }
+          to   { transform: scale(1) translateY(0); opacity: 1; }
+        }
+        @keyframes legendGlow {
+          from { text-shadow: 0 0 20px gold, 0 0 40px gold; }
+          to   { text-shadow: 0 0 30px gold, 0 0 80px gold, 0 0 150px rgba(255,200,0,0.4); }
+        }
+        @keyframes legendPulse {
+          0%,100% { opacity: 1; transform: scale(1); }
+          50%     { opacity: 0.7; transform: scale(1.05); }
+        }
+        @keyframes legendStar {
+          from { opacity: 0.5; transform: scale(0.8); }
+          to   { opacity: 1;   transform: scale(1.2); }
+        }
+        @keyframes legendStar2 {
+          from { transform: translateY(-20px) rotate(15deg); opacity: 1; }
+          to   { transform: translateY(110vh) rotate(15deg); opacity: 0; }
         }
         @keyframes cutinTextAnim {
           0%,100% { opacity: 1; transform: scale(1); }
@@ -760,17 +869,13 @@ export default function GachaScreen({ state, onBack, onPull }) {
           from { opacity: 0.45; width: 80px; }
           to   { opacity: 0.9;  width: 150px; }
         }
-        @keyframes beamHorizAnim {
-          from { opacity: 0.3; }
-          to   { opacity: 0.8; }
-        }
         @keyframes starShootAnim {
           from { transform: translateY(-20px); opacity: 1; }
           to   { transform: translateY(110vh); opacity: 0; }
         }
         @keyframes reachPulseAnim {
-          0%,100% { transform: scale(1);    opacity: 1;   }
-          50%     { transform: scale(1.1);  opacity: 0.8; }
+          0%,100% { transform: scale(1);   opacity: 1; }
+          50%     { transform: scale(1.1); opacity: 0.8; }
         }
         @keyframes gachaSpin {
           from { transform: rotate(0deg);   }
@@ -812,16 +917,16 @@ export default function GachaScreen({ state, onBack, onPull }) {
           to   { transform: scale(1);   opacity: 1; }
         }
         @keyframes gacha-shake-kf {
-          0%,100% { transform: translate(0, 0)    }
-          10%     { transform: translate(-6px, 3px)  }
-          20%     { transform: translate( 6px,-3px)  }
-          30%     { transform: translate(-4px, 5px)  }
-          40%     { transform: translate( 4px,-5px)  }
-          50%     { transform: translate(-6px, 2px)  }
-          60%     { transform: translate( 6px,-2px)  }
-          70%     { transform: translate(-3px, 4px)  }
-          80%     { transform: translate( 3px,-4px)  }
-          90%     { transform: translate(-4px, 2px)  }
+          0%,100% { transform: translate(0,0) }
+          10%     { transform: translate(-6px,3px) }
+          20%     { transform: translate(6px,-3px) }
+          30%     { transform: translate(-4px,5px) }
+          40%     { transform: translate(4px,-5px) }
+          50%     { transform: translate(-6px,2px) }
+          60%     { transform: translate(6px,-2px) }
+          70%     { transform: translate(-3px,4px) }
+          80%     { transform: translate(3px,-4px) }
+          90%     { transform: translate(-4px,2px) }
         }
         .gacha-shake {
           animation: gacha-shake-kf 0.12s linear infinite;
