@@ -251,22 +251,26 @@ export default function StickerBookPage({ pageIndex, placed, collection, onUpdat
       {selectedItem && (
         <div style={{
           display: 'flex', alignItems: 'center', gap: 6,
-          padding: '5px 10px', background: 'white',
-          borderRadius: 10, border: '2px solid #fbcfe8', flexShrink: 0,
+          padding: '6px 10px',
+          background: 'rgba(255,255,255,0.85)',
+          backdropFilter: 'blur(12px)',
+          WebkitBackdropFilter: 'blur(12px)',
+          borderRadius: 12,
+          border: '1.5px solid var(--pink-200)',
+          boxShadow: 'var(--shadow-sm)',
+          flexShrink: 0,
         }}>
-          <span style={{ fontSize: '0.75rem', color: '#ec4899', fontWeight: 800 }}>🔍</span>
+          <span style={{ fontSize: '0.7rem', color: 'var(--pink-400)', fontWeight: 800, flexShrink: 0 }}>サイズ</span>
           <input
             type="range" min={0.3} max={3.0} step={0.05}
             value={selectedItem.scale ?? 1.0}
             onChange={e => handleScaleChange(parseFloat(e.target.value))}
-            style={{ flex: 1, minWidth: 60, accentColor: '#ec4899' }}
+            style={{ flex: 1, minWidth: 50, accentColor: 'var(--pink-500)', cursor: 'pointer' }}
           />
           <button onClick={() => handleRotate(-15)} style={btnStyle}>↺</button>
           <button onClick={() => handleRotate(15)} style={btnStyle}>↻</button>
-          <button onClick={handleDeleteSelected}
-            style={{ ...btnStyle, background: '#fce7f3', color: '#9d174d' }}>🗑️</button>
-          <button onClick={() => setSelected(null)}
-            style={{ ...btnStyle, background: '#f3f4f6', color: '#6b7280' }}>✕</button>
+          <button onClick={handleDeleteSelected} style={{ ...btnStyle, background: '#fce7f3', color: '#9d174d' }}>🗑️</button>
+          <button onClick={() => setSelected(null)} style={{ ...btnStyle, background: '#f3f4f6', color: '#9ca3af' }}>✕</button>
         </div>
       )}
 
@@ -274,41 +278,55 @@ export default function StickerBookPage({ pageIndex, placed, collection, onUpdat
       {pickedSticker && (
         <div style={{
           display: 'flex', alignItems: 'center', gap: 8,
-          padding: '6px 12px', background: '#fef3c7',
-          borderRadius: 10, border: '2px solid #fbbf24', flexShrink: 0,
+          padding: '6px 12px',
+          background: 'rgba(254,249,195,0.9)',
+          backdropFilter: 'blur(8px)',
+          WebkitBackdropFilter: 'blur(8px)',
+          borderRadius: 12,
+          border: '1.5px solid #fbbf24',
+          boxShadow: '0 2px 8px rgba(251,191,36,0.2)',
+          flexShrink: 0,
         }}>
           <img src={pickedSticker.imagePath} alt={pickedSticker.name}
-            style={{ width: 32, height: 32, objectFit: 'contain' }} />
-          <span style={{ fontSize: '0.8rem', fontWeight: 800, color: '#92400e' }}>
-            「{pickedSticker.name}」— シール帳をタップしてはろう！
+            style={{ width: 30, height: 30, objectFit: 'contain' }} />
+          <span style={{ fontSize: '0.75rem', fontWeight: 800, color: '#92400e', flex: 1 }}>
+            「{pickedSticker.name}」をタップしてはろう！
           </span>
           <button onClick={() => setPickedStickerId(null)}
-            style={{ ...btnStyle, background: '#fef3c7', color: '#92400e', marginLeft: 'auto' }}>✕</button>
+            style={{ ...btnStyle, background: 'transparent', color: '#b45309' }}>✕</button>
         </div>
       )}
 
-      {/* 自動整列ボタン */}
+      {/* ツールバー（整列＋まとめてサイズ） */}
       {placed.length > 0 && (
         <div style={{
           display: 'flex', alignItems: 'center', gap: 6,
-          padding: '5px 10px', background: 'white',
-          borderRadius: 10, border: '2px solid #ede9fe', flexShrink: 0,
+          padding: '6px 10px',
+          background: 'rgba(255,255,255,0.85)',
+          backdropFilter: 'blur(12px)',
+          WebkitBackdropFilter: 'blur(12px)',
+          borderRadius: 12,
+          border: '1.5px solid #ddd6fe',
+          boxShadow: 'var(--shadow-sm)',
+          flexShrink: 0,
         }}>
           <button onClick={handleAutoArrange} style={{
-            ...btnStyle,
-            background: '#ede9fe', color: '#6d28d9',
-            border: '2px solid #c4b5fd', fontSize: '0.78rem', padding: '4px 10px', flexShrink: 0,
+            background: 'linear-gradient(135deg, #ede9fe, #ddd6fe)',
+            color: '#6d28d9', border: '1px solid #c4b5fd',
+            borderRadius: 8, padding: '4px 10px',
+            fontSize: '0.75rem', fontWeight: 800,
+            cursor: 'pointer', flexShrink: 0,
+            whiteSpace: 'nowrap',
           }}>
             📐 ならべる
           </button>
-          <span style={{ fontSize: '0.75rem', color: '#7c3aed', fontWeight: 800, flexShrink: 0 }}>🔍</span>
+          <span style={{ fontSize: '0.68rem', color: '#7c3aed', fontWeight: 700, flexShrink: 0 }}>サイズ</span>
           <input
             type="range" min={0.3} max={3.0} step={0.05}
             defaultValue={1.0}
             onChange={e => handleBulkScale(parseFloat(e.target.value))}
-            style={{ flex: 1, minWidth: 60, accentColor: '#7c3aed' }}
+            style={{ flex: 1, minWidth: 50, accentColor: '#7c3aed', cursor: 'pointer' }}
           />
-          <span style={{ fontSize: '0.7rem', color: '#7c3aed', fontWeight: 800, flexShrink: 0 }}>まとめてサイズ</span>
         </div>
       )}
 
@@ -483,7 +501,14 @@ export default function StickerBookPage({ pageIndex, placed, collection, onUpdat
 }
 
 const btnStyle = {
-  border: 'none', background: '#fce7f3', color: '#9d174d',
-  borderRadius: 8, padding: '4px 10px', fontSize: '0.85rem',
-  fontWeight: 800, cursor: 'pointer', whiteSpace: 'nowrap',
+  border: 'none',
+  background: 'var(--pink-100)',
+  color: 'var(--pink-800)',
+  borderRadius: 8,
+  padding: '5px 10px',
+  fontSize: '0.82rem',
+  fontWeight: 800,
+  cursor: 'pointer',
+  whiteSpace: 'nowrap',
+  lineHeight: 1,
 };

@@ -1,5 +1,92 @@
 @import "tailwindcss";
 
+/* ===== Design System ===== */
+:root {
+  --pink-50:  #fdf2f8;
+  --pink-100: #fce7f3;
+  --pink-200: #fbcfe8;
+  --pink-300: #f9a8d4;
+  --pink-400: #f472b6;
+  --pink-500: #ec4899;
+  --pink-600: #db2777;
+  --pink-700: #be185d;
+  --pink-800: #9d174d;
+  --pink-900: #831843;
+
+  --purple-400: #c084fc;
+  --purple-500: #a855f7;
+  --purple-600: #9333ea;
+
+  --radius-sm: 10px;
+  --radius-md: 16px;
+  --radius-lg: 22px;
+  --radius-xl: 28px;
+  --radius-full: 9999px;
+
+  --shadow-sm: 0 1px 3px rgba(0,0,0,0.06), 0 1px 2px rgba(0,0,0,0.04);
+  --shadow-md: 0 4px 12px rgba(0,0,0,0.08);
+  --shadow-lg: 0 8px 30px rgba(0,0,0,0.1);
+  --shadow-glow-pink: 0 4px 20px rgba(236,72,153,0.25);
+  --shadow-glow-purple: 0 4px 20px rgba(168,85,247,0.25);
+
+  --glass-bg: rgba(255,255,255,0.72);
+  --glass-border: rgba(255,255,255,0.45);
+  --glass-blur: blur(16px);
+}
+
+/* ===== Global ===== */
+*,*::before,*::after { box-sizing: border-box; }
+
+html {
+  font-family: 'Zen Maru Gothic', 'Hiragino Sans', 'Hiragino Kaku Gothic ProN',
+    'BIZ UDPGothic', 'Noto Sans JP', sans-serif;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  text-rendering: optimizeLegibility;
+}
+
+body {
+  margin: 0;
+  background: var(--pink-50);
+  color: var(--pink-900);
+  overscroll-behavior: none;
+}
+
+/* ===== Scrollbar ===== */
+::-webkit-scrollbar { width: 4px; height: 4px; }
+::-webkit-scrollbar-track { background: transparent; }
+::-webkit-scrollbar-thumb { background: var(--pink-200); border-radius: 99px; }
+::-webkit-scrollbar-thumb:hover { background: var(--pink-300); }
+
+/* ===== Glass Card ===== */
+.glass {
+  background: var(--glass-bg);
+  backdrop-filter: var(--glass-blur);
+  -webkit-backdrop-filter: var(--glass-blur);
+  border: 1px solid var(--glass-border);
+}
+
+/* ===== Button Base ===== */
+.btn-primary {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border: none;
+  font-weight: 900;
+  cursor: pointer;
+  transition: transform 0.15s cubic-bezier(0.4,0,0.2,1), box-shadow 0.15s ease;
+  -webkit-tap-highlight-color: transparent;
+}
+.btn-primary:active { transform: scale(0.96); }
+
+/* ===== Gradient backgrounds ===== */
+.bg-app {
+  background: linear-gradient(168deg, #fdf2f8 0%, #fce7f3 30%, #f5f0ff 70%, #ede9fe 100%);
+}
+.bg-app-dark {
+  background: linear-gradient(168deg, #2d0a3e 0%, #4a1260 50%, #2d0a3e 100%);
+}
+
 /* ===== トップ画面シールフロートアニメーション ===== */
 @keyframes stickerFloat {
   0%, 100% { transform: translateY(0px) rotate(var(--rot)); }
@@ -37,7 +124,6 @@
 }
 
 /* ===== シートめくり演出 ===== */
-/* 上半分がめくれ落ちる（フリップクロック風） */
 @keyframes sheetFlipTop {
   0%   { transform: perspective(400px) rotateX(0deg);   opacity: 1; }
   100% { transform: perspective(400px) rotateX(-90deg); opacity: 0.6; }
@@ -46,17 +132,42 @@
   0%   { transform: perspective(400px) rotateX(90deg);  opacity: 0.6; }
   100% { transform: perspective(400px) rotateX(0deg);   opacity: 1; }
 }
-/* 前の数字が上へめくれる */
 .sheet-flip-out {
   animation: sheetFlipTop 0.18s ease-in forwards;
   transform-origin: center bottom;
 }
-/* 新しい数字が下からめくれて現れる */
 .sheet-flip-in {
   animation: sheetFlipBottom 0.18s ease-out forwards;
   transform-origin: center top;
 }
 
+/* ===== Utility Animations ===== */
+@keyframes fadeIn {
+  from { opacity: 0; }
+  to   { opacity: 1; }
+}
+@keyframes slideUp {
+  from { opacity: 0; transform: translateY(16px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+@keyframes scaleIn {
+  from { opacity: 0; transform: scale(0.92); }
+  to   { opacity: 1; transform: scale(1); }
+}
+@keyframes shimmer {
+  0%   { background-position: -200% center; }
+  100% { background-position: 200% center; }
+}
+
+.animate-fade-in    { animation: fadeIn 0.4s ease both; }
+.animate-slide-up   { animation: slideUp 0.4s ease both; }
+.animate-scale-in   { animation: scaleIn 0.35s cubic-bezier(0.175,0.885,0.32,1.275) both; }
+.animate-stagger-1  { animation-delay: 0.05s; }
+.animate-stagger-2  { animation-delay: 0.10s; }
+.animate-stagger-3  { animation-delay: 0.15s; }
+.animate-stagger-4  { animation-delay: 0.20s; }
+
+/* ===== Reduced Motion ===== */
 @media (prefers-reduced-motion: reduce) {
   *,
   *::before,
