@@ -183,11 +183,12 @@ export function rollGachaLegend() {
   return pool[Math.floor(Math.random() * pool.length)];
 }
 
-// シリーズの交換ポイント（ノーマル=1を基準）
-// normal:1, bonbon-drop:8, marshmallow:10, shaka-shaka:15, water-seal:37, oshiri/special:73
+// シリーズの交換ポイント（ノーマル=1を基準、oshiri以外は×2）
+// normal:2, bonbon-drop:16, marshmallow:20, shaka-shaka:30, water-seal:74, oshiri:73, special:146
 const NORMAL_RATE = 73;
 export function getSeriesValue(seriesId) {
   const s = SERIES.find(x => x.id === seriesId);
   if (!s) return 1;
-  return Math.ceil(NORMAL_RATE / s.rate);
+  const base = Math.ceil(NORMAL_RATE / s.rate);
+  return seriesId === 'oshiri' ? base : base * 2;
 }
