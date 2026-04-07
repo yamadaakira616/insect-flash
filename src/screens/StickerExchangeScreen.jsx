@@ -18,9 +18,9 @@ const STICKER_MAP = Object.fromEntries(STICKERS.map(s => [s.id, s]));
 // giveValue <  receiveValue → 複数あげて1枚もらう
 function calcExchange(giveSeries, receiveSeries) {
   const gv = getSeriesValue(giveSeries);
-  const rv = getSeriesValue(receiveSeries);
+  const rv = getSeriesValue(receiveSeries) * 2; // 交換手数料：受け取り側を2倍換算
   if (gv >= rv) {
-    return { giveCount: 1, receiveCount: Math.floor(gv / rv) };
+    return { giveCount: 1, receiveCount: Math.max(1, Math.floor(gv / rv)) };
   } else {
     return { giveCount: Math.ceil(rv / gv), receiveCount: 1 };
   }
