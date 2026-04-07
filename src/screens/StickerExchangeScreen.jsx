@@ -11,50 +11,53 @@ const SERIES_THEME = {
   'special':     { color: '#8b5cf6', bg: '#faf5ff', label: 'スペシャル' },
 };
 
-// シリーズ名ラベル（交換レート表示用）
-const SERIES_LABEL = Object.fromEntries(SERIES.map(s => [s.id, s.label]));
+const STICKER_MAP = Object.fromEntries(STICKERS.map(s => [s.id, s]));
 
-// 交換に必要な枚数: ceil(もらうシールのポイント / あげるシールのポイント)
-function calcNeeded(giveSeries, receiveSeries) {
+// 交換レート計算
+// giveValue >= receiveValue → 1枚あげて複数もらう
+// giveValue <  receiveValue → 複数あげて1枚もらう
+function calcExchange(giveSeries, receiveSeries) {
   const gv = getSeriesValue(giveSeries);
   const rv = getSeriesValue(receiveSeries);
-  return Math.ceil(rv / gv);
+  if (gv >= rv) {
+    return { giveCount: 1, receiveCount: Math.floor(gv / rv) };
+  } else {
+    return { giveCount: Math.ceil(rv / gv), receiveCount: 1 };
+  }
 }
 
 export default function StickerExchangeScreen({ state, onBack, onExchange }) {
-  const [tab, setTab] = useState('normal');
-  const [receiveSticker, setReceiveSticker] = useState(null); // 欲しいシール
-  const [giveSticker, setGiveSticker]       = useState(null); // あげるシール
-  const [resultMsg, setResultMsg]           = useState(null); // 交換結果メッセージ
+  const [receiveTab, setReceiveTab] = useState('normal');
+  const [receiveSticker, setReceiveSticker] = useState(null);
+  const [giveSticker, setGiveSticker]       = useState(null);
+  const [resultMsg, setResultMsg]           = useState(null);
 
   const stickerCounts = state.stickerCounts ?? {};
-
-  // 所持枚数
   const countOf = id => stickerCounts[id] ?? 0;
 
-  // あげられるシール一覧（1枚以上持っているもの）
-  const givableStickers = STICKERS.filter(s => countOf(s.id) >= 1);
+  // 手持ちシール（1枚以上）
+  const ownedStickers = STICKERS.filter(s => countOf(s.id) >= 1);
 
-  // 受け取るシール（タブフィルタ）
-  const receiveStickers = STICKERS.filter(s => s.series === tab);
+  // 欲しいシール（タブ別）
+  const receiveStickers = STICKERS.filter(s => s.series === receiveTab);
 
-  // 交換計算
-  const needed = (receiveSticker && giveSticker)
-    ? calcNeeded(giveSticker.series, receiveSticker.series)
+  // 交換レート
+  const exchange = (receiveSticker && giveSticker)
+    ? calcExchange(giveSticker.series, receiveSticker.series)
     : null;
-  const canExchange = needed !== null && countOf(giveSticker.id) >= needed;
+
+  const canExchange = exchange !== null && countOf(giveSticker.id) >= exchange.giveCount;
 
   function handleExchange() {
     if (!receiveSticker || !giveSticker || !canExchange) return;
-    const success = onExchange(giveSticker.id, receiveSticker.id);
+    const success = onExchange(giveSticker.id, receiveSticker.id, exchange.giveCount, exchange.receiveCount);
     if (success) {
+      const giveRemain = countOf(giveSticker.id) - exchange.giveCount;
       setResultMsg({
         type: 'success',
-        text: `${giveSticker.name} を ${needed} まいわたして、${receiveSticker.name} をゲット！`,
+        text: `${giveSticker.name} ×${exchange.giveCount} → ${receiveSticker.name} ×${exchange.receiveCount} ゲット！`,
       });
-      // 交換後、あげたシールが0枚になった場合は選択解除
-      const newCount = countOf(giveSticker.id) - needed;
-      if (newCount <= 0) setGiveSticker(null);
+      if (giveRemain <= 0) setGiveSticker(null);
     } else {
       setResultMsg({ type: 'error', text: 'こうかんできませんでした' });
     }
@@ -96,8 +99,127 @@ export default function StickerExchangeScreen({ state, onBack, onExchange }) {
 
       <div className="flex-1 overflow-y-auto">
 
-        {/* ===== 欲しいシール選択エリア ===== */}
+        {/* ===== あげるシール ===== */}
         <div style={{ padding: '12px 12px 0' }}>
+          <div className="font-black text-sm mb-2" style={{ color: 'var(--pink-700)' }}>
+            🤲 あげるシール（もっているもの）
+          </div>
+
+          {ownedStickers.length === 0 ? (
+            <div className="text-center py-6" style={{ color: '#9ca3af' }}>
+              <div style={{ fontSize: '2rem' }}>🥹</div>
+              <p className="text-sm font-bold mt-2">シールをゲットしてから<br/>こうかんしよう！</p>
+            </div>
+          ) : (
+            <div className="grid grid-cols-4 gap-2">
+              {ownedStickers.map(sticker => {
+                const theme = SERIES_THEME[sticker.series];
+                const isSelected = giveSticker?.id === sticker.id;
+                const count = countOf(sticker.id);
+                const ex = receiveSticker ? calcExchange(sticker.series, receiveSticker.series) : null;
+                const canAfford = ex ? count >= ex.giveCount : true;
+                return (
+                  <button
+                    key={sticker.id}
+                    onClick={() => setGiveSticker(isSelected ? null : sticker)}
+                    style={{
+                      aspectRatio: '1',
+                      borderRadius: 12,
+                      background: isSelected ? theme.bg : 'white',
+                      border: `2px solid ${isSelected ? theme.color : canAfford ? '#e5e7eb' : '#fee2e2'}`,
+                      boxShadow: isSelected ? `0 2px 12px ${theme.color}40` : 'var(--shadow-sm)',
+                      display: 'flex', flexDirection: 'column',
+                      alignItems: 'center', justifyContent: 'center',
+                      padding: 6, cursor: 'pointer',
+                      transition: 'all 0.15s ease',
+                      position: 'relative',
+                      opacity: receiveSticker && !canAfford ? 0.45 : 1,
+                    }}
+                  >
+                    {/* シリーズ価値バッジ（左上） */}
+                    <div style={{
+                      position: 'absolute', top: 3, left: 3,
+                      background: isSelected ? theme.color : '#e5e7eb',
+                      color: isSelected ? 'white' : '#6b7280',
+                      borderRadius: 99, fontSize: '0.5rem', fontWeight: 900,
+                      padding: '0 4px', lineHeight: 1.6,
+                    }}>
+                      {getSeriesValue(sticker.series)}pt
+                    </div>
+                    {/* 所持枚数バッジ（右上） */}
+                    <div style={{
+                      position: 'absolute', top: 3, right: 3,
+                      background: isSelected ? theme.color : '#6b7280',
+                      color: 'white',
+                      borderRadius: 99, fontSize: '0.55rem', fontWeight: 900,
+                      padding: '0 4px', lineHeight: 1.5,
+                    }}>
+                      ×{count}
+                    </div>
+                    <img
+                      src={sticker.imagePath}
+                      alt={sticker.name}
+                      style={{ width: '55%', aspectRatio: '1', objectFit: 'contain', marginTop: 8 }}
+                    />
+                    <div style={{ fontSize: '0.5rem', fontWeight: 700, color: theme.color, marginTop: 2, textAlign: 'center', lineHeight: 1.2 }}>
+                      {sticker.name}
+                    </div>
+                    {/* 交換枚数バッジ（下） */}
+                    {ex && (
+                      <div style={{
+                        position: 'absolute', bottom: 3,
+                        background: canAfford ? (ex.giveCount === 1 ? '#22c55e' : '#f59e0b') : '#ef4444',
+                        color: 'white',
+                        borderRadius: 99, fontSize: '0.5rem', fontWeight: 900,
+                        padding: '0 4px', lineHeight: 1.5,
+                      }}>
+                        {ex.giveCount === 1
+                          ? `→×${ex.receiveCount}`
+                          : `${ex.giveCount}まい必要`}
+                      </div>
+                    )}
+                  </button>
+                );
+              })}
+            </div>
+          )}
+        </div>
+
+        {/* ===== 交換サマリー ===== */}
+        <div style={{ padding: '10px 12px' }}>
+          <div
+            style={{
+              background: 'rgba(255,255,255,0.85)',
+              borderRadius: 16,
+              border: '1.5px solid var(--pink-100)',
+              padding: '12px 14px',
+              minHeight: 68,
+              display: 'flex', alignItems: 'center', justifyContent: 'center',
+            }}
+          >
+            {giveSticker && receiveSticker && exchange ? (
+              <div className="text-center w-full">
+                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8, flexWrap: 'wrap' }}>
+                  <StickerChip sticker={giveSticker} count={exchange.giveCount} theme={SERIES_THEME[giveSticker.series]} />
+                  <span style={{ fontSize: '1.4rem' }}>→</span>
+                  <StickerChip sticker={receiveSticker} count={exchange.receiveCount} theme={SERIES_THEME[receiveSticker.series]} />
+                </div>
+                <div className="text-xs mt-2" style={{ color: canExchange ? '#22c55e' : '#ef4444', fontWeight: 700 }}>
+                  {canExchange
+                    ? `手持ち ${countOf(giveSticker.id)} まい → こうかん後 ${countOf(giveSticker.id) - exchange.giveCount} まい`
+                    : `${giveSticker.name} があと ${exchange.giveCount - countOf(giveSticker.id)} まいたりない`}
+                </div>
+              </div>
+            ) : (
+              <p className="text-sm font-bold" style={{ color: '#d1d5db' }}>
+                {!giveSticker ? 'あげるシールをえらんでね' : 'ほしいシールをえらんでね'}
+              </p>
+            )}
+          </div>
+        </div>
+
+        {/* ===== ほしいシール ===== */}
+        <div style={{ padding: '0 12px 12px' }}>
           <div className="font-black text-sm mb-2" style={{ color: 'var(--pink-700)' }}>
             🎀 ほしいシール
           </div>
@@ -106,11 +228,11 @@ export default function StickerExchangeScreen({ state, onBack, onExchange }) {
           <div className="flex overflow-x-auto gap-2 pb-2" style={{ scrollbarWidth: 'none' }}>
             {SERIES.map(s => {
               const t = SERIES_THEME[s.id];
-              const isActive = tab === s.id;
+              const isActive = receiveTab === s.id;
               return (
                 <button
                   key={s.id}
-                  onClick={() => { setTab(s.id); setReceiveSticker(null); }}
+                  onClick={() => { setReceiveTab(s.id); setReceiveSticker(null); }}
                   style={{
                     flexShrink: 0,
                     padding: '5px 12px',
@@ -129,11 +251,11 @@ export default function StickerExchangeScreen({ state, onBack, onExchange }) {
             })}
           </div>
 
-          {/* 欲しいシールグリッド */}
           <div className="grid grid-cols-4 gap-2">
             {receiveStickers.map(sticker => {
               const theme = SERIES_THEME[sticker.series];
               const isSelected = receiveSticker?.id === sticker.id;
+              const ex = giveSticker ? calcExchange(giveSticker.series, sticker.series) : null;
               return (
                 <button
                   key={sticker.id}
@@ -151,140 +273,40 @@ export default function StickerExchangeScreen({ state, onBack, onExchange }) {
                     position: 'relative',
                   }}
                 >
+                  {/* シリーズ価値バッジ（左上） */}
+                  <div style={{
+                    position: 'absolute', top: 3, left: 3,
+                    background: isSelected ? theme.color : '#e5e7eb',
+                    color: isSelected ? 'white' : '#6b7280',
+                    borderRadius: 99, fontSize: '0.5rem', fontWeight: 900,
+                    padding: '0 4px', lineHeight: 1.6,
+                  }}>
+                    {getSeriesValue(sticker.series)}pt
+                  </div>
                   <img
                     src={sticker.imagePath}
                     alt={sticker.name}
-                    style={{ width: '70%', aspectRatio: '1', objectFit: 'contain' }}
+                    style={{ width: '65%', aspectRatio: '1', objectFit: 'contain', marginTop: 8 }}
                   />
                   <div style={{ fontSize: '0.5rem', fontWeight: 700, color: theme.color, marginTop: 2, textAlign: 'center', lineHeight: 1.2 }}>
                     {sticker.name}
                   </div>
-                  {/* 交換レートバッジ */}
-                  <div style={{
-                    position: 'absolute', top: 3, left: 3,
-                    background: '#fff', border: `1px solid ${theme.color}`,
-                    borderRadius: 99, fontSize: '0.5rem', fontWeight: 900,
-                    padding: '0 4px', color: theme.color, lineHeight: 1.6,
-                  }}>
-                    {getSeriesValue(sticker.series)}pt
-                  </div>
+                  {/* もらえる枚数バッジ（下） */}
+                  {ex && (
+                    <div style={{
+                      position: 'absolute', bottom: 3,
+                      background: ex.receiveCount > 1 ? '#22c55e' : '#9ca3af',
+                      color: 'white',
+                      borderRadius: 99, fontSize: '0.5rem', fontWeight: 900,
+                      padding: '0 4px', lineHeight: 1.5,
+                    }}>
+                      ×{ex.receiveCount}もらえる
+                    </div>
+                  )}
                 </button>
               );
             })}
           </div>
-        </div>
-
-        {/* ===== 交換レート表示 ===== */}
-        <div style={{ padding: '10px 12px' }}>
-          <div
-            style={{
-              background: 'rgba(255,255,255,0.8)',
-              borderRadius: 16,
-              border: '1.5px solid var(--pink-100)',
-              padding: '10px 14px',
-              minHeight: 64,
-              display: 'flex', alignItems: 'center', justifyContent: 'center',
-            }}
-          >
-            {receiveSticker && giveSticker ? (
-              <div className="text-center">
-                <div className="font-black text-sm" style={{ color: 'var(--pink-800)' }}>
-                  {giveSticker.name} <span style={{ color: '#9ca3af' }}>を</span>{' '}
-                  <span style={{ color: needed > (stickerCounts[giveSticker.id] ?? 0) ? '#ef4444' : '#22c55e', fontSize: '1.1em' }}>
-                    {needed}まい
-                  </span>{' '}
-                  <span style={{ color: '#9ca3af' }}>わたす</span>
-                </div>
-                <div className="font-black text-base mt-1" style={{ color: 'var(--pink-600)' }}>
-                  → {receiveSticker.name} 1まい ゲット！
-                </div>
-                <div className="text-xs mt-1" style={{ color: '#9ca3af' }}>
-                  いま {giveSticker.name}: {countOf(giveSticker.id)}まい
-                  {canExchange ? '' : `（あと${needed - countOf(giveSticker.id)}まいたりない）`}
-                </div>
-              </div>
-            ) : (
-              <p className="text-sm font-bold" style={{ color: '#d1d5db' }}>
-                {!receiveSticker ? 'ほしいシールをえらんでね' : 'あげるシールをえらんでね'}
-              </p>
-            )}
-          </div>
-        </div>
-
-        {/* ===== あげるシール選択エリア ===== */}
-        <div style={{ padding: '0 12px 12px' }}>
-          <div className="font-black text-sm mb-2" style={{ color: 'var(--pink-700)' }}>
-            🤲 あげるシール（もっているもの）
-          </div>
-
-          {givableStickers.length === 0 ? (
-            <div className="text-center py-8" style={{ color: '#9ca3af' }}>
-              <div style={{ fontSize: '2rem' }}>🥹</div>
-              <p className="text-sm font-bold mt-2">シールをゲットしてから<br/>こうかんしよう！</p>
-            </div>
-          ) : (
-            <div className="grid grid-cols-4 gap-2">
-              {givableStickers.map(sticker => {
-                const theme = SERIES_THEME[sticker.series];
-                const isSelected = giveSticker?.id === sticker.id;
-                const count = countOf(sticker.id);
-                const neededForThis = receiveSticker
-                  ? calcNeeded(sticker.series, receiveSticker.series)
-                  : null;
-                const canAfford = neededForThis !== null && count >= neededForThis;
-                return (
-                  <button
-                    key={sticker.id}
-                    onClick={() => setGiveSticker(isSelected ? null : sticker)}
-                    style={{
-                      aspectRatio: '1',
-                      borderRadius: 12,
-                      background: isSelected ? theme.bg : 'white',
-                      border: `2px solid ${isSelected ? theme.color : receiveSticker && !canAfford ? '#fee2e2' : '#e5e7eb'}`,
-                      boxShadow: isSelected ? `0 2px 12px ${theme.color}40` : 'var(--shadow-sm)',
-                      display: 'flex', flexDirection: 'column',
-                      alignItems: 'center', justifyContent: 'center',
-                      padding: 6, cursor: 'pointer',
-                      transition: 'all 0.15s ease',
-                      position: 'relative',
-                      opacity: receiveSticker && !canAfford ? 0.5 : 1,
-                    }}
-                  >
-                    <img
-                      src={sticker.imagePath}
-                      alt={sticker.name}
-                      style={{ width: '65%', aspectRatio: '1', objectFit: 'contain' }}
-                    />
-                    <div style={{ fontSize: '0.5rem', fontWeight: 700, color: theme.color, marginTop: 2, textAlign: 'center', lineHeight: 1.2 }}>
-                      {sticker.name}
-                    </div>
-                    {/* 所持枚数バッジ */}
-                    <div style={{
-                      position: 'absolute', top: 3, right: 3,
-                      background: isSelected ? theme.color : '#6b7280',
-                      color: 'white',
-                      borderRadius: 99, fontSize: '0.55rem', fontWeight: 900,
-                      padding: '0 4px', lineHeight: 1.5,
-                    }}>
-                      ×{count}
-                    </div>
-                    {/* 必要枚数表示 */}
-                    {receiveSticker && (
-                      <div style={{
-                        position: 'absolute', bottom: 3, left: 3,
-                        background: canAfford ? '#22c55e' : '#ef4444',
-                        color: 'white',
-                        borderRadius: 99, fontSize: '0.5rem', fontWeight: 900,
-                        padding: '0 4px', lineHeight: 1.5,
-                      }}>
-                        {neededForThis}まい
-                      </div>
-                    )}
-                  </button>
-                );
-              })}
-            </div>
-          )}
         </div>
       </div>
 
@@ -299,7 +321,7 @@ export default function StickerExchangeScreen({ state, onBack, onExchange }) {
           textAlign: 'center', zIndex: 100,
           boxShadow: '0 8px 32px rgba(0,0,0,0.15)',
           maxWidth: '80vw',
-          animation: 'scaleIn 0.2s ease',
+          animation: 'resultIn 0.2s ease',
         }}>
           <div style={{ fontSize: '1.5rem' }}>{resultMsg.type === 'success' ? '🎉' : '😢'}</div>
           <div className="font-black text-sm mt-1" style={{ color: resultMsg.type === 'success' ? '#15803d' : '#dc2626' }}>
@@ -323,30 +345,49 @@ export default function StickerExchangeScreen({ state, onBack, onExchange }) {
             width: '100%', padding: '14px',
             borderRadius: 16, border: 'none',
             background: canExchange
-              ? 'linear-gradient(135deg, var(--pink-400), var(--pink-500))'
+              ? 'linear-gradient(135deg, #34d399, #059669)'
               : '#e5e7eb',
             color: canExchange ? 'white' : '#9ca3af',
             fontWeight: 900, fontSize: '1.05rem',
             cursor: canExchange ? 'pointer' : 'not-allowed',
-            boxShadow: canExchange ? '0 4px 0 var(--pink-700), var(--shadow-glow-pink)' : 'none',
+            boxShadow: canExchange ? '0 4px 0 #047857, 0 4px 20px rgba(52,211,153,0.3)' : 'none',
             transition: 'all 0.2s ease',
           }}
         >
-          {canExchange ? '✨ こうかんする！' : 'シールをえらんでね'}
+          {canExchange
+            ? `✨ こうかんする！（×${exchange.giveCount} → ×${exchange.receiveCount}）`
+            : 'シールをえらんでね'}
         </button>
-
-        {/* レートの説明 */}
         <p className="text-center text-xs mt-2" style={{ color: '#9ca3af' }}>
-          レートは出やすさで決まるよ。レアなシールほど多く必要！
+          レアなシールほど高ポイント！高レア → 低レアはたくさんもらえるよ
         </p>
       </div>
 
       <style>{`
-        @keyframes scaleIn {
+        @keyframes resultIn {
           from { transform: translate(-50%, -50%) scale(0.8); opacity: 0; }
           to   { transform: translate(-50%, -50%) scale(1); opacity: 1; }
         }
       `}</style>
+    </div>
+  );
+}
+
+function StickerChip({ sticker, count, theme }) {
+  return (
+    <div style={{
+      display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 2,
+      background: theme.bg, border: `1.5px solid ${theme.color}`,
+      borderRadius: 12, padding: '4px 8px', minWidth: 60,
+    }}>
+      <img src={sticker.imagePath} alt={sticker.name}
+           style={{ width: 36, height: 36, objectFit: 'contain' }} />
+      <div style={{ fontSize: '0.6rem', fontWeight: 800, color: theme.color, textAlign: 'center', lineHeight: 1.2 }}>
+        {sticker.name}
+      </div>
+      <div style={{ fontSize: '0.75rem', fontWeight: 900, color: theme.color }}>
+        ×{count}
+      </div>
     </div>
   );
 }

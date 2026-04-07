@@ -136,28 +136,20 @@ export function useGameState() {
 
   // シール交換
   // giveId: 渡すシールID, receiveId: もらうシールID
-  // 必要枚数 = ceil(受け取るシールの交換値 / 渡すシールの交換値)
+  // giveCount: 渡す枚数, receiveCount: もらう枚数
   // 戻り値: true=成功, false=失敗（枚数不足など）
   const exchangeResultRef = useRef(null);
 
-  function exchangeStickers(giveId, receiveId) {
+  function exchangeStickers(giveId, receiveId, giveCount, receiveCount) {
     exchangeResultRef.current = false;
     setState(s => {
-      const giveSeries = stickerSeriesMap[giveId];
-      const receiveSeries = stickerSeriesMap[receiveId];
-      if (!giveSeries || !receiveSeries) return s;
-
-      const giveValue = getSeriesValue(giveSeries);
-      const receiveValue = getSeriesValue(receiveSeries);
-      const needed = Math.ceil(receiveValue / giveValue);
-
       const haveCount = s.stickerCounts[giveId] ?? 0;
-      if (haveCount < needed) return s;
+      if (haveCount < giveCount) return s;
 
       exchangeResultRef.current = true;
       const newCounts = { ...s.stickerCounts };
-      newCounts[giveId] = haveCount - needed;
-      newCounts[receiveId] = (newCounts[receiveId] ?? 0) + 1;
+      newCounts[giveId] = haveCount - giveCount;
+      newCounts[receiveId] = (newCounts[receiveId] ?? 0) + receiveCount;
 
       return { ...s, stickerCounts: newCounts };
     });
