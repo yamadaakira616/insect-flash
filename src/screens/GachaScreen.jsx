@@ -1,6 +1,6 @@
 import { useState, useEffect, useRef } from 'react';
 import Confetti from '../components/Confetti.jsx';
-import { rollGacha, rollGachaLegend, DUPLICATE_COINS, SERIES } from '../data/stickers.js';
+import { rollGacha, rollGachaLegend, SERIES } from '../data/stickers.js';
 import { GACHA_COST } from '../utils/gameLogic.js';
 import { playGachaTick, playGachaSlowTick, playGachaReveal, playGachaFlash } from '../utils/sound.js';
 
@@ -89,6 +89,7 @@ export default function GachaScreen({ state, onBack, onPull }) {
   const [phase, setPhase]               = useState('idle');
   const [result, setResult]             = useState(null);
   const [isNew, setIsNew]               = useState(false);
+  const [newStickerCount, setNewStickerCount] = useState(1);
   const [effect, setEffect]             = useState(FX_PLAIN);
   const [isLegend, setIsLegend]         = useState(false);
   const [rouletteIdx, setRouletteIdx]   = useState(0);
@@ -301,8 +302,9 @@ export default function GachaScreen({ state, onBack, onPull }) {
       setBeamOn(false);
       setParticles([]);
       clearInterval(cosmicRef.current);
-      const { isNew: n } = onPull(sticker);
+      const { isNew: n, newCount } = onPull(sticker);
       setIsNew(n);
+      setNewStickerCount(newCount ?? 1);
       setPhase('result');
     }, 900);
   }
@@ -782,14 +784,14 @@ export default function GachaScreen({ state, onBack, onPull }) {
                  style={{ animation: 'slideUpAnim 0.4s ease 0.2s both' }}>
               <div className="text-2xl mb-1">🔍</div>
               <p className="text-green-700 font-black">シールずかんに登録しました！</p>
-              <p className="text-green-600 text-sm">{state.collection.length + 1}まい目をゲット！</p>
+              <p className="text-green-600 text-sm">{state.collection.length}まい目をゲット！</p>
             </div>
           ) : (
             <div className="w-full bg-amber-50 border-2 border-amber-400 rounded-2xl p-4 text-center"
                  style={{ animation: 'slideUpAnim 0.4s ease 0.2s both' }}>
               <div className="text-2xl mb-1">💫</div>
-              <p className="text-amber-700 font-black">すでに入手済み！</p>
-              <p className="text-amber-600 text-sm">コイン +{DUPLICATE_COINS} に変換しました</p>
+              <p className="text-amber-700 font-black">すでに持ってるシール！</p>
+              <p className="text-amber-600 text-sm">これで {newStickerCount} まい目だよ！</p>
             </div>
           )}
 

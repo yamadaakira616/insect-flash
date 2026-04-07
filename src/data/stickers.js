@@ -1,5 +1,3 @@
-export const DUPLICATE_COINS = 30;
-
 const B = import.meta.env.BASE_URL;
 
 export const SERIES = [
@@ -183,4 +181,13 @@ export function rollGachaLegend() {
   const highRare = ['special', 'oshiri'];
   const pool = STICKERS.filter(s => highRare.includes(s.series));
   return pool[Math.floor(Math.random() * pool.length)];
+}
+
+// シリーズの交換ポイント（ノーマル=1を基準）
+// normal:1, bonbon-drop:8, marshmallow:10, shaka-shaka:15, water-seal:37, oshiri/special:73
+const NORMAL_RATE = 73;
+export function getSeriesValue(seriesId) {
+  const s = SERIES.find(x => x.id === seriesId);
+  if (!s) return 1;
+  return Math.ceil(NORMAL_RATE / s.rate);
 }

@@ -1,12 +1,15 @@
 import { useState, useEffect, useRef } from 'react';
-import { DUPLICATE_COINS } from '../data/stickers.js';
 import { GACHA_COST } from '../utils/gameLogic.js';
+import { getSeriesValue, STICKERS } from '../data/stickers.js';
 
 const KEY = 'sticker-book-v1';
+
+const stickerSeriesMap = Object.fromEntries(STICKERS.map(s => [s.id, s.series]));
+
 const DEFAULT_STATE = {
   level: 1,
   coins: 100,
-  collection: [],
+  stickerCounts: {},   // { [stickerId]: number } 枚数管理
   levelStars: {},
   totalStars: 0,
   bestCombo: 0,
@@ -14,6 +17,25 @@ const DEFAULT_STATE = {
   levelPlayCount: {},
   bookPages: [[], [], [], [], []],
 };
+
+// stickerCounts から「所持している（count>=1）シールID配列」を導出
+function deriveCollection(stickerCounts) {
+  return Object.entries(stickerCounts)
+    .filter(([, count]) => count >= 1)
+    .map(([id]) => id);
+}
+
+// 旧データ（collection配列）からstickerCountsへマイグレーション
+function migrateState(parsed) {
+  if (parsed.stickerCounts) return parsed;
+  const stickerCounts = {};
+  if (Array.isArray(parsed.collection)) {
+    for (const id of parsed.collection) {
+      stickerCounts[id] = 1;
+    }
+  }
+  return { ...parsed, stickerCounts };
+}
 
 export function getLevelCoinMultiplier(playCount) {
   if (playCount === 0) return 1.0;
@@ -28,20 +50,29 @@ export function useGameState() {
       const raw = localStorage.getItem(KEY);
       if (!raw) return DEFAULT_STATE;
       const parsed = JSON.parse(raw);
-      const level = (typeof parsed.level === 'number' && parsed.level >= 1 && parsed.level <= 50)
-        ? parsed.level : DEFAULT_STATE.level;
-      const coins = (typeof parsed.coins === 'number' && parsed.coins >= 0)
-        ? parsed.coins : DEFAULT_STATE.coins;
-      const collection = Array.isArray(parsed.collection)
-        ? parsed.collection : DEFAULT_STATE.collection;
-      const bookPages = Array.isArray(parsed.bookPages) && parsed.bookPages.length === 5
-        ? parsed.bookPages : DEFAULT_STATE.bookPages;
-      return { ...DEFAULT_STATE, ...parsed, level, coins, collection, bookPages };
+      const migrated = migrateState(parsed);
+      const level = (typeof migrated.level === 'number' && migrated.level >= 1 && migrated.level <= 50)
+        ? migrated.level : DEFAULT_STATE.level;
+      const coins = (typeof migrated.coins === 'number' && migrated.coins >= 0)
+        ? migrated.coins : DEFAULT_STATE.coins;
+      const stickerCounts = (typeof migrated.stickerCounts === 'object' && migrated.stickerCounts !== null)
+        ? migrated.stickerCounts : DEFAULT_STATE.stickerCounts;
+      const bookPages = Array.isArray(migrated.bookPages) && migrated.bookPages.length === 5
+        ? migrated.bookPages : DEFAULT_STATE.bookPages;
+      return { ...DEFAULT_STATE, ...migrated, level, coins, stickerCounts, bookPages };
     } catch { return DEFAULT_STATE; }
   });
 
+  // collectionはstickerCountsから導出してstateに含める（既存コードとの互換性）
+  const stateWithCollection = {
+    ...state,
+    collection: deriveCollection(state.stickerCounts),
+  };
+
   useEffect(() => {
-    localStorage.setItem(KEY, JSON.stringify(state));
+    // localStorageにはstickerCountsのみ保存（collectionは保存しない）
+    const { collection: _col, ...toSave } = stateWithCollection;
+    localStorage.setItem(KEY, JSON.stringify(toSave));
   }, [state]);
 
   function addCoins(n) {
@@ -88,23 +119,49 @@ export function useGameState() {
   function pullGacha(sticker) {
     pullGachaResultRef.current = null;
     setState(s => {
-      const isNew = !s.collection.includes(sticker.id);
-      if (isNew) {
-        pullGachaResultRef.current = { isNew: true, coinBonus: 0 };
-        return {
-          ...s,
-          coins: Math.max(0, s.coins - GACHA_COST),
-          collection: [...s.collection, sticker.id],
-        };
-      } else {
-        pullGachaResultRef.current = { isNew: false, coinBonus: DUPLICATE_COINS };
-        return {
-          ...s,
-          coins: Math.max(0, s.coins - GACHA_COST) + DUPLICATE_COINS,
-        };
-      }
+      const prevCount = s.stickerCounts[sticker.id] ?? 0;
+      const isNew = prevCount === 0;
+      pullGachaResultRef.current = { isNew, newCount: prevCount + 1 };
+      return {
+        ...s,
+        coins: Math.max(0, s.coins - GACHA_COST),
+        stickerCounts: {
+          ...s.stickerCounts,
+          [sticker.id]: prevCount + 1,
+        },
+      };
     });
     return pullGachaResultRef.current;
+  }
+
+  // シール交換
+  // giveId: 渡すシールID, receiveId: もらうシールID
+  // 必要枚数 = ceil(受け取るシールの交換値 / 渡すシールの交換値)
+  // 戻り値: true=成功, false=失敗（枚数不足など）
+  const exchangeResultRef = useRef(null);
+
+  function exchangeStickers(giveId, receiveId) {
+    exchangeResultRef.current = false;
+    setState(s => {
+      const giveSeries = stickerSeriesMap[giveId];
+      const receiveSeries = stickerSeriesMap[receiveId];
+      if (!giveSeries || !receiveSeries) return s;
+
+      const giveValue = getSeriesValue(giveSeries);
+      const receiveValue = getSeriesValue(receiveSeries);
+      const needed = Math.ceil(receiveValue / giveValue);
+
+      const haveCount = s.stickerCounts[giveId] ?? 0;
+      if (haveCount < needed) return s;
+
+      exchangeResultRef.current = true;
+      const newCounts = { ...s.stickerCounts };
+      newCounts[giveId] = haveCount - needed;
+      newCounts[receiveId] = (newCounts[receiveId] ?? 0) + 1;
+
+      return { ...s, stickerCounts: newCounts };
+    });
+    return exchangeResultRef.current;
   }
 
   function updateBookPage(pageIndex, placed) {
@@ -117,7 +174,7 @@ export function useGameState() {
   }
 
   return {
-    state,
+    state: stateWithCollection,
     addCoins,
     spendCoins,
     levelUp,
@@ -125,6 +182,7 @@ export function useGameState() {
     updateBestCombo,
     incLevelPlayCount,
     pullGacha,
+    exchangeStickers,
     updateBookPage,
   };
 }

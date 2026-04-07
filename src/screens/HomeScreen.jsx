@@ -21,7 +21,7 @@ const SHOWCASE = [
   { id: 'nm-kappa',        x: '76%', y: '72%', size: 56, rotate:   4, delay: '1.4s' },
 ];
 
-export default function HomeScreen({ state, onPlay, onEncyclopedia, onGacha, onStickerBook }) {
+export default function HomeScreen({ state, onPlay, onEncyclopedia, onGacha, onStickerBook, onExchange }) {
   const owned = state.collection.length;
   const total = STICKERS.length;
   const pct = Math.round((owned / total) * 100);
@@ -216,6 +216,19 @@ export default function HomeScreen({ state, onPlay, onEncyclopedia, onGacha, onS
         >
           シールブック
           <div className="text-xs font-bold opacity-75 mt-0.5">シールをはって飾ろう！</div>
+        </button>
+
+        {/* シール交換屋さん */}
+        <button
+          onClick={onExchange}
+          className="btn-primary w-full py-3 rounded-2xl text-base text-white"
+          style={{
+            background: 'linear-gradient(135deg, #34d399, #059669)',
+            boxShadow: '0 4px 0 #047857, 0 4px 20px rgba(52,211,153,0.3)',
+          }}
+        >
+          シール交換屋さん
+          <div className="text-xs font-bold opacity-75 mt-0.5">シールをこうかんしよう！</div>
         </button>
       </div>
     </div>

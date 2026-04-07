@@ -21,7 +21,8 @@ export default function EncyclopediaScreen({ state, onBack }) {
   }, [detail]);
 
   const stickers = STICKERS.filter(s => s.series === tab);
-  const owned = id => state.collection.includes(id);
+  const owned = id => (state.stickerCounts?.[id] ?? 0) >= 1;
+  const stickerCount = id => state.stickerCounts?.[id] ?? 0;
   const theme = SERIES_THEME[tab] ?? SERIES_THEME['normal'];
 
   const totalOwned = state.collection.length;
@@ -126,9 +127,20 @@ export default function EncyclopediaScreen({ state, onBack }) {
                   boxShadow: 'var(--shadow-sm)',
                   display: 'flex', flexDirection: 'column',
                   padding: 8,
+                  position: 'relative',
                   animation: `scaleIn 0.3s ease ${Math.min(idx * 0.03, 0.3)}s both`,
                 }}
               >
+                {stickerCount(sticker.id) > 1 && (
+                  <div style={{
+                    position: 'absolute', top: 4, right: 4,
+                    background: theme.color, color: 'white',
+                    borderRadius: 99, fontSize: '0.55rem', fontWeight: 900,
+                    padding: '1px 5px', lineHeight: 1.4,
+                  }}>
+                    ×{stickerCount(sticker.id)}
+                  </div>
+                )}
                 <img
                   src={sticker.imagePath}
                   alt={sticker.name}
