@@ -212,15 +212,19 @@ export const STICKERS = [
   { id:'nm-angel-bunny', name:'てんしうさぎ',   series:'normal', imagePath:B+'assets/normal/nm-angel-bunny.png' },
   { id:'nm-star-cat',    name:'ほしねこ',       series:'normal', imagePath:B+'assets/normal/nm-star-cat.png' },
 
-  // ===== アルティメット (8枚) =====
-  { id:'ul-gold-canary',  name:'ゴールドカナリア', series:'ultimate', imagePath:B+'assets/Ultimate/ul-gold-canary.png' },
-  { id:'ul-gold-bunny',   name:'ゴールドうさぎ',  series:'ultimate', imagePath:B+'assets/Ultimate/ul-gold-bunny.png' },
-  { id:'ul-gold-kitten',  name:'ゴールドこねこ',  series:'ultimate', imagePath:B+'assets/Ultimate/ul-gold-kitten.png' },
-  { id:'ul-gold-bear',    name:'ゴールドこぐま',  series:'ultimate', imagePath:B+'assets/Ultimate/ul-gold-bear.png' },
-  { id:'ul-gem-duckling', name:'ジェムあひるこ',  series:'ultimate', imagePath:B+'assets/Ultimate/ul-gem-duckling.png' },
-  { id:'ul-gem-red-panda',name:'ジェムレッサー',  series:'ultimate', imagePath:B+'assets/Ultimate/ul-gem-red-panda.png' },
-  { id:'ul-gem-penguin',  name:'ジェムペンギン',  series:'ultimate', imagePath:B+'assets/Ultimate/ul-gem-penguin.png' },
-  { id:'ul-gem-pug',      name:'ジェムパグ',      series:'ultimate', imagePath:B+'assets/Ultimate/ul-gem-pug.png' },
+  // ===== アルティメット (12枚) =====
+  { id:'ul-gold-canary',    name:'ゴールドカナリア',     series:'ultimate', imagePath:B+'assets/Ultimate/ul-gold-canary.png' },
+  { id:'ul-gold-bunny',     name:'ゴールドうさぎ',       series:'ultimate', imagePath:B+'assets/Ultimate/ul-gold-bunny.png' },
+  { id:'ul-gold-kitten',    name:'ゴールドこねこ',       series:'ultimate', imagePath:B+'assets/Ultimate/ul-gold-kitten.png' },
+  { id:'ul-gold-bear',      name:'ゴールドこぐま',       series:'ultimate', imagePath:B+'assets/Ultimate/ul-gold-bear.png' },
+  { id:'ul-gem-duckling',   name:'ジェムあひるこ',       series:'ultimate', imagePath:B+'assets/Ultimate/ul-gem-duckling.png' },
+  { id:'ul-gem-red-panda',  name:'ジェムレッサー',       series:'ultimate', imagePath:B+'assets/Ultimate/ul-gem-red-panda.png' },
+  { id:'ul-gem-penguin',    name:'ジェムペンギン',       series:'ultimate', imagePath:B+'assets/Ultimate/ul-gem-penguin.png' },
+  { id:'ul-gem-pug',        name:'ジェムパグ',           series:'ultimate', imagePath:B+'assets/Ultimate/ul-gem-pug.png' },
+  { id:'ul-rainbow-whale',  name:'レインボーくじら',     series:'ultimate', imagePath:B+'assets/Ultimate/ul-rainbow-whale.png' },
+  { id:'ul-rainbow-fox',    name:'レインボーきつね',     series:'ultimate', imagePath:B+'assets/Ultimate/ul-rainbow-fox.png' },
+  { id:'ul-rainbow-bunny',  name:'レインボーうさぎ',     series:'ultimate', imagePath:B+'assets/Ultimate/ul-rainbow-bunny.png' },
+  { id:'ul-rainbow-cat',    name:'レインボーねこ',       series:'ultimate', imagePath:B+'assets/Ultimate/ul-rainbow-cat.png' },
 ];
 
 export function rollGacha() {
