@@ -1,13 +1,14 @@
 const B = import.meta.env.BASE_URL;
 
 export const SERIES = [
-  { id: 'normal',      label: 'ノーマル',       rate: 73 },
+  { id: 'normal',      label: 'ノーマル',       rate: 72 },
   { id: 'bonbon-drop', label: 'ボンボンドロップ', rate: 10 },
   { id: 'marshmallow', label: 'マシュマロ',       rate: 8  },
   { id: 'shaka-shaka', label: 'シャカシャカ',     rate: 5  },
   { id: 'water-seal',  label: 'ウォーター',       rate: 2  },
   { id: 'oshiri',      label: 'おしりシール',     rate: 1  },
   { id: 'special',     label: 'スペシャル',       rate: 1  },
+  { id: 'ultimate',    label: 'アルティメット',   rate: 1  },
 ];
 
 export const STICKERS = [
@@ -149,6 +150,12 @@ export const STICKERS = [
   { id:'os-kiwi',     name:'キウイのお尻',           series:'oshiri', imagePath:B+'assets/oshiri/kiwi-oshiri.png' },
   { id:'os-kakapo',   name:'カカポのぷにぷに',       series:'oshiri', imagePath:B+'assets/oshiri/kakapo-oshiri.png' },
 
+  // ===== おしりシール 追加分2 (4枚) =====
+  { id:'os-sea-otter',   name:'ラッコのぷりぷり',   series:'oshiri', imagePath:B+'assets/oshiri/os-sea-otter.png' },
+  { id:'os-harbor-seal', name:'ゴマフアザラシのお尻', series:'oshiri', imagePath:B+'assets/oshiri/os-harbor-seal.png' },
+  { id:'os-river-otter', name:'カワウソのまるまる', series:'oshiri', imagePath:B+'assets/oshiri/os-river-otter.png' },
+  { id:'os-dolphin',     name:'イルカのぽよぽよ',   series:'oshiri', imagePath:B+'assets/oshiri/os-dolphin.png' },
+
   // ===== スペシャル (12枚) =====
   { id:'sp-velvet-bunny',  name:'ベルベットうさぎ',   series:'special', imagePath:B+'assets/special/velvet-bunny.png' },
   { id:'sp-velvet-bear',   name:'ベルベットくま',     series:'special', imagePath:B+'assets/special/velvet-bear.png' },
@@ -162,6 +169,58 @@ export const STICKERS = [
   { id:'sp-puni-food',     name:'プニプニたべもの',   series:'special', imagePath:B+'assets/special/puni-food.png' },
   { id:'sp-puni-vehicles', name:'プニプニのりもの',   series:'special', imagePath:B+'assets/special/puni-vehicles.png' },
   { id:'sp-puni-creatures',name:'プニプニいきもの',   series:'special', imagePath:B+'assets/special/puni-creatures.png' },
+
+  // ===== スペシャル 追加分 (8枚) =====
+  { id:'sp-puni-shiba',        name:'プニプニ柴犬ほっぺ',   series:'special', imagePath:B+'assets/special/sp-puni-shiba.png' },
+  { id:'sp-puni-hamster',      name:'プニプニハムほっぺ',   series:'special', imagePath:B+'assets/special/sp-puni-hamster.png' },
+  { id:'sp-puni-rabbit',       name:'プニプニうさぎほっぺ', series:'special', imagePath:B+'assets/special/sp-puni-rabbit.png' },
+  { id:'sp-puni-elephant',     name:'プニプニゾウほっぺ',   series:'special', imagePath:B+'assets/special/sp-puni-elephant.png' },
+  { id:'sp-puni-bear-tummy',   name:'プニプニくまおなか',   series:'special', imagePath:B+'assets/special/sp-puni-bear-tummy.png' },
+  { id:'sp-puni-seal-tummy',   name:'プニプニあざらしおなか', series:'special', imagePath:B+'assets/special/sp-puni-seal-tummy.png' },
+  { id:'sp-puni-cat-tummy',    name:'プニプニねこおなか',   series:'special', imagePath:B+'assets/special/sp-puni-cat-tummy.png' },
+  { id:'sp-puni-penguin-tummy',name:'プニプニペンギンおなか', series:'special', imagePath:B+'assets/special/sp-puni-penguin-tummy.png' },
+
+  // ===== マシュマロシール 追加分 (8枚) =====
+  { id:'mm-sparrow',  name:'ぶっくりスズメ', series:'marshmallow', imagePath:B+'assets/marshmallow/mm-sparrow.png' },
+  { id:'mm-parakeet', name:'赤ちゃんインコ', series:'marshmallow', imagePath:B+'assets/marshmallow/mm-parakeet.png' },
+  { id:'mm-chick',    name:'ふわふわヒヨコ', series:'marshmallow', imagePath:B+'assets/marshmallow/mm-chick.png' },
+  { id:'mm-owl',      name:'赤ちゃんフクロウ', series:'marshmallow', imagePath:B+'assets/marshmallow/mm-owl.png' },
+  { id:'mm-octopus',  name:'赤ちゃんタコ',   series:'marshmallow', imagePath:B+'assets/marshmallow/mm-octopus.png' },
+  { id:'mm-dolphin',  name:'赤ちゃんイルカ', series:'marshmallow', imagePath:B+'assets/marshmallow/mm-dolphin.png' },
+  { id:'mm-seahorse', name:'赤ちゃんタツノオトシゴ', series:'marshmallow', imagePath:B+'assets/marshmallow/mm-seahorse.png' },
+  { id:'mm-manta',    name:'赤ちゃんマンタ', series:'marshmallow', imagePath:B+'assets/marshmallow/mm-manta.png' },
+
+  // ===== シャカシャカシール 追加分 (8枚) =====
+  { id:'ss-flower-blue',    name:'あおいはな',     series:'shaka-shaka', imagePath:B+'assets/shaka-shaka/ss-flower-blue.png' },
+  { id:'ss-heart-pink',     name:'ピンクハート',   series:'shaka-shaka', imagePath:B+'assets/shaka-shaka/ss-heart-pink.png' },
+  { id:'ss-mushroom-forest',name:'きのこのもり',   series:'shaka-shaka', imagePath:B+'assets/shaka-shaka/ss-mushroom-forest.png' },
+  { id:'ss-star-purple',    name:'むらさきの星',   series:'shaka-shaka', imagePath:B+'assets/shaka-shaka/ss-star-purple.png' },
+  { id:'ss-canary',         name:'カナリア',       series:'shaka-shaka', imagePath:B+'assets/shaka-shaka/ss-canary.png' },
+  { id:'ss-blue-jay',       name:'ブルージェイ',   series:'shaka-shaka', imagePath:B+'assets/shaka-shaka/ss-blue-jay.png' },
+  { id:'ss-eagle',          name:'わしおう',       series:'shaka-shaka', imagePath:B+'assets/shaka-shaka/ss-eagle.png' },
+  { id:'ss-hummingbird',    name:'ハチドリ',       series:'shaka-shaka', imagePath:B+'assets/shaka-shaka/ss-hummingbird.png' },
+
+  // ===== ウォーターシール 追加分2 (4枚) =====
+  { id:'ws-clownfish',  name:'クマノミ',       series:'water-seal', imagePath:B+'assets/water-seal/ws-clownfish.png' },
+  { id:'ws-sea-turtle', name:'ウミガメ',       series:'water-seal', imagePath:B+'assets/water-seal/ws-sea-turtle.png' },
+  { id:'ws-octopus',    name:'タコちゃん',     series:'water-seal', imagePath:B+'assets/water-seal/ws-octopus.png' },
+  { id:'ws-dolphin',    name:'イルカちゃん',   series:'water-seal', imagePath:B+'assets/water-seal/ws-dolphin.png' },
+
+  // ===== ノーマル 追加分3 (4枚) =====
+  { id:'nm-whale',       name:'くじらちゃん',   series:'normal', imagePath:B+'assets/normal/nm-whale.png' },
+  { id:'nm-fox-moon',    name:'つきのきつね',   series:'normal', imagePath:B+'assets/normal/nm-fox-moon.png' },
+  { id:'nm-angel-bunny', name:'てんしうさぎ',   series:'normal', imagePath:B+'assets/normal/nm-angel-bunny.png' },
+  { id:'nm-star-cat',    name:'ほしねこ',       series:'normal', imagePath:B+'assets/normal/nm-star-cat.png' },
+
+  // ===== アルティメット (8枚) =====
+  { id:'ul-gold-canary',  name:'ゴールドカナリア', series:'ultimate', imagePath:B+'assets/Ultimate/ul-gold-canary.png' },
+  { id:'ul-gold-bunny',   name:'ゴールドうさぎ',  series:'ultimate', imagePath:B+'assets/Ultimate/ul-gold-bunny.png' },
+  { id:'ul-gold-kitten',  name:'ゴールドこねこ',  series:'ultimate', imagePath:B+'assets/Ultimate/ul-gold-kitten.png' },
+  { id:'ul-gold-bear',    name:'ゴールドこぐま',  series:'ultimate', imagePath:B+'assets/Ultimate/ul-gold-bear.png' },
+  { id:'ul-gem-duckling', name:'ジェムあひるこ',  series:'ultimate', imagePath:B+'assets/Ultimate/ul-gem-duckling.png' },
+  { id:'ul-gem-red-panda',name:'ジェムレッサー',  series:'ultimate', imagePath:B+'assets/Ultimate/ul-gem-red-panda.png' },
+  { id:'ul-gem-penguin',  name:'ジェムペンギン',  series:'ultimate', imagePath:B+'assets/Ultimate/ul-gem-penguin.png' },
+  { id:'ul-gem-pug',      name:'ジェムパグ',      series:'ultimate', imagePath:B+'assets/Ultimate/ul-gem-pug.png' },
 ];
 
 export function rollGacha() {
@@ -183,6 +242,12 @@ export function rollGachaLegend() {
   return pool[Math.floor(Math.random() * pool.length)];
 }
 
+// ULTIMATEガチャ：ultimate から確定で1枚
+export function rollGachaUltimate() {
+  const pool = STICKERS.filter(s => s.series === 'ultimate');
+  return pool[Math.floor(Math.random() * pool.length)];
+}
+
 // シリーズ別交換ポイント（固定値）
 const SERIES_VALUE = {
   'normal':      10,
@@ -191,6 +256,7 @@ const SERIES_VALUE = {
   'shaka-shaka': 50,
   'water-seal':  74,
   'oshiri':      146,
+  'ultimate':    300,
   'special':     146,
 };
 export function getSeriesValue(seriesId) {

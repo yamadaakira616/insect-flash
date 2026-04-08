@@ -1,6 +1,6 @@
 import { useState, useEffect, useRef } from 'react';
 import Confetti from '../components/Confetti.jsx';
-import { rollGacha, rollGachaLegend, SERIES } from '../data/stickers.js';
+import { rollGacha, rollGachaLegend, rollGachaUltimate, SERIES } from '../data/stickers.js';
 import { GACHA_COST } from '../utils/gameLogic.js';
 import { playGachaTick, playGachaSlowTick, playGachaReveal, playGachaFlash } from '../utils/sound.js';
 
@@ -13,6 +13,7 @@ const FX_EXPLOSION = 4; // 爆発（超レア）
 const FX_RAINBOW   = 5; // レインボー（超超レア）
 const FX_COSMIC    = 6; // コズミック（激レア）
 const FX_LEGEND    = 7; // LEGEND確定（0.8%）★special/oshiri確定
+const FX_ULTIMATE  = 8; // ULTIMATE確定（1%）★ultimate確定
 
 // シリーズ別エフェクト確率 [PLAIN, CUTIN, REACH, BEAM, EXPLOSION, RAINBOW, COSMIC]
 // ノーマルは滅多にエフェクトが出ない。レア度が上がるほどエフェクトが出やすい。
@@ -24,11 +25,13 @@ const EFFECT_WEIGHTS = {
   'water-seal':  [28, 18, 22, 18, 10,  4,  0],  // 72%
   'oshiri':      [12, 15, 20, 24, 18, 11,  0],  // 88%
   'special':     [ 8, 12, 18, 24, 20, 15,  3],  // 92%（COSMICはLEGEND経由が主）
+  'ultimate':    [ 0,  0,  0,  0,  0,  0,  0],  // 必ずFX_ULTIMATE
 };
 
 const REVEAL_SFX = {
   'normal': 'common', 'bonbon-drop': 'rare', 'marshmallow': 'rare',
   'shaka-shaka': 'superRare', 'water-seal': 'ultra', 'oshiri': 'ultra', 'special': 'legend',
+  'ultimate': 'legend',
 };
 
 function weightedRandom(weights) {
@@ -58,6 +61,7 @@ const SERIES_COLORS = {
   'water-seal':  { bg:'#e0f2fe', text:'#0369a1', glow:'rgba(14,165,233,0.9)',  flash:'#bae6fd' },
   'oshiri':      { bg:'#fff1f2', text:'#be123c', glow:'rgba(244,63,94,0.9)',   flash:'#ffe4e6' },
   'special':     { bg:'#faf5ff', text:'#7e22ce', glow:'rgba(168,85,247,1)',    flash:'#e9d5ff' },
+  'ultimate':    { bg:'#fffbeb', text:'#92400e', glow:'rgba(251,191,36,1)',     flash:'#fde68a' },
 };
 
 const SERIES_LABELS = Object.fromEntries(SERIES.map(s => [s.id, s.label]));
@@ -92,6 +96,9 @@ export default function GachaScreen({ state, onBack, onPull }) {
   const [newStickerCount, setNewStickerCount] = useState(1);
   const [effect, setEffect]             = useState(FX_PLAIN);
   const [isLegend, setIsLegend]         = useState(false);
+  const [isUltimate, setIsUltimate]     = useState(false);
+  const [ultimateStep, setUltimateStep] = useState(0); // 0=暗転 1=text 2=firework
+  const [ultimateParticles, setUltimateParticles] = useState([]);
   const [rouletteIdx, setRouletteIdx]   = useState(0);
   const [screenFlash, setScreenFlash]   = useState(false);
   // cutinStep: 0=非表示 1=外側初期位置 2=閉じた 3=外へ出る
@@ -120,14 +127,17 @@ export default function GachaScreen({ state, onBack, onPull }) {
   function handlePull() {
     if (!canPull || phase !== 'idle') return;
 
-    // 0.8%でLEGEND確定（special/oshiri確定）
-    const legend = Math.random() < 0.008;
-    const sticker = legend ? rollGachaLegend() : rollGacha();
-    const fx = legend ? FX_LEGEND : pickEffect(sticker.series);
+    // 1%でULTIMATE確定、0.8%でLEGEND確定（special/oshiri確定）
+    const rand = Math.random();
+    const ultimate = rand < 0.01;
+    const legend   = !ultimate && rand < 0.018; // 0.01〜0.018 の範囲
+    const sticker  = ultimate ? rollGachaUltimate() : legend ? rollGachaLegend() : rollGacha();
+    const fx       = ultimate ? FX_ULTIMATE : legend ? FX_LEGEND : pickEffect(sticker.series);
 
     setResult(sticker);
     setEffect(fx);
     setIsLegend(legend);
+    setIsUltimate(ultimate);
     setParticles([]);
     setShaking(false);
     setBeamOn(false);
@@ -135,14 +145,51 @@ export default function GachaScreen({ state, onBack, onPull }) {
     setReachPulsing(false);
     setCutinStep(0);
     setLegendStep(0);
+    setUltimateStep(0);
+    setUltimateParticles([]);
 
-    if (legend) {
+    if (ultimate) {
+      doUltimate(sticker);
+    } else if (legend) {
       doLegend(sticker);
     } else if (fx === FX_CUTIN || fx === FX_COSMIC) {
       doCutin(sticker, fx);
     } else {
       doSpin(sticker, fx);
     }
+  }
+
+  // ===== ULTIMATE演出（宇宙暗転→虹ビッグバン→テキスト→カットイン→スピン） =====
+  function genUltimateParticles() {
+    return Array.from({ length: 60 }, (_, i) => {
+      const angle = (i / 60) * Math.PI * 2;
+      const dist  = 60 + Math.random() * 140;
+      const hue   = Math.floor((i / 60) * 360);
+      return {
+        id: i,
+        dx: Math.cos(angle) * dist,
+        dy: Math.sin(angle) * dist,
+        color: `hsl(${hue},100%,65%)`,
+        size: 4 + Math.random() * 8,
+        delay: Math.random() * 0.3,
+      };
+    });
+  }
+
+  function doUltimate(sticker) {
+    setPhase('ultimate');
+    setUltimateStep(0); // 深宇宙暗転
+    timerRef.current = setTimeout(() => {
+      setUltimateStep(1); // ULTIMATE テキスト出現
+      setUltimateParticles(genUltimateParticles());
+      timerRef.current = setTimeout(() => {
+        setUltimateStep(2); // 爆発パーティクル全開
+        timerRef.current = setTimeout(() => {
+          setUltimateParticles([]);
+          doCutin(sticker, FX_ULTIMATE);
+        }, 2400);
+      }, 1200);
+    }, 500);
   }
 
   // ===== LEGEND演出（暗転→金テキスト→カットイン→スピン→COSMIC） =====
@@ -315,7 +362,10 @@ export default function GachaScreen({ state, onBack, onPull }) {
     setResult(null);
     setIsNew(false);
     setIsLegend(false);
+    setIsUltimate(false);
     setParticles([]);
+    setUltimateParticles([]);
+    setUltimateStep(0);
     setShaking(false);
     setBeamOn(false);
     setRainbowOn(false);
@@ -327,25 +377,125 @@ export default function GachaScreen({ state, onBack, onPull }) {
 
   // ===== 描画用データ =====
   const colors = result ? (SERIES_COLORS[result.series] ?? SERIES_COLORS.normal) : SERIES_COLORS.normal;
-  const isHighRare = result && ['water-seal','oshiri','special','shaka-shaka'].includes(result.series);
+  const isHighRare = result && ['water-seal','oshiri','special','shaka-shaka','ultimate'].includes(result.series);
 
   const bgColor = phase === 'result'
     ? `linear-gradient(180deg, ${colors.bg} 0%, #fdf2f8 100%)`
+    : phase === 'ultimate'
+    ? 'linear-gradient(180deg,#000000 0%,#0a0010 50%,#000020 100%)'
     : phase === 'legend'
     ? 'linear-gradient(180deg,#000000 0%,#0a0020 100%)'
-    : effect === FX_COSMIC || effect === FX_LEGEND
+    : effect === FX_COSMIC || effect === FX_LEGEND || effect === FX_ULTIMATE
     ? 'linear-gradient(180deg,#070718 0%,#120830 50%,#070718 100%)'
     : 'linear-gradient(180deg,#2d0a3e 0%,#4a1260 50%,#2d0a3e 100%)';
 
   const cutinLeft  = cutinStep === 2 ? 'translateX(0)' : 'translateX(-101%)';
   const cutinRight = cutinStep === 2 ? 'translateX(0)' : 'translateX(101%)';
   const cutinTrans = cutinStep === 1 ? 'none' : 'transform 0.4s cubic-bezier(0.25,0.46,0.45,0.94)';
+  const ultimateColors = ['#ff0080','#ff8c00','#ffe000','#00ff80','#00e0ff','#8000ff','#ff00ff'];
 
   return (
     <div
       className={`min-h-screen flex flex-col items-center relative overflow-hidden${shaking ? ' gacha-shake' : ''}`}
       style={{ background: bgColor, transition: 'background 0.8s ease' }}
     >
+
+      {/* ===== ULTIMATE 演出 ===== */}
+      {phase === 'ultimate' && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center overflow-hidden"
+             style={{ background: 'radial-gradient(ellipse at center, #0a002a 0%, #000000 100%)' }}>
+
+          {/* 背景の虹ストライプ回転 */}
+          {ultimateStep >= 1 && (
+            <div className="absolute inset-0" style={{ animation: 'ultimateBgSpin 3s linear infinite' }}>
+              {ultimateColors.map((c, i) => (
+                <div key={i} style={{
+                  position: 'absolute', inset: 0,
+                  background: `conic-gradient(from ${i * (360/7)}deg, ${c}22, transparent ${100/7}%)`,
+                }}/>
+              ))}
+            </div>
+          )}
+
+          {/* 爆発パーティクル */}
+          {ultimateParticles.map(p => (
+            <div key={p.id} style={{
+              position: 'absolute', top: '50%', left: '50%',
+              width: p.size, height: p.size, borderRadius: '50%',
+              background: p.color,
+              boxShadow: `0 0 ${p.size*2}px ${p.color}`,
+              animation: `ultimateParticle 1.8s cubic-bezier(0,0,0.2,1) ${p.delay}s both`,
+              '--dx': `${p.dx}px`, '--dy': `${p.dy}px`,
+            }}/>
+          ))}
+
+          {/* 回転リング群 */}
+          {ultimateStep >= 1 && [160,220,290,360,440].map((r, i) => (
+            <div key={i} style={{
+              position: 'absolute',
+              width: r*2, height: r*2, borderRadius: '50%',
+              border: `${3-i*0.4}px solid ${ultimateColors[i % ultimateColors.length]}`,
+              boxShadow: `0 0 20px ${ultimateColors[i % ultimateColors.length]}, inset 0 0 20px ${ultimateColors[i % ultimateColors.length]}44`,
+              animation: `ultimateRing ${1.2 + i*0.3}s linear ${i%2===0?'':'reverse'} infinite`,
+            }}/>
+          ))}
+
+          {/* 流れ星 */}
+          {ultimateStep >= 1 && [...Array(14)].map((_, i) => (
+            <div key={i} style={{
+              position: 'absolute',
+              width: 3, height: 70 + Math.random()*40,
+              background: `linear-gradient(180deg, transparent, ${ultimateColors[i%7]}, transparent)`,
+              left: `${4 + i * 7}%`, top: '-15%',
+              animation: `ultimateShoot ${0.8 + (i%3)*0.4}s linear ${i*0.18}s infinite`,
+              transform: `rotate(${-10 + (i%5)*5}deg)`,
+            }}/>
+          ))}
+
+          {/* メインテキスト */}
+          {ultimateStep >= 1 && (
+            <div className="relative z-10 flex flex-col items-center gap-4"
+                 style={{ animation: 'ultimateTextIn 0.7s cubic-bezier(0.175,0.885,0.32,1.275) both' }}>
+              {/* 宝石アイコン行 */}
+              <div style={{ display:'flex', gap:10 }}>
+                {['💎','✨','👑','✨','💎'].map((s,i) => (
+                  <span key={i} style={{
+                    fontSize:'1.6rem',
+                    filter:'drop-shadow(0 0 12px cyan)',
+                    animation:`ultimateGem 0.6s ease ${i*0.1}s infinite alternate`,
+                  }}>{s}</span>
+                ))}
+              </div>
+
+              {/* ULTIMATE 文字 */}
+              <div style={{
+                fontSize:'3.8rem', fontWeight:900,
+                background:'linear-gradient(135deg,#ff0080,#ff8c00,#ffe000,#00ff80,#00e0ff,#8000ff,#ff00ff)',
+                WebkitBackgroundClip:'text', WebkitTextFillColor:'transparent',
+                backgroundClip:'text',
+                filter:'drop-shadow(0 0 30px rgba(255,255,255,0.8))',
+                letterSpacing:'0.1em',
+                animation:'ultimateTextGlow 0.8s ease-in-out infinite alternate',
+              }}>ULTIMATE</div>
+
+              <div style={{
+                fontSize:'1.1rem', fontWeight:900, color:'#fff',
+                letterSpacing:'0.25em',
+                textShadow:'0 0 20px cyan, 0 0 40px cyan',
+                animation:'ultimatePulse 0.5s ease-in-out infinite',
+              }}>★ 最高のレア確定 ★</div>
+
+              {/* 虹バー */}
+              <div style={{
+                width:280, height:6, borderRadius:99,
+                background:'linear-gradient(90deg,#ff0080,#ff8c00,#ffe000,#00ff80,#00e0ff,#8000ff,#ff00ff)',
+                boxShadow:'0 0 20px rgba(255,255,255,0.8)',
+                animation:'ultimateBarGlow 0.6s ease infinite alternate',
+              }}/>
+            </div>
+          )}
+        </div>
+      )}
 
       {/* ===== LEGEND 暗転演出 ===== */}
       {phase === 'legend' && (
@@ -408,50 +558,61 @@ export default function GachaScreen({ state, onBack, onPull }) {
           <div className="fixed inset-y-0 left-0 z-40 pointer-events-none flex items-center justify-end pr-5"
                style={{
                  width: '50%',
-                 background: isLegend
+                 background: isUltimate
+                   ? 'linear-gradient(135deg,#000000,#0a0030,#1a0050)'
+                   : isLegend
                    ? 'linear-gradient(135deg,#000000,#1a0040)'
                    : 'linear-gradient(135deg,#0a001a,#2a005a)',
                  transform: cutinLeft,
                  transition: cutinTrans,
-                 borderRight: `3px solid ${isLegend ? 'gold' : '#a855f7'}`,
-                 boxShadow: `4px 0 30px ${isLegend ? 'rgba(255,215,0,0.5)' : 'rgba(168,85,247,0.4)'}`,
+                 borderRight: `3px solid ${isUltimate ? 'cyan' : isLegend ? 'gold' : '#a855f7'}`,
+                 boxShadow: `4px 0 30px ${isUltimate ? 'rgba(0,255,255,0.6)' : isLegend ? 'rgba(255,215,0,0.5)' : 'rgba(168,85,247,0.4)'}`,
                }}>
             <span style={{
               fontSize: 64,
-              filter: `drop-shadow(0 0 20px ${isLegend ? 'gold' : '#a855f7'})`,
-            }}>{isLegend ? '👑' : '⚡'}</span>
+              filter: `drop-shadow(0 0 20px ${isUltimate ? 'cyan' : isLegend ? 'gold' : '#a855f7'})`,
+            }}>{isUltimate ? '💎' : isLegend ? '👑' : '⚡'}</span>
           </div>
           <div className="fixed inset-y-0 right-0 z-40 pointer-events-none flex items-center justify-start pl-5"
                style={{
                  width: '50%',
-                 background: isLegend
+                 background: isUltimate
+                   ? 'linear-gradient(225deg,#000000,#0a0030,#1a0050)'
+                   : isLegend
                    ? 'linear-gradient(225deg,#000000,#1a0040)'
                    : 'linear-gradient(225deg,#0a001a,#2a005a)',
                  transform: cutinRight,
                  transition: cutinTrans,
-                 borderLeft: `3px solid ${isLegend ? 'gold' : '#a855f7'}`,
-                 boxShadow: `-4px 0 30px ${isLegend ? 'rgba(255,215,0,0.5)' : 'rgba(168,85,247,0.4)'}`,
+                 borderLeft: `3px solid ${isUltimate ? 'cyan' : isLegend ? 'gold' : '#a855f7'}`,
+                 boxShadow: `-4px 0 30px ${isUltimate ? 'rgba(0,255,255,0.6)' : isLegend ? 'rgba(255,215,0,0.5)' : 'rgba(168,85,247,0.4)'}`,
                }}>
             <span style={{
               fontSize: 64,
-              filter: `drop-shadow(0 0 20px ${isLegend ? 'gold' : '#a855f7'})`,
+              filter: `drop-shadow(0 0 20px ${isUltimate ? 'cyan' : isLegend ? 'gold' : '#a855f7'})`,
               transform: 'scaleX(-1)', display: 'inline-block',
-            }}>{isLegend ? '👑' : '⚡'}</span>
+            }}>{isUltimate ? '💎' : isLegend ? '👑' : '⚡'}</span>
           </div>
           {cutinStep === 2 && (
             <div className="fixed inset-0 z-50 flex items-center justify-center pointer-events-none">
               <div style={{
-                fontSize: isLegend ? '3rem' : '2.8rem',
+                fontSize: isUltimate ? '2.4rem' : isLegend ? '3rem' : '2.8rem',
                 fontWeight: 900,
-                color: isLegend ? 'gold' : '#e879f9',
-                textShadow: isLegend
+                color: isUltimate ? 'transparent' : isLegend ? 'gold' : '#e879f9',
+                background: isUltimate ? 'linear-gradient(90deg,#ff0080,#ff8c00,#ffe000,#00ff80,#00e0ff,#8000ff)' : 'none',
+                WebkitBackgroundClip: isUltimate ? 'text' : 'unset',
+                WebkitTextFillColor: isUltimate ? 'transparent' : 'unset',
+                backgroundClip: isUltimate ? 'text' : 'unset',
+                textShadow: isUltimate
+                  ? 'none'
+                  : isLegend
                   ? '0 0 20px gold, 0 0 60px gold, 0 0 120px rgba(255,200,0,0.4)'
                   : '0 0 20px #a855f7, 0 0 60px #a855f7',
+                filter: isUltimate ? 'drop-shadow(0 0 20px cyan)' : 'none',
                 animation: 'cutinTextAnim 1s ease-in-out infinite',
                 letterSpacing: '0.08em',
                 WebkitTextStroke: isLegend ? '1px #ff8c00' : 'none',
               }}>
-                {isLegend ? '👑 LEGEND PULL！！' : '🎰 カットイン！！'}
+                {isUltimate ? '💎 ULTIMATE PULL！！' : isLegend ? '👑 LEGEND PULL！！' : '🎰 カットイン！！'}
               </div>
             </div>
           )}
@@ -902,6 +1063,42 @@ export default function GachaScreen({ state, onBack, onPull }) {
         @keyframes pingKf {
           0%   { transform: scale(1);   opacity: 0.8; }
           100% { transform: scale(2.2); opacity: 0;   }
+        }
+        @keyframes ultimateParticle {
+          from { transform: translate(-50%,-50%) scale(1); opacity: 1; }
+          to   { transform: translate(calc(-50% + var(--dx)), calc(-50% + var(--dy))) scale(0); opacity: 0; }
+        }
+        @keyframes ultimateBgSpin {
+          from { transform: rotate(0deg); }
+          to   { transform: rotate(360deg); }
+        }
+        @keyframes ultimateRing {
+          from { transform: rotate(0deg); }
+          to   { transform: rotate(360deg); }
+        }
+        @keyframes ultimateShoot {
+          from { transform: translateY(-20px) rotate(var(--rot,15deg)); opacity: 1; }
+          to   { transform: translateY(110vh) rotate(var(--rot,15deg)); opacity: 0; }
+        }
+        @keyframes ultimateTextIn {
+          from { transform: scale(0.3) translateY(40px); opacity: 0; }
+          to   { transform: scale(1) translateY(0); opacity: 1; }
+        }
+        @keyframes ultimateTextGlow {
+          from { filter: drop-shadow(0 0 20px rgba(255,255,255,0.6)); }
+          to   { filter: drop-shadow(0 0 50px rgba(255,255,255,1)) drop-shadow(0 0 80px cyan); }
+        }
+        @keyframes ultimatePulse {
+          0%,100% { opacity: 1; transform: scale(1); }
+          50%     { opacity: 0.7; transform: scale(1.08); }
+        }
+        @keyframes ultimateBarGlow {
+          from { box-shadow: 0 0 10px rgba(255,255,255,0.5); }
+          to   { box-shadow: 0 0 30px rgba(255,255,255,1), 0 0 60px cyan; }
+        }
+        @keyframes ultimateGem {
+          from { transform: scale(0.8) translateY(0); }
+          to   { transform: scale(1.3) translateY(-6px); }
         }
         @keyframes explodeParticle {
           from {

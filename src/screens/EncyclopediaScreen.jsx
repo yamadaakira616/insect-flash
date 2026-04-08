@@ -9,6 +9,7 @@ const SERIES_THEME = {
   'water-seal':  { color: '#0ea5e9', bg: '#e0f2fe', label: 'ウォーター' },
   'oshiri':      { color: '#f43f5e', bg: '#fff1f2', label: 'おしり' },
   'special':     { color: '#8b5cf6', bg: '#faf5ff', label: 'スペシャル' },
+  'ultimate':    { color: '#d97706', bg: '#fffbeb', label: '💎アルティメット' },
 };
 
 export default function EncyclopediaScreen({ state, onBack }) {
