@@ -186,11 +186,11 @@ export function rollGachaLegend() {
 // シリーズ別交換ポイント（固定値）
 const SERIES_VALUE = {
   'normal':      10,
-  'bonbon-drop': 146,
+  'bonbon-drop': 30,
   'marshmallow': 40,
   'shaka-shaka': 50,
   'water-seal':  74,
-  'oshiri':      73,
+  'oshiri':      146,
   'special':     146,
 };
 export function getSeriesValue(seriesId) {
