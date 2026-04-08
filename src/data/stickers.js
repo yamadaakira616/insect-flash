@@ -128,7 +128,7 @@ export const STICKERS = [
   { id:'nm-quokka',       name:'クオッカ',         series:'normal', imagePath:B+'assets/normal/nm-quokka.png' },
   { id:'nm-mendako',      name:'メンダコ',         series:'normal', imagePath:B+'assets/normal/nm-mendako.png' },
   { id:'nm-shoebill',     name:'ハシビロコウ',     series:'normal', imagePath:B+'assets/normal/nm-shoebill.png' },
-  { id:'nm-axolotl',      name:'アホロートル',     series:'normal', imagePath:B+'assets/normal/nm-axolotl.png' },
+  { id:'nm-axolotl2',     name:'アホロートル',     series:'normal', imagePath:B+'assets/normal/nm-axolotl.png' },
   { id:'nm-kappa',        name:'カッパ',           series:'normal', imagePath:B+'assets/normal/nm-kappa.png' },
   { id:'nm-karakasa',     name:'からかさ',         series:'normal', imagePath:B+'assets/normal/nm-karakasa.png' },
   { id:'nm-kitsune',      name:'きつね',           series:'normal', imagePath:B+'assets/normal/nm-kitsune.png' },
