@@ -1,11 +1,11 @@
 const B = import.meta.env.BASE_URL;
 
 export const SERIES = [
-  { id: 'normal',      label: 'ノーマル',       rate: 72 },
-  { id: 'bonbon-drop', label: 'ボンボンドロップ', rate: 10 },
+  { id: 'normal',      label: 'ノーマル',       rate: 68 },
+  { id: 'bonbon-drop', label: 'ボンボンドロップ', rate: 12 },
   { id: 'marshmallow', label: 'マシュマロ',       rate: 8  },
-  { id: 'shaka-shaka', label: 'シャカシャカ',     rate: 5  },
-  { id: 'water-seal',  label: 'ウォーター',       rate: 2  },
+  { id: 'shaka-shaka', label: 'シャカシャカ',     rate: 6  },
+  { id: 'water-seal',  label: 'ウォーター',       rate: 3  },
   { id: 'oshiri',      label: 'おしりシール',     rate: 1  },
   { id: 'special',     label: 'スペシャル',       rate: 1  },
   { id: 'ultimate',    label: 'アルティメット',   rate: 1  },
@@ -65,6 +65,28 @@ export const STICKERS = [
   { id:'bd-mushroom',    name:'スペースきのこ',     series:'bonbon-drop', imagePath:B+'assets/bonbon-drop/space-mushroom.png' },
   { id:'bd-magic-book',  name:'まほうの本',         series:'bonbon-drop', imagePath:B+'assets/bonbon-drop/magic-book.png' },
   { id:'bd-ghost',       name:'ぎゃらくしーおばけ', series:'bonbon-drop', imagePath:B+'assets/bonbon-drop/galaxy-ghost.png' },
+
+  // ===== ボンボンドロップ 追加分 (野菜・くだもの 20枚) =====
+  { id:'bd-tomato',        name:'トマトボンボン',           series:'bonbon-drop', imagePath:B+'assets/bonbon-drop/bd-tomato.png' },
+  { id:'bd-red-pepper',    name:'パプリカボンボン',         series:'bonbon-drop', imagePath:B+'assets/bonbon-drop/bd-red-pepper.png' },
+  { id:'bd-cucumber',      name:'きゅうりボンボン',         series:'bonbon-drop', imagePath:B+'assets/bonbon-drop/bd-cucumber.png' },
+  { id:'bd-pumpkin',       name:'かぼちゃボンボン',         series:'bonbon-drop', imagePath:B+'assets/bonbon-drop/bd-pumpkin.png' },
+  { id:'bd-strawberry',    name:'いちごボンボン',           series:'bonbon-drop', imagePath:B+'assets/bonbon-drop/bd-strawberry.png' },
+  { id:'bd-grape',         name:'ぶどうボンボン',           series:'bonbon-drop', imagePath:B+'assets/bonbon-drop/bd-grape.png' },
+  { id:'bd-apple',         name:'りんごボンボン',           series:'bonbon-drop', imagePath:B+'assets/bonbon-drop/bd-apple.png' },
+  { id:'bd-mango',         name:'マンゴーボンボン',         series:'bonbon-drop', imagePath:B+'assets/bonbon-drop/bd-mango.png' },
+  { id:'bd-carrot',        name:'にんじんボンボン',         series:'bonbon-drop', imagePath:B+'assets/bonbon-drop/bd-carrot.png' },
+  { id:'bd-green-pepper',  name:'ピーマンボンボン',         series:'bonbon-drop', imagePath:B+'assets/bonbon-drop/bd-green-pepper.png' },
+  { id:'bd-eggplant',      name:'なすボンボン',             series:'bonbon-drop', imagePath:B+'assets/bonbon-drop/bd-eggplant.png' },
+  { id:'bd-corn',          name:'とうもろこしボンボン',     series:'bonbon-drop', imagePath:B+'assets/bonbon-drop/bd-corn.png' },
+  { id:'bd-cherry-tomato', name:'ぷちトマトボンボン',       series:'bonbon-drop', imagePath:B+'assets/bonbon-drop/bd-cherry-tomato.png' },
+  { id:'bd-snap-pea',      name:'スナップえんどうボンボン', series:'bonbon-drop', imagePath:B+'assets/bonbon-drop/bd-snap-pea.png' },
+  { id:'bd-potato',        name:'じゃがいもボンボン',       series:'bonbon-drop', imagePath:B+'assets/bonbon-drop/bd-potato.png' },
+  { id:'bd-kinoko',        name:'きのこボンボン',           series:'bonbon-drop', imagePath:B+'assets/bonbon-drop/bd-kinoko.png' },
+  { id:'bd-banana',        name:'バナナボンボン',           series:'bonbon-drop', imagePath:B+'assets/bonbon-drop/bd-banana.png' },
+  { id:'bd-kiwi',          name:'キウイボンボン',           series:'bonbon-drop', imagePath:B+'assets/bonbon-drop/bd-kiwi.png' },
+  { id:'bd-peach',         name:'もものボンボン',           series:'bonbon-drop', imagePath:B+'assets/bonbon-drop/bd-peach.png' },
+  { id:'bd-muscat',        name:'マスカットボンボン',       series:'bonbon-drop', imagePath:B+'assets/bonbon-drop/bd-muscat.png' },
 
   // ===== ボンボンドロップ 追加分 (妖怪コレクション 8枚) =====
   { id:'bd-kappa-yokai',    name:'カッパ',       series:'bonbon-drop', imagePath:B+'assets/bonbon-drop/bd-kappa-yokai.png' },
@@ -156,6 +178,16 @@ export const STICKERS = [
   { id:'os-river-otter', name:'カワウソのまるまる', series:'oshiri', imagePath:B+'assets/oshiri/os-river-otter.png' },
   { id:'os-dolphin',     name:'イルカのぽよぽよ',   series:'oshiri', imagePath:B+'assets/oshiri/os-dolphin.png' },
 
+  // ===== おしりシール 追加分3 (ベイビー 8枚) =====
+  { id:'os-angel-baby',    name:'てんしベイビー',       series:'oshiri', imagePath:B+'assets/oshiri/angel-baby-oshiri.png' },
+  { id:'os-chick-baby',    name:'ひよこベイビー',       series:'oshiri', imagePath:B+'assets/oshiri/chick-baby-oshiri.png' },
+  { id:'os-dino-baby',     name:'きょうりゅうベイビー', series:'oshiri', imagePath:B+'assets/oshiri/dino-baby-oshiri.png' },
+  { id:'os-lavender-baby', name:'ラベンダーベイビー',   series:'oshiri', imagePath:B+'assets/oshiri/lavender-baby-oshiri.png' },
+  { id:'os-elephant-baby', name:'ぞうベイビー',         series:'oshiri', imagePath:B+'assets/oshiri/elephant-baby-oshiri.png' },
+  { id:'os-bear-baby',     name:'くまベイビー',         series:'oshiri', imagePath:B+'assets/oshiri/bear-baby-oshiri.png' },
+  { id:'os-mouse-baby',    name:'ねずみベイビー',       series:'oshiri', imagePath:B+'assets/oshiri/mouse-baby-oshiri.png' },
+  { id:'os-duck-baby',     name:'あひるベイビー',       series:'oshiri', imagePath:B+'assets/oshiri/duck-baby-oshiri.png' },
+
   // ===== スペシャル (12枚) =====
   { id:'sp-velvet-bunny',  name:'ベルベットうさぎ',   series:'special', imagePath:B+'assets/special/velvet-bunny.png' },
   { id:'sp-velvet-bear',   name:'ベルベットくま',     series:'special', imagePath:B+'assets/special/velvet-bear.png' },
@@ -190,6 +222,24 @@ export const STICKERS = [
   { id:'mm-seahorse', name:'赤ちゃんタツノオトシゴ', series:'marshmallow', imagePath:B+'assets/marshmallow/mm-seahorse.png' },
   { id:'mm-manta',    name:'赤ちゃんマンタ', series:'marshmallow', imagePath:B+'assets/marshmallow/mm-manta.png' },
 
+  // ===== シャカシャカシール 追加分 (くだもの・野菜 16枚) =====
+  { id:'ss-grape',       name:'ぶどうシャカシャカ',         series:'shaka-shaka', imagePath:B+'assets/shaka-shaka/ss-grape.png' },
+  { id:'ss-kiwi-berry',  name:'キウイベリーシャカシャカ',   series:'shaka-shaka', imagePath:B+'assets/shaka-shaka/ss-kiwi-berry.png' },
+  { id:'ss-strawberry',  name:'いちごシャカシャカ',         series:'shaka-shaka', imagePath:B+'assets/shaka-shaka/ss-strawberry.png' },
+  { id:'ss-fig',         name:'いちじくシャカシャカ',       series:'shaka-shaka', imagePath:B+'assets/shaka-shaka/ss-fig.png' },
+  { id:'ss-broccoli',    name:'ブロッコリーシャカシャカ',   series:'shaka-shaka', imagePath:B+'assets/shaka-shaka/ss-broccoli.png' },
+  { id:'ss-bell-pepper', name:'ピーマンシャカシャカ',       series:'shaka-shaka', imagePath:B+'assets/shaka-shaka/ss-bell-pepper.png' },
+  { id:'ss-carrot',      name:'にんじんシャカシャカ',       series:'shaka-shaka', imagePath:B+'assets/shaka-shaka/ss-carrot.png' },
+  { id:'ss-tomato',      name:'トマトシャカシャカ',         series:'shaka-shaka', imagePath:B+'assets/shaka-shaka/ss-tomato.png' },
+  { id:'ss-peach',       name:'もものシャカシャカ',         series:'shaka-shaka', imagePath:B+'assets/shaka-shaka/ss-peach.png' },
+  { id:'ss-kiwi',        name:'キウイシャカシャカ',         series:'shaka-shaka', imagePath:B+'assets/shaka-shaka/ss-kiwi.png' },
+  { id:'ss-banana',      name:'バナナシャカシャカ',         series:'shaka-shaka', imagePath:B+'assets/shaka-shaka/ss-banana.png' },
+  { id:'ss-pineapple',   name:'パイナップルシャカシャカ',   series:'shaka-shaka', imagePath:B+'assets/shaka-shaka/ss-pineapple.png' },
+  { id:'ss-eggplant',    name:'なすシャカシャカ',           series:'shaka-shaka', imagePath:B+'assets/shaka-shaka/ss-eggplant.png' },
+  { id:'ss-asparagus',   name:'アスパラシャカシャカ',       series:'shaka-shaka', imagePath:B+'assets/shaka-shaka/ss-asparagus.png' },
+  { id:'ss-onion',       name:'たまねぎシャカシャカ',       series:'shaka-shaka', imagePath:B+'assets/shaka-shaka/ss-onion.png' },
+  { id:'ss-mushroom',    name:'きのこシャカシャカ',         series:'shaka-shaka', imagePath:B+'assets/shaka-shaka/ss-mushroom.png' },
+
   // ===== シャカシャカシール 追加分 (8枚) =====
   { id:'ss-flower-blue',    name:'あおいはな',     series:'shaka-shaka', imagePath:B+'assets/shaka-shaka/ss-flower-blue.png' },
   { id:'ss-heart-pink',     name:'ピンクハート',   series:'shaka-shaka', imagePath:B+'assets/shaka-shaka/ss-heart-pink.png' },
@@ -206,11 +256,47 @@ export const STICKERS = [
   { id:'ws-octopus',    name:'タコちゃん',     series:'water-seal', imagePath:B+'assets/water-seal/ws-octopus.png' },
   { id:'ws-dolphin',    name:'イルカちゃん',   series:'water-seal', imagePath:B+'assets/water-seal/ws-dolphin.png' },
 
+  // ===== ウォーターシール 追加分3 (野菜 8枚) =====
+  { id:'ws-cabbage',      name:'キャベツウォーター',       series:'water-seal', imagePath:B+'assets/water-seal/ws-cabbage.png' },
+  { id:'ws-broccoli',     name:'ブロッコリーウォーター',   series:'water-seal', imagePath:B+'assets/water-seal/ws-broccoli.png' },
+  { id:'ws-peas',         name:'えんどうウォーター',       series:'water-seal', imagePath:B+'assets/water-seal/ws-peas.png' },
+  { id:'ws-green-pepper', name:'ピーマンウォーター',       series:'water-seal', imagePath:B+'assets/water-seal/ws-green-pepper.png' },
+  { id:'ws-carrot',       name:'にんじんウォーター',       series:'water-seal', imagePath:B+'assets/water-seal/ws-carrot.png' },
+  { id:'ws-radish',       name:'だいこんウォーター',       series:'water-seal', imagePath:B+'assets/water-seal/ws-radish.png' },
+  { id:'ws-eggplant',     name:'なすウォーター',           series:'water-seal', imagePath:B+'assets/water-seal/ws-eggplant.png' },
+  { id:'ws-corn',         name:'とうもろこしウォーター',   series:'water-seal', imagePath:B+'assets/water-seal/ws-corn.png' },
+
   // ===== ノーマル 追加分3 (4枚) =====
   { id:'nm-whale',       name:'くじらちゃん',   series:'normal', imagePath:B+'assets/normal/nm-whale.png' },
   { id:'nm-fox-moon',    name:'つきのきつね',   series:'normal', imagePath:B+'assets/normal/nm-fox-moon.png' },
   { id:'nm-angel-bunny', name:'てんしうさぎ',   series:'normal', imagePath:B+'assets/normal/nm-angel-bunny.png' },
   { id:'nm-star-cat',    name:'ほしねこ',       series:'normal', imagePath:B+'assets/normal/nm-star-cat.png' },
+
+  // ===== ノーマル 追加分4 (野菜・くだもの 24枚) =====
+  { id:'nm-bell-pepper',   name:'ピーマンちゃん',     series:'normal', imagePath:B+'assets/normal/nm-bell-pepper.png' },
+  { id:'nm-corn',          name:'コーンちゃん',       series:'normal', imagePath:B+'assets/normal/nm-corn.png' },
+  { id:'nm-onion',         name:'たまねぎちゃん',     series:'normal', imagePath:B+'assets/normal/nm-onion.png' },
+  { id:'nm-broccoli',      name:'ブロッコリーちゃん', series:'normal', imagePath:B+'assets/normal/nm-broccoli.png' },
+  { id:'nm-eggplant',      name:'なすちゃん',         series:'normal', imagePath:B+'assets/normal/nm-eggplant.png' },
+  { id:'nm-sweet-potato',  name:'さつまいもちゃん',   series:'normal', imagePath:B+'assets/normal/nm-sweet-potato.png' },
+  { id:'nm-asparagus',     name:'アスパラちゃん',     series:'normal', imagePath:B+'assets/normal/nm-asparagus.png' },
+  { id:'nm-radish',        name:'こかぶちゃん',       series:'normal', imagePath:B+'assets/normal/nm-radish.png' },
+  { id:'nm-peach-pack',    name:'もものシール',       series:'normal', imagePath:B+'assets/normal/nm-peach-pack.png' },
+  { id:'nm-kiwi-pack',     name:'キウイのシール',     series:'normal', imagePath:B+'assets/normal/nm-kiwi-pack.png' },
+  { id:'nm-banana-pack',   name:'バナナのシール',     series:'normal', imagePath:B+'assets/normal/nm-banana-pack.png' },
+  { id:'nm-pineapple-pack',name:'パイナップルのシール',series:'normal', imagePath:B+'assets/normal/nm-pineapple-pack.png' },
+  { id:'nm-apple',         name:'りんごちゃん',       series:'normal', imagePath:B+'assets/normal/nm-apple.png' },
+  { id:'nm-watermelon',    name:'すいかちゃん',       series:'normal', imagePath:B+'assets/normal/nm-watermelon.png' },
+  { id:'nm-grape',         name:'ぶどうちゃん',       series:'normal', imagePath:B+'assets/normal/nm-grape.png' },
+  { id:'nm-kiwi',          name:'キウイちゃん',       series:'normal', imagePath:B+'assets/normal/nm-kiwi.png' },
+  { id:'nm-peach',         name:'もものちゃん',       series:'normal', imagePath:B+'assets/normal/nm-peach.png' },
+  { id:'nm-banana',        name:'バナナちゃん',       series:'normal', imagePath:B+'assets/normal/nm-banana.png' },
+  { id:'nm-strawberry',    name:'いちごちゃん',       series:'normal', imagePath:B+'assets/normal/nm-strawberry.png' },
+  { id:'nm-pineapple',     name:'パイナップルちゃん', series:'normal', imagePath:B+'assets/normal/nm-pineapple.png' },
+  { id:'nm-carrot',        name:'にんじんちゃん',     series:'normal', imagePath:B+'assets/normal/nm-carrot.png' },
+  { id:'nm-white-radish',  name:'だいこんちゃん',     series:'normal', imagePath:B+'assets/normal/nm-white-radish.png' },
+  { id:'nm-cabbage',       name:'キャベツちゃん',     series:'normal', imagePath:B+'assets/normal/nm-cabbage.png' },
+  { id:'nm-tomato',        name:'トマトちゃん',       series:'normal', imagePath:B+'assets/normal/nm-tomato.png' },
 
   // ===== アルティメット (12枚) =====
   { id:'ul-gold-canary',    name:'ゴールドカナリア',     series:'ultimate', imagePath:B+'assets/Ultimate/ul-gold-canary.png' },
