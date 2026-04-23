@@ -1,4 +1,4 @@
-// 50レベル分のテーブル
+// 59レベル分のテーブル
 const LEVEL_TABLE = [
   // 1桁
   { digits:1, count:2, ms:2000, label:'1けた 2こ', world:1 },  // Lv1
@@ -37,22 +37,31 @@ const LEVEL_TABLE = [
   { digits:2, count:6, ms:1200, label:'2けた 6こ', world:2 },
   { digits:2, count:7, ms:1400, label:'2けた 7こ', world:2 },
   { digits:2, count:7, ms:1200, label:'2けた 7こ', world:2 }, // Lv35
+  { digits:2, count:7, ms:1400, label:'2けた 7こ', world:2 }, // Lv36 (7こ×10秒)
+  { digits:2, count:7, ms:1300, label:'2けた 7こ', world:2 }, // Lv37 (7こ×9秒)
+  { digits:2, count:7, ms:1100, label:'2けた 7こ', world:2 }, // Lv38 (7こ×8秒)
+  { digits:2, count:8, ms:1250, label:'2けた 8こ', world:2 }, // Lv39 (8こ×10秒)
+  { digits:2, count:8, ms:1100, label:'2けた 8こ', world:2 }, // Lv40 (8こ×9秒)
+  { digits:2, count:9, ms:1000, label:'2けた 9こ', world:2 }, // Lv41 (9こ×9秒)
+  { digits:2, count:10, ms:1200, label:'2けた 10こ', world:2 }, // Lv42 (10こ×12秒)
+  { digits:2, count:10, ms:1100, label:'2けた 10こ', world:2 }, // Lv43 (10こ×11秒)
+  { digits:2, count:10, ms:1000, label:'2けた 10こ', world:2 }, // Lv44 (10こ×10秒) ← GOAL
   // 3桁
   { digits:3, count:2, ms:2000, label:'3けた 2こ', world:3 },
   { digits:3, count:2, ms:1700, label:'3けた 2こ', world:3 },
   { digits:3, count:3, ms:2000, label:'3けた 3こ', world:3 },
   { digits:3, count:3, ms:1700, label:'3けた 3こ', world:3 },
-  { digits:3, count:3, ms:1500, label:'3けた 3こ', world:3 }, // Lv40
+  { digits:3, count:3, ms:1500, label:'3けた 3こ', world:3 }, // Lv49
   { digits:3, count:4, ms:1700, label:'3けた 4こ', world:3 },
-  { digits:3, count:4, ms:1500, label:'3けた 4こ', world:3 },
+  { digits:3, count:4, ms:1500, label:'3けた 4こ', world:3 }, // Lv51
   { digits:3, count:4, ms:1300, label:'3けた 4こ', world:3 },
   { digits:3, count:5, ms:1500, label:'3けた 5こ', world:3 },
-  { digits:3, count:5, ms:1300, label:'3けた 5こ', world:3 }, // Lv45
+  { digits:3, count:5, ms:1300, label:'3けた 5こ', world:3 }, // Lv54
   { digits:3, count:6, ms:1300, label:'3けた 6こ', world:3 },
   { digits:3, count:6, ms:1100, label:'3けた 6こ', world:3 },
   { digits:3, count:7, ms:1200, label:'3けた 7こ', world:3 },
   { digits:3, count:7, ms:1000, label:'3けた 7こ', world:3 },
-  { digits:3, count:8, ms:900,  label:'3けた 8こ', world:3 }, // Lv50
+  { digits:3, count:8, ms:900,  label:'3けた 8こ', world:3 }, // Lv59
 ];
 
 export const TOTAL_LEVELS = LEVEL_TABLE.length;
@@ -89,7 +98,7 @@ export function generateChoices(answer, digits) {
 export const QUESTIONS_PER_LEVEL = 5;
 export const GACHA_COST = 100;
 export const COINS_PER_CORRECT = 100; // 1問正解で100コイン
-export const MAX_COINS_PER_PLAY = 800; // 1回のプレイの上限（レベル35は常に最大800）
+export const MAX_COINS_PER_PLAY = 800; // 1回のプレイの上限（レベル35以上は常に最大800）
 export const WORLD_COLORS = {
   1: { bg: '#fef9c3', accent: '#f97316', name: '1けたワールド 🌱' },
   2: { bg: '#dbeafe', accent: '#3b82f6', name: '2けたワールド 🌊' },
@@ -97,7 +106,7 @@ export const WORLD_COLORS = {
 };
 
 // 1回のプレイで獲得できるコイン
-// レベル35: 何回やっても正解数×160コイン（5問全正解=800）
+// レベル35以上: 何回やっても正解数×160コイン（5問全正解=800）
 // レベル34: 何回やってもコインが減らない（初回と同じ300×2=最大600）
 // レベル33: 2倍コイン、最大600（回数で減少あり）
 // 最上位レベル: 常に最大300コイン
