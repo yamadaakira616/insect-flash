@@ -5,7 +5,10 @@ const TOTAL_PAGES = 10;
 
 export default function StickerBookScreen({ state, onBack, onUpdatePage }) {
   const [pageIndex, setPageIndex] = useState(0);
-  const placed = state.bookPages?.[pageIndex] ?? [];
+  const pageData = state.bookPages?.[pageIndex] ?? { placed: [], colorIndex: 0, decos: [] };
+  const placed = Array.isArray(pageData) ? pageData : (pageData.placed ?? []);
+  const colorIndex = Array.isArray(pageData) ? 0 : (pageData.colorIndex ?? 0);
+  const decos = Array.isArray(pageData) ? [] : (pageData.decos ?? []);
 
   return (
     <div style={{ height: '100svh', display: 'flex', flexDirection: 'column', background: 'linear-gradient(168deg, #fdf2f8 0%, #fce7f3 40%, #f5f0ff 100%)' }}>
@@ -64,8 +67,12 @@ export default function StickerBookScreen({ state, onBack, onUpdatePage }) {
         <StickerBookPage
           pageIndex={pageIndex}
           placed={placed}
+          colorIndex={colorIndex}
+          decos={decos}
           collection={state.collection}
-          onUpdate={newPlaced => onUpdatePage(pageIndex, newPlaced)}
+          onUpdate={newPlaced => onUpdatePage(pageIndex, { placed: newPlaced })}
+          onUpdateColor={ci => onUpdatePage(pageIndex, { colorIndex: ci })}
+          onUpdateDecos={newDecos => onUpdatePage(pageIndex, { decos: newDecos })}
         />
       </div>
     </div>

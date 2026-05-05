@@ -15,7 +15,7 @@ const DEFAULT_STATE = {
   bestCombo: 0,
   totalPlayed: 0,
   levelPlayCount: {},
-  bookPages: [[], [], [], [], [], [], [], [], [], []],
+  bookPages: Array.from({ length: 10 }, () => ({ placed: [], colorIndex: 0, decos: [] })),
 };
 
 // stickerCounts から「所持している（count>=1）シールID配列」を導出
@@ -57,9 +57,13 @@ export function useGameState() {
         ? migrated.coins : DEFAULT_STATE.coins;
       const stickerCounts = (typeof migrated.stickerCounts === 'object' && migrated.stickerCounts !== null)
         ? migrated.stickerCounts : DEFAULT_STATE.stickerCounts;
-      const bookPages = Array.isArray(migrated.bookPages) && migrated.bookPages.length >= 5
-        ? [...migrated.bookPages, ...Array(Math.max(0, 10 - migrated.bookPages.length)).fill([])].slice(0, 10)
-        : DEFAULT_STATE.bookPages;
+      const rawPages = migrated.bookPages;
+      const bookPages = Array.from({ length: 10 }, (_, i) => {
+        const p = Array.isArray(rawPages) ? rawPages[i] : undefined;
+        if (!p) return { placed: [], colorIndex: 0, decos: [] };
+        if (Array.isArray(p)) return { placed: p, colorIndex: i % 5, decos: [] };
+        return { placed: p.placed ?? [], colorIndex: p.colorIndex ?? 0, decos: p.decos ?? [] };
+      });
       return { ...DEFAULT_STATE, ...migrated, level, coins, stickerCounts, bookPages };
     } catch { return DEFAULT_STATE; }
   });
@@ -157,11 +161,11 @@ export function useGameState() {
     return exchangeResultRef.current;
   }
 
-  function updateBookPage(pageIndex, placed) {
+  function updateBookPage(pageIndex, update) {
     if (pageIndex < 0 || pageIndex >= 10) return;
     setState(s => {
       const newPages = [...s.bookPages];
-      newPages[pageIndex] = placed;
+      newPages[pageIndex] = { ...newPages[pageIndex], ...update };
       return { ...s, bookPages: newPages };
     });
   }
