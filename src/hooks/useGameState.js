@@ -2,7 +2,8 @@ import { useState, useEffect, useRef } from 'react';
 import { GACHA_COST } from '../utils/gameLogic.js';
 import { getSeriesValue, STICKERS } from '../data/stickers.js';
 
-const KEY = 'sticker-book-v1';
+const KEY = 'sticker-book-v2';
+const KEY_V1 = 'sticker-book-v1';
 
 const stickerSeriesMap = Object.fromEntries(STICKERS.map(s => [s.id, s.series]));
 
@@ -47,8 +48,20 @@ export function getLevelCoinMultiplier(playCount) {
 export function useGameState() {
   const [state, setState] = useState(() => {
     try {
-      const raw = localStorage.getItem(KEY);
-      if (!raw) return DEFAULT_STATE;
+      // v1データをv2へ移行（bookPagesは新フォーマットにリセット、それ以外は引き継ぎ）
+      const rawV2 = localStorage.getItem(KEY);
+      if (!rawV2) {
+        const rawV1 = localStorage.getItem(KEY_V1);
+        if (rawV1) {
+          const v1 = migrateState(JSON.parse(rawV1));
+          const level = (typeof v1.level === 'number' && v1.level >= 1 && v1.level <= 50) ? v1.level : DEFAULT_STATE.level;
+          const coins = (typeof v1.coins === 'number' && v1.coins >= 0) ? v1.coins : DEFAULT_STATE.coins;
+          const stickerCounts = (typeof v1.stickerCounts === 'object' && v1.stickerCounts !== null) ? v1.stickerCounts : DEFAULT_STATE.stickerCounts;
+          return { ...DEFAULT_STATE, ...v1, level, coins, stickerCounts, bookPages: DEFAULT_STATE.bookPages };
+        }
+        return DEFAULT_STATE;
+      }
+      const raw = rawV2;
       const parsed = JSON.parse(raw);
       const migrated = migrateState(parsed);
       const level = (typeof migrated.level === 'number' && migrated.level >= 1 && migrated.level <= 50)
