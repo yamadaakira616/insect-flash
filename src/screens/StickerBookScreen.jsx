@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import StickerBookPage from '../components/StickerBookPage.jsx';
 
-const TOTAL_PAGES = 5;
+const TOTAL_PAGES = 10;
 
 export default function StickerBookScreen({ state, onBack, onUpdatePage }) {
   const [pageIndex, setPageIndex] = useState(0);

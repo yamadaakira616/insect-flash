@@ -15,7 +15,7 @@ const DEFAULT_STATE = {
   bestCombo: 0,
   totalPlayed: 0,
   levelPlayCount: {},
-  bookPages: [[], [], [], [], []],
+  bookPages: [[], [], [], [], [], [], [], [], [], []],
 };
 
 // stickerCounts から「所持している（count>=1）シールID配列」を導出
@@ -57,8 +57,9 @@ export function useGameState() {
         ? migrated.coins : DEFAULT_STATE.coins;
       const stickerCounts = (typeof migrated.stickerCounts === 'object' && migrated.stickerCounts !== null)
         ? migrated.stickerCounts : DEFAULT_STATE.stickerCounts;
-      const bookPages = Array.isArray(migrated.bookPages) && migrated.bookPages.length === 5
-        ? migrated.bookPages : DEFAULT_STATE.bookPages;
+      const bookPages = Array.isArray(migrated.bookPages) && migrated.bookPages.length >= 5
+        ? [...migrated.bookPages, ...Array(Math.max(0, 10 - migrated.bookPages.length)).fill([])].slice(0, 10)
+        : DEFAULT_STATE.bookPages;
       return { ...DEFAULT_STATE, ...migrated, level, coins, stickerCounts, bookPages };
     } catch { return DEFAULT_STATE; }
   });
@@ -157,7 +158,7 @@ export function useGameState() {
   }
 
   function updateBookPage(pageIndex, placed) {
-    if (pageIndex < 0 || pageIndex >= 5) return;
+    if (pageIndex < 0 || pageIndex >= 10) return;
     setState(s => {
       const newPages = [...s.bookPages];
       newPages[pageIndex] = placed;
