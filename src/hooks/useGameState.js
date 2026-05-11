@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef } from 'react';
-import { GACHA_COST } from '../utils/gameLogic.js';
+import { GACHA_COST, TOTAL_LEVELS } from '../utils/gameLogic.js';
 import { getSeriesValue, STICKERS } from '../data/stickers.js';
 
 const KEY = 'sticker-book-v2';
@@ -54,7 +54,7 @@ export function useGameState() {
         const rawV1 = localStorage.getItem(KEY_V1);
         if (rawV1) {
           const v1 = migrateState(JSON.parse(rawV1));
-          const level = (typeof v1.level === 'number' && v1.level >= 1 && v1.level <= 50) ? v1.level : DEFAULT_STATE.level;
+          const level = (typeof v1.level === 'number' && v1.level >= 1 && v1.level <= TOTAL_LEVELS) ? v1.level : DEFAULT_STATE.level;
           const coins = (typeof v1.coins === 'number' && v1.coins >= 0) ? v1.coins : DEFAULT_STATE.coins;
           const stickerCounts = (typeof v1.stickerCounts === 'object' && v1.stickerCounts !== null) ? v1.stickerCounts : DEFAULT_STATE.stickerCounts;
           return { ...DEFAULT_STATE, ...v1, level, coins, stickerCounts, bookPages: DEFAULT_STATE.bookPages };
@@ -64,7 +64,7 @@ export function useGameState() {
       const raw = rawV2;
       const parsed = JSON.parse(raw);
       const migrated = migrateState(parsed);
-      const level = (typeof migrated.level === 'number' && migrated.level >= 1 && migrated.level <= 50)
+      const level = (typeof migrated.level === 'number' && migrated.level >= 1 && migrated.level <= TOTAL_LEVELS)
         ? migrated.level : DEFAULT_STATE.level;
       const coins = (typeof migrated.coins === 'number' && migrated.coins >= 0)
         ? migrated.coins : DEFAULT_STATE.coins;
@@ -102,7 +102,7 @@ export function useGameState() {
   }
 
   function levelUp() {
-    setState(s => ({ ...s, level: Math.min(s.level + 1, 50) }));
+    setState(s => ({ ...s, level: Math.min(s.level + 1, TOTAL_LEVELS) }));
   }
 
   function saveStars(lvl, stars) {

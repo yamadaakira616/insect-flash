@@ -1,5 +1,5 @@
 import { STICKERS } from '../data/stickers.js';
-import { GACHA_COST } from '../utils/gameLogic.js';
+import { GACHA_COST, TOTAL_LEVELS } from '../utils/gameLogic.js';
 
 const stickerMap = Object.fromEntries(STICKERS.map(s => [s.id, s]));
 
@@ -126,14 +126,14 @@ export default function HomeScreen({ state, onPlay, onEncyclopedia, onGacha, onS
               <div
                 className="h-full rounded-full transition-all duration-500"
                 style={{
-                  width: `${((state.level ?? 1) / 50) * 100}%`,
+                  width: `${((state.level ?? 1) / TOTAL_LEVELS) * 100}%`,
                   background: 'linear-gradient(90deg, var(--pink-300), var(--pink-500))',
                 }}
               />
             </div>
           </div>
           <div className="text-xs font-bold whitespace-nowrap" style={{ color: '#9ca3af' }}>
-            {state.level ?? 1}/50
+            {state.level ?? 1}/{TOTAL_LEVELS}
           </div>
         </div>
       </div>
