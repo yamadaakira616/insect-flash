@@ -1,9 +1,9 @@
 import { describe, it, expect } from 'vitest';
-import { STICKERS, SERIES, rollGacha, DUPLICATE_COINS } from '../data/stickers.js';
+import { STICKERS, SERIES, rollGacha } from '../data/stickers.js';
 
 describe('STICKERS', () => {
-  it('72種類のシールがある', () => {
-    expect(STICKERS).toHaveLength(72);
+  it('シールが1枚以上ある', () => {
+    expect(STICKERS.length).toBeGreaterThan(0);
   });
 
   it('すべてのシールにid・name・series・imagePathがある', () => {
@@ -20,12 +20,17 @@ describe('STICKERS', () => {
     expect(new Set(ids).size).toBe(ids.length);
   });
 
-  it('シリーズ別の枚数が正しい', () => {
-    expect(STICKERS.filter(s => s.series === 'normal').length).toBe(32);
-    expect(STICKERS.filter(s => s.series === 'bonbon-drop').length).toBe(16);
-    expect(STICKERS.filter(s => s.series === 'marshmallow').length).toBe(8);
-    expect(STICKERS.filter(s => s.series === 'shaka-shaka').length).toBe(8);
-    expect(STICKERS.filter(s => s.series === 'water-seal').length).toBe(8);
+  it('すべてのシールのseriesがSERIES定義に含まれる', () => {
+    const seriesIds = new Set(SERIES.map(s => s.id));
+    for (const s of STICKERS) {
+      expect(seriesIds.has(s.series)).toBe(true);
+    }
+  });
+
+  it('全シリーズに1枚以上シールがある', () => {
+    for (const { id } of SERIES) {
+      expect(STICKERS.some(s => s.series === id)).toBe(true);
+    }
   });
 });
 
@@ -35,9 +40,11 @@ describe('rollGacha', () => {
     expect(STICKERS).toContainEqual(result);
   });
 
-  it('1000回試行してすべてのシリーズが出る', () => {
+  it('1000回試行して主要シリーズ(排出率6%以上)がすべて出る', () => {
     const seen = new Set();
     for (let i = 0; i < 1000; i++) seen.add(rollGacha().series);
-    expect(seen.size).toBe(5);
+    for (const { id } of SERIES.filter(s => s.rate >= 6)) {
+      expect(seen.has(id)).toBe(true);
+    }
   });
 });

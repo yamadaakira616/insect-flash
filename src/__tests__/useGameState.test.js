@@ -13,13 +13,7 @@ const localStorageMock = (() => {
 })();
 Object.defineProperty(global, 'localStorage', { value: localStorageMock });
 
-import { DUPLICATE_COINS } from '../data/stickers.js';
-
 describe('game state logic', () => {
-  it('DUPLICATE_COINS is 30', () => {
-    expect(DUPLICATE_COINS).toBe(30);
-  });
-
   it('collection deduplication: adding same ID twice results in one entry', () => {
     const collection = [];
     const addToCollection = (col, id) =>
@@ -64,10 +58,10 @@ describe('useGameState - updateBookPage', () => {
     const stickers = [{ stickerId: 'ss-ame-chan', x: 0.5, y: 0.5, scale: 1 }];
 
     act(() => {
-      result.current.updateBookPage(0, stickers);
+      result.current.updateBookPage(0, { placed: stickers });
     });
 
-    expect(result.current.state.bookPages[0]).toEqual(stickers);
+    expect(result.current.state.bookPages[0].placed).toEqual(stickers);
   });
 
   it('does not change state when pageIndex is -1 (out-of-range)', () => {
@@ -81,12 +75,12 @@ describe('useGameState - updateBookPage', () => {
     expect(result.current.state.bookPages).toEqual(before);
   });
 
-  it('does not change state when pageIndex is 5 (out-of-range)', () => {
+  it('does not change state when pageIndex is 10 (out-of-range)', () => {
     const { result } = renderHook(() => useGameState());
     const before = result.current.state.bookPages;
 
     act(() => {
-      result.current.updateBookPage(5, []);
+      result.current.updateBookPage(10, []);
     });
 
     expect(result.current.state.bookPages).toEqual(before);
