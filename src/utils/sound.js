@@ -109,3 +109,15 @@ export function playBattleStart() {
   tone(660, 'triangle', 0.25, 0.1, 0.15);
   tone(880, 'triangle', 0.3, 0.22, 0.25);
 }
+
+// ===== スクイーズガチャ音 =====
+export function playSqueezeSquish() { tone(150 + Math.random() * 60, 'sine', 0.12, 0, 0.09); }
+export function playSqueezeBounce() { tone(320, 'sine', 0.12, 0, 0.08); tone(430, 'sine', 0.1, 0.06, 0.1); }
+export function playSqueezePop() {
+  tone(200, 'square', 0.2, 0, 0.05);
+  tone(600, 'triangle', 0.25, 0.03, 0.12);
+  tone(900, 'sine', 0.2, 0.08, 0.18);
+}
+export function playSqueezeRare() {
+  [660, 880, 1100, 1320].forEach((f, i) => tone(f, 'sine', 0.18, i * 0.09, 0.22));
+}

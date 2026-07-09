@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef } from 'react';
-import { GACHA_COST, TOTAL_LEVELS } from '../utils/gameLogic.js';
+import { GACHA_COST, SQUEEZE_GACHA_COST, TOTAL_LEVELS } from '../utils/gameLogic.js';
 import { getSeriesValue, STICKERS } from '../data/stickers.js';
 
 const KEY = 'sticker-book-v2';
@@ -11,6 +11,7 @@ const DEFAULT_STATE = {
   level: 1,
   coins: 100,
   stickerCounts: {},   // { [stickerId]: number } 枚数管理
+  squeezeCounts: {},   // { [squeezeId]: number } スクイーズ個数管理
   levelStars: {},
   totalStars: 0,
   bestCombo: 0,
@@ -70,6 +71,8 @@ export function useGameState() {
         ? migrated.coins : DEFAULT_STATE.coins;
       const stickerCounts = (typeof migrated.stickerCounts === 'object' && migrated.stickerCounts !== null)
         ? migrated.stickerCounts : DEFAULT_STATE.stickerCounts;
+      const squeezeCounts = (typeof migrated.squeezeCounts === 'object' && migrated.squeezeCounts !== null)
+        ? migrated.squeezeCounts : DEFAULT_STATE.squeezeCounts;
       const rawPages = migrated.bookPages;
       const bookPages = Array.from({ length: 10 }, (_, i) => {
         const p = Array.isArray(rawPages) ? rawPages[i] : undefined;
@@ -77,7 +80,7 @@ export function useGameState() {
         if (Array.isArray(p)) return { placed: p, colorIndex: i % 5, decos: [] };
         return { placed: p.placed ?? [], colorIndex: p.colorIndex ?? 0, decos: p.decos ?? [] };
       });
-      return { ...DEFAULT_STATE, ...migrated, level, coins, stickerCounts, bookPages };
+      return { ...DEFAULT_STATE, ...migrated, level, coins, stickerCounts, squeezeCounts, bookPages };
     } catch { return DEFAULT_STATE; }
   });
 
@@ -85,11 +88,12 @@ export function useGameState() {
   const stateWithCollection = {
     ...state,
     collection: deriveCollection(state.stickerCounts),
+    squeezeCollection: deriveCollection(state.squeezeCounts ?? {}),
   };
 
   useEffect(() => {
-    // localStorageにはstickerCountsのみ保存（collectionは保存しない）
-    const { collection: _col, ...toSave } = stateWithCollection;
+    // localStorageにはカウントのみ保存（導出値collection/squeezeCollectionは保存しない）
+    const { collection: _col, squeezeCollection: _sq, ...toSave } = stateWithCollection;
     localStorage.setItem(KEY, JSON.stringify(toSave));
   }, [state]);
 
@@ -152,6 +156,25 @@ export function useGameState() {
     return pullGachaResultRef.current;
   }
 
+  // setState更新関数内でのref書き込みはReactの最適化次第で遅延するため、
+  // 最新stateのミラーrefから結果を先に計算する
+  const latestStateRef = useRef(state);
+  latestStateRef.current = state;
+
+  function pullSqueezeGacha(squeeze) {
+    const prevCount = latestStateRef.current.squeezeCounts?.[squeeze.id] ?? 0;
+    const result = { isNew: prevCount === 0, newCount: prevCount + 1 };
+    setState(s => ({
+      ...s,
+      coins: Math.max(0, s.coins - SQUEEZE_GACHA_COST),
+      squeezeCounts: {
+        ...(s.squeezeCounts ?? {}),
+        [squeeze.id]: (s.squeezeCounts?.[squeeze.id] ?? 0) + 1,
+      },
+    }));
+    return result;
+  }
+
   // シール交換
   // giveId: 渡すシールID, receiveId: もらうシールID
   // giveCount: 渡す枚数, receiveCount: もらう枚数
@@ -192,6 +215,7 @@ export function useGameState() {
     updateBestCombo,
     incLevelPlayCount,
     pullGacha,
+    pullSqueezeGacha,
     exchangeStickers,
     updateBookPage,
   };

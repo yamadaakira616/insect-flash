@@ -97,6 +97,7 @@ export function generateChoices(answer, digits) {
 
 export const QUESTIONS_PER_LEVEL = 5;
 export const GACHA_COST = 100;
+export const SQUEEZE_GACHA_COST = 1000;
 export const COINS_PER_CORRECT = 100; // 1問正解で100コイン
 export const MAX_COINS_PER_PLAY = 800; // 1回のプレイの上限（レベル35以上は常に最大800）
 export const WORLD_COLORS = {

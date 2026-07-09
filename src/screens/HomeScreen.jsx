@@ -1,5 +1,5 @@
 import { STICKERS } from '../data/stickers.js';
-import { GACHA_COST, TOTAL_LEVELS } from '../utils/gameLogic.js';
+import { GACHA_COST, SQUEEZE_GACHA_COST, TOTAL_LEVELS } from '../utils/gameLogic.js';
 
 const stickerMap = Object.fromEntries(STICKERS.map(s => [s.id, s]));
 
@@ -21,7 +21,7 @@ const SHOWCASE = [
   { id: 'nm-kappa',        x: '76%', y: '72%', size: 56, rotate:   4, delay: '1.4s' },
 ];
 
-export default function HomeScreen({ state, onPlay, onEncyclopedia, onGacha, onStickerBook, onExchange }) {
+export default function HomeScreen({ state, onPlay, onEncyclopedia, onGacha, onStickerBook, onExchange, onSqueezeGacha, onSqueezeShelf }) {
   const owned = state.collection.length;
   const total = STICKERS.length;
   const pct = Math.round((owned / total) * 100);
@@ -202,6 +202,38 @@ export default function HomeScreen({ state, onPlay, onEncyclopedia, onGacha, onS
             {state.coins < GACHA_COST && GACHA_COST - state.coins <= 50 && (
               <div className="text-xs font-bold opacity-80">あと{GACHA_COST - state.coins}コイン</div>
             )}
+          </button>
+        </div>
+
+        {/* スクイーズ2つ */}
+        <div className="flex gap-2.5">
+          <button
+            onClick={onSqueezeGacha}
+            disabled={state.coins < SQUEEZE_GACHA_COST}
+            aria-disabled={state.coins < SQUEEZE_GACHA_COST}
+            className="btn-primary flex-1 py-3 rounded-2xl text-base text-white disabled:opacity-50 disabled:cursor-not-allowed"
+            style={{
+              background: state.coins >= SQUEEZE_GACHA_COST
+                ? 'linear-gradient(135deg, #22d3ee, #0891b2)'
+                : '#9ca3af',
+              boxShadow: state.coins >= SQUEEZE_GACHA_COST
+                ? '0 4px 0 #155e75, 0 4px 20px rgba(34,211,238,0.25)'
+                : 'none',
+            }}
+          >
+            スクイーズガチャ
+            <div className="text-xs font-bold opacity-75 mt-0.5">{SQUEEZE_GACHA_COST}コイン</div>
+          </button>
+          <button
+            onClick={onSqueezeShelf}
+            className="btn-primary flex-1 py-3 rounded-2xl text-base text-white"
+            style={{
+              background: 'linear-gradient(135deg, #5eead4, #14b8a6)',
+              boxShadow: '0 4px 0 #0f766e, 0 4px 20px rgba(94,234,212,0.3)',
+            }}
+          >
+            スクイーズだな
+            <div className="text-xs font-bold opacity-75 mt-0.5">にぎってあそぼう！</div>
           </button>
         </div>
 
