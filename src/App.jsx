@@ -7,6 +7,8 @@ import GachaScreen from './screens/GachaScreen.jsx';
 import EncyclopediaScreen from './screens/EncyclopediaScreen.jsx';
 import StickerBookScreen from './screens/StickerBookScreen.jsx';
 import StickerExchangeScreen from './screens/StickerExchangeScreen.jsx';
+import SqueezeGachaScreen from './screens/SqueezeGachaScreen.jsx';
+import SqueezeShelfScreen from './screens/SqueezeShelfScreen.jsx';
 
 const SCREEN = {
   HOME: 'HOME',
@@ -16,12 +18,14 @@ const SCREEN = {
   ENCYCLOPEDIA: 'ENCYCLOPEDIA',
   STICKER_BOOK: 'STICKER_BOOK',
   EXCHANGE: 'EXCHANGE',
+  SQUEEZE_GACHA: 'SQUEEZE_GACHA',
+  SQUEEZE_SHELF: 'SQUEEZE_SHELF',
 };
 
 export default function App() {
   const [screen, setScreen] = useState(SCREEN.HOME);
   const [selectedLevel, setSelectedLevel] = useState(null);
-  const { state, addCoins, spendCoins, levelUp, saveStars, updateBestCombo, incLevelPlayCount, pullGacha, exchangeStickers, updateBookPage } = useGameState();
+  const { state, addCoins, spendCoins, levelUp, saveStars, updateBestCombo, incLevelPlayCount, pullGacha, pullSqueezeGacha, exchangeStickers, updateBookPage } = useGameState();
 
   if (screen === SCREEN.HOME) return (
     <HomeScreen
@@ -31,6 +35,8 @@ export default function App() {
       onGacha={() => setScreen(SCREEN.GACHA)}
       onStickerBook={() => setScreen(SCREEN.STICKER_BOOK)}
       onExchange={() => setScreen(SCREEN.EXCHANGE)}
+      onSqueezeGacha={() => setScreen(SCREEN.SQUEEZE_GACHA)}
+      onSqueezeShelf={() => setScreen(SCREEN.SQUEEZE_SHELF)}
     />
   );
 
@@ -60,6 +66,23 @@ export default function App() {
       state={state}
       onBack={() => setScreen(SCREEN.HOME)}
       onPull={pullGacha}
+    />
+  );
+
+  if (screen === SCREEN.SQUEEZE_GACHA) return (
+    <SqueezeGachaScreen
+      state={state}
+      onBack={() => setScreen(SCREEN.HOME)}
+      onPull={pullSqueezeGacha}
+      onShelf={() => setScreen(SCREEN.SQUEEZE_SHELF)}
+    />
+  );
+
+  if (screen === SCREEN.SQUEEZE_SHELF) return (
+    <SqueezeShelfScreen
+      state={state}
+      onBack={() => setScreen(SCREEN.HOME)}
+      onGacha={() => setScreen(SCREEN.SQUEEZE_GACHA)}
     />
   );
 
