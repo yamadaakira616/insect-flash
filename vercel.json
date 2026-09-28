@@ -1,4 +1,10 @@
 {
+  "rewrites": [
+    {
+      "source": "/insect-flash/:path*",
+      "destination": "/:path*"
+    }
+  ],
   "headers": [
     {
       "source": "/assets/insects/(.*)",
