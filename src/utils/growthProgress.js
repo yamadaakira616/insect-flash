@@ -75,7 +75,10 @@ export function growthSummary(state) {
   const g = initializeGrowth(state).growth;
   const questions = g.sessions.reduce((n, s) => n + s.questions, 0);
   const correct = g.sessions.reduce((n, s) => n + s.correct, 0);
-  return { loginDays: Object.keys(g.loginDays).length, playDays: Object.keys(g.playDays).length,
+  const studySessions = state.abacusRecords?.sessions ?? [];
+  const playDays = new Set([...Object.keys(g.playDays), ...studySessions.map(s => s.date).filter(Boolean)]);
+  return { loginDays: Object.keys(g.loginDays).length, playDays: playDays.size,
+    abacusSessions: studySessions.length,
     practicePassed: Object.values(g.milestones).filter(m => m.mode === 'practice').length,
     examPassed: Object.values(g.milestones).filter(m => m.mode === 'exam').length,
     correct, questions, accuracy: questions ? Math.round(correct / questions * 100) : null,

@@ -3,7 +3,7 @@ import MyRoom from '../components/MyRoom.jsx';
 import { STICKERS } from '../data/stickers.js';
 import { GACHA_COST, SQUEEZE_GACHA_COST, TOTAL_LEVELS } from '../utils/gameLogic.js';
 
-export default function HomeScreen({ state, onPlay, onEncyclopedia, onGacha, onStickerBook, onExchange, onSqueezeGacha, onSqueezeShelf, onUpdateRoom, today, onClaimLogin, onGrowth, storageError }) {
+export default function HomeScreen({ state, onPlay, onStudy, onEncyclopedia, onGacha, onStickerBook, onExchange, onSqueezeGacha, onSqueezeShelf, onUpdateRoom, today, onClaimLogin, onGrowth, storageError }) {
   const owned = state.collection.length;
   const total = STICKERS.length;
   const pct = Math.round((owned / total) * 100);
@@ -27,7 +27,9 @@ export default function HomeScreen({ state, onPlay, onEncyclopedia, onGacha, onS
 
       <GrowthCard state={state} today={today} onClaim={onClaimLogin} onOpen={onGrowth} storageError={storageError} />
 
-      <MyRoom state={state} onUpdate={onUpdateRoom} onPlay={onPlay} />
+      <button className="abacus-home-invite" onClick={onStudy}><span aria-hidden="true">🧮</span><span><strong>1〜100のそろばん</strong><small>れんしゅう・1分チャレンジで、お部屋のぬいぐるみをゲット！</small></span><b aria-hidden="true">→</b></button>
+
+      <MyRoom state={state} onUpdate={onUpdateRoom} onPlay={onPlay} onStudy={onStudy} />
 
       {/* ふきだし */}
       <div

@@ -81,15 +81,16 @@ describe('セーブ互換ときせかえ', () => {
   beforeEach(() => localStorage.clear());
   it('既存v2のコイン・シール・星・ブックを引き継ぎ、新機能を保存する', () => {
     const bookPages = [{ placed: [{ id: 'ss-neko-chan', x: 10, y: 20 }], colorIndex: 2, decos: [] }];
-    localStorage.setItem('sticker-book-v2', JSON.stringify({ ...initial, coins: 4321, level: 44, totalPlayed: 3, bookPages }));
+    localStorage.setItem('sticker-book-v2', JSON.stringify({ ...initial, coins: 4321, level: 44, totalPlayed: 3, bookPages, buddyId: 'ss-neko-chan' }));
     const hook = renderHook(() => useGameState());
     expect(hook.result.current.state.coins).toBe(4321);
     expect(hook.result.current.state.bookPages[0]).toEqual(bookPages[0]);
+    expect(hook.result.current.state.buddyId).toBe('room-bunny');
     act(() => hook.result.current.updateRoom({ roomTheme: 'mint', buddyId: 'ss-neko-chan', roomDecorations: ['ribbon', 'rainbow'] }));
     expect(hook.result.current.state.roomDecorations).toEqual(['ribbon']);
     hook.unmount();
     const reloaded = renderHook(() => useGameState());
-    expect(reloaded.result.current.state).toMatchObject({ coins: 4321, level: 44, roomTheme: 'mint', buddyId: 'ss-neko-chan' });
+    expect(reloaded.result.current.state).toMatchObject({ coins: 4321, level: 44, roomTheme: 'mint', buddyId: 'room-bunny' });
     expect(reloaded.result.current.state.stickerCounts).toEqual(initial.stickerCounts);
   });
   it('未所持の相棒や未解放のかざりは選べない', () => {

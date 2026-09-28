@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { useGameState } from './hooks/useGameState.js';
 import GrowthScreen from './screens/GrowthScreen.jsx';
+import AbacusStudyScreen from './screens/AbacusStudyScreen.jsx';
 import HomeScreen from './screens/HomeScreen.jsx';
 import LevelSelectScreen from './screens/LevelSelectScreen.jsx';
 import GameScreen from './screens/GameScreen.jsx';
@@ -10,10 +11,12 @@ import StickerBookScreen from './screens/StickerBookScreen.jsx';
 import StickerExchangeScreen from './screens/StickerExchangeScreen.jsx';
 import SqueezeGachaScreen from './screens/SqueezeGachaScreen.jsx';
 import SqueezeShelfScreen from './screens/SqueezeShelfScreen.jsx';
+import { getBuddy } from './data/room.js';
 
 const SCREEN = {
   HOME: 'HOME',
   GROWTH: 'GROWTH',
+  ABACUS: 'ABACUS',
   LEVEL_SELECT: 'LEVEL_SELECT',
   GAME: 'GAME',
   GACHA: 'GACHA',
@@ -28,7 +31,7 @@ export default function App() {
   const [screen, setScreen] = useState(SCREEN.HOME);
   const [selectedLevel, setSelectedLevel] = useState(null);
   const [gameMode, setGameMode] = useState('practice');
-  const { state, today, storageError, claimLoginBonus, completeSession, updateRoom, pullGacha, pullSqueezeGacha, exchangeStickers, updateBookPage } = useGameState();
+  const { state, today, storageError, claimLoginBonus, completeSession, completeAbacusStudy, updateRoom, pullGacha, pullSqueezeGacha, exchangeStickers, updateBookPage } = useGameState();
 
   if (screen === SCREEN.HOME) return (
     <HomeScreen
@@ -39,6 +42,7 @@ export default function App() {
       onGrowth={() => setScreen(SCREEN.GROWTH)}
       onUpdateRoom={updateRoom}
       onPlay={() => setScreen(SCREEN.LEVEL_SELECT)}
+      onStudy={() => setScreen(SCREEN.ABACUS)}
       onEncyclopedia={() => setScreen(SCREEN.ENCYCLOPEDIA)}
       onGacha={() => setScreen(SCREEN.GACHA)}
       onStickerBook={() => setScreen(SCREEN.STICKER_BOOK)}
@@ -51,6 +55,11 @@ export default function App() {
   if (screen === SCREEN.GROWTH) return (
     <GrowthScreen state={state} today={today} storageError={storageError}
       onClaim={claimLoginBonus} onBack={() => setScreen(SCREEN.HOME)} />
+  );
+
+  if (screen === SCREEN.ABACUS) return (
+    <AbacusStudyScreen onExit={() => setScreen(SCREEN.HOME)} onComplete={completeAbacusStudy}
+      existingRecords={state.abacusRecords} buddyImage={getBuddy(state.buddyId).imagePath} />
   );
 
   if (screen === SCREEN.LEVEL_SELECT) return (

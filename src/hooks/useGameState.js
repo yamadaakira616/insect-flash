@@ -7,6 +7,7 @@ import { initializeGrowth, registerVisit, claimLoginBonus as applyLoginBonus } f
 import { localDateKey } from '../data/room.js';
 import { applySessionResult } from '../utils/sessionProgress.js';
 import { ROOM_THEMES, ROOM_DECORATIONS, STARTER_BUDDIES } from '../data/room.js';
+import { reconcileRoomItems, recordAbacusStudy, setPlacedRoomItems } from '../utils/roomItemProgress.js';
 
 const KEY = 'sticker-book-v2';
 const KEY_V1 = 'sticker-book-v1';
@@ -20,6 +21,8 @@ const DEFAULT_STATE = {
   daily: null,
   examRecords: {},
   lastSessionId: null,
+  abacusRecords: { sessions: [] },
+  roomItems: { earned: {}, placed: [] },
   level: 1,
   coins: 100,
   stickerCounts: {},   // { [stickerId]: number } 枚数管理
@@ -51,6 +54,19 @@ function migrateState(parsed) {
   return { ...parsed, stickerCounts };
 }
 
+function normalizeBookPages(rawPages) {
+  return Array.from({ length: 10 }, (_, i) => {
+    const page = Array.isArray(rawPages) ? rawPages[i] : undefined;
+    if (Array.isArray(page)) return { placed: page, colorIndex: i % 5, decos: [] };
+    if (!page || typeof page !== 'object') return { placed: [], colorIndex: 0, decos: [] };
+    return {
+      placed: Array.isArray(page.placed) ? page.placed : [],
+      colorIndex: Number.isInteger(page.colorIndex) ? page.colorIndex : 0,
+      decos: Array.isArray(page.decos) ? page.decos : [],
+    };
+  });
+}
+
 export function getLevelCoinMultiplier(playCount) {
   if (playCount === 0) return 1.0;
   if (playCount === 1) return 0.75;
@@ -64,7 +80,7 @@ export function useGameState() {
   const [state, setState] = useState(() => {
     const load = () => {
     try {
-      // v1データをv2へ移行（bookPagesは新フォーマットにリセット、それ以外は引き継ぎ）
+      // 公開済みv1のシール配置を新しい10ページ形式へ変換し、収集や記録も引き継ぐ。
       const rawV2 = localStorage.getItem(KEY);
       if (!rawV2) {
         const rawV1 = localStorage.getItem(KEY_V1);
@@ -73,7 +89,9 @@ export function useGameState() {
           const level = (typeof v1.level === 'number' && v1.level >= 1 && v1.level <= TOTAL_LEVELS) ? v1.level : DEFAULT_STATE.level;
           const coins = (typeof v1.coins === 'number' && v1.coins >= 0) ? v1.coins : DEFAULT_STATE.coins;
           const stickerCounts = (typeof v1.stickerCounts === 'object' && v1.stickerCounts !== null) ? v1.stickerCounts : DEFAULT_STATE.stickerCounts;
-          return { ...DEFAULT_STATE, ...v1, level, coins, stickerCounts, bookPages: DEFAULT_STATE.bookPages };
+          const squeezeCounts = (typeof v1.squeezeCounts === 'object' && v1.squeezeCounts !== null) ? v1.squeezeCounts : DEFAULT_STATE.squeezeCounts;
+          return { ...DEFAULT_STATE, ...v1, level, coins, stickerCounts, squeezeCounts,
+            bookPages: normalizeBookPages(v1.bookPages) };
         }
         return DEFAULT_STATE;
       }
@@ -88,17 +106,13 @@ export function useGameState() {
         ? migrated.stickerCounts : DEFAULT_STATE.stickerCounts;
       const squeezeCounts = (typeof migrated.squeezeCounts === 'object' && migrated.squeezeCounts !== null)
         ? migrated.squeezeCounts : DEFAULT_STATE.squeezeCounts;
-      const rawPages = migrated.bookPages;
-      const bookPages = Array.from({ length: 10 }, (_, i) => {
-        const p = Array.isArray(rawPages) ? rawPages[i] : undefined;
-        if (!p) return { placed: [], colorIndex: 0, decos: [] };
-        if (Array.isArray(p)) return { placed: p, colorIndex: i % 5, decos: [] };
-        return { placed: p.placed ?? [], colorIndex: p.colorIndex ?? 0, decos: p.decos ?? [] };
-      });
+      const bookPages = normalizeBookPages(migrated.bookPages);
       return { ...DEFAULT_STATE, ...migrated, level, coins, stickerCounts, squeezeCounts, bookPages };
     } catch { return DEFAULT_STATE; }
     };
-    return initializeGrowth(load());
+    const loaded = load();
+    const buddyId = STARTER_BUDDIES.includes(loaded.buddyId) ? loaded.buddyId : STARTER_BUDDIES[0];
+    return reconcileRoomItems(initializeGrowth({ ...loaded, buddyId }), localDateKey()).state;
   });
 
   useEffect(() => {
@@ -229,7 +243,17 @@ export function useGameState() {
 
   function completeSession(result) {
     const date = localDateKey();
-    setState(s => applySessionResult(s, result, date));
+    setState(s => reconcileRoomItems(applySessionResult(s, result, date), date, 'flash').state);
+  }
+
+  function completeAbacusStudy(result) {
+    const date = localDateKey();
+    const previous = latestStateRef.current;
+    const predicted = recordAbacusStudy(previous, result, date);
+    if (predicted.state === previous) return { newItems: [], reward: 0 };
+    latestStateRef.current = predicted.state;
+    setState(s => recordAbacusStudy(s, result, date).state);
+    return { newItems: predicted.newItems, reward: predicted.state.abacusRecords?.sessions?.at(-1)?.reward ?? 0 };
   }
 
   function claimLoginBonus() {
@@ -241,10 +265,10 @@ export function useGameState() {
     setState(s => {
       const next = { ...s };
       if (ROOM_THEMES.some(t => t.id === update.roomTheme)) next.roomTheme = update.roomTheme;
-      if (STARTER_BUDDIES.includes(update.buddyId) || (s.stickerCounts[update.buddyId] ?? 0) > 0) next.buddyId = update.buddyId;
+      if (STARTER_BUDDIES.includes(update.buddyId)) next.buddyId = update.buddyId;
       if (Array.isArray(update.roomDecorations)) next.roomDecorations = [...new Set(update.roomDecorations)].filter(id =>
         ROOM_DECORATIONS.some(d => d.id === id && s.totalPlayed >= d.sessions));
-      return next;
+      return Array.isArray(update.roomPlacedItems) ? setPlacedRoomItems(next, update.roomPlacedItems) : next;
     });
   }
 
@@ -254,6 +278,7 @@ export function useGameState() {
     storageError,
     claimLoginBonus,
     completeSession,
+    completeAbacusStudy,
     updateRoom,
     addCoins,
     spendCoins,

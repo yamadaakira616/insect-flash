@@ -238,3 +238,31 @@ body {
 .record-backup { margin:24px 0;padding:18px;border:1px dashed #d9cbdc;border-radius:17px; }.record-backup h2 { font-size:14px;font-weight:900; }.record-backup p { font-size:11px;line-height:1.9;margin:10px 0 14px;color:#927b90; }.record-backup .secondary-button { font-size:13px; }.record-backup [role="alert"] { color:#a74050; }
 .growth-home button:focus-visible,.growth-page button:focus-visible { outline:3px solid #6655ab;outline-offset:3px; }
 @media(max-width:480px) { .growth-stats { grid-template-columns:repeat(2,minmax(0,1fr));gap:8px; }.growth-intro h2 { font-size:21px; }.growth-intro img { width:100px;height:120px; }.notebook-tag { font-size:10px; }.notebook-section { padding:16px 12px; }.section-title h2 { font-size:18px; }.login-stamp-row { gap:4px; }.login-stamp-row small { font-size:8px; }.login-stamp-row span { font-size:20px; }.growth-calendar,.calendar-week { gap:4px; }.growth-calendar>button { min-height:48px; }.milestone-list { grid-template-columns:1fr; }.calendar-nav { gap:7px; }.growth-home h2 { font-size:14px; } }
+
+/* お勉強で集める背景なしのお部屋アイテム */
+.room-item { position:absolute;object-fit:contain;pointer-events:none;filter:drop-shadow(0 8px 5px #66435024);z-index:2; }
+.room-item-slot-0 { width:15%;height:26%;left:5%;bottom:13%; }
+.room-item-slot-1 { width:16%;height:28%;left:21%;bottom:5%; }
+.room-item-slot-2 { width:16%;height:28%;right:21%;bottom:5%; }
+.room-item-slot-3 { width:15%;height:26%;right:5%;bottom:13%; }
+.room-item-slot-4 { width:12%;height:20%;left:8%;bottom:42%; }
+.room-item-slot-5 { width:12%;height:20%;right:8%;bottom:42%; }
+.room-item-options { display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:8px;max-height:370px;overflow-y:auto;padding:4px; }
+.room-item-options button { display:flex;flex-direction:column;align-items:center;min-width:0;min-height:120px;padding:8px 4px;background:white;border:1px solid #e9dce6;border-radius:13px;cursor:pointer; }
+.room-item-options button:disabled { cursor:default; }
+.room-item-options button img { width:66px;height:66px;max-width:100%;object-fit:contain;filter:drop-shadow(0 4px 3px #79577818); }
+.room-item-options button img.locked-item { filter:grayscale(1);opacity:.36; }
+.room-item-options strong { font-size:10px;line-height:1.35;margin-top:3px; }
+.room-item-options small { font-size:9px;line-height:1.45;color:#8c7181;margin-top:4px; }
+.room-controls h3 small { color:#a07690;font-size:11px; }
+.room-study-links { display:flex;gap:9px;margin:16px 17px 20px; }
+.room-study-links .room-start { flex:1;padding:12px 9px;font-size:12px;box-shadow:0 3px 0 #66465630;background:var(--room-accent); }
+.room-study-links .room-flash-link { background:#7662ac; }
+@media(max-width:420px) { .room-item-options { grid-template-columns:repeat(3,minmax(0,1fr)); }.room-item-options button { min-height:110px; }.room-study-links { flex-direction:column; } }
+.abacus-home-invite { display:flex;align-items:center;gap:12px;width:100%;max-width:540px;margin-top:14px;padding:14px 17px;border:1px solid #dbbfe5;border-radius:18px;background:linear-gradient(115deg,#fbecfa,#f2f7ff);color:#704379;text-align:left;cursor:pointer;box-shadow:0 5px 16px #7857a112; }
+.abacus-home-invite>span:first-child { font-size:29px;line-height:1; }.abacus-home-invite>span:nth-child(2) { flex:1; }.abacus-home-invite strong { display:block;font-size:16px;font-weight:900; }.abacus-home-invite small { display:block;margin-top:3px;font-size:11px;line-height:1.5; }.abacus-home-invite>b { font-size:22px; }
+.abacus-home-invite:focus-visible { outline:3px solid #6655ab;outline-offset:3px; }
+.abacus-growth-stats { display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:9px; }
+.abacus-growth-stats>div { padding:13px 8px;text-align:center;border-radius:13px;background:#f7f1fb; }
+.abacus-growth-stats strong { display:block;font-size:27px;color:#85529d; }
+.abacus-growth-stats small { display:block;font-size:10px;color:#796b89;line-height:1.5; }
