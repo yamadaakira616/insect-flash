@@ -1,536 +1,172 @@
-import { useState, useEffect, useCallback, useRef } from 'react';
-import { generateFlashProblem, generateChoices, getLevelConfig, QUESTIONS_PER_LEVEL, calcPlayReward } from '../utils/gameLogic';
-import { playFlash, playCorrect, playWrong, playLevelUp, playPerfect, playCountdown, playGo, playCoinGet } from '../utils/sound';
-import Confetti from '../components/Confetti';
+import React, { useEffect, useRef, useState } from 'react';
+import { generateFlashProblem, generateChoices, getLevelConfig, getFlashFrame, getSessionRules, sessionStars, TOTAL_LEVELS } from '../utils/gameLogic.js';
+import { ANSWER_SECONDS } from '../data/examStandards.js';
+import { getBuddy } from '../data/room.js';
+import { playFlash, playCorrect, playWrong, playPerfect, playCountdown } from '../utils/sound.js';
+import Confetti from '../components/Confetti.jsx';
 
-const Phase = { COUNTDOWN:'countdown', FLASH:'flash', BLANK:'blank', ANSWER:'answer', FEEDBACK:'feedback', LEVELUP:'levelup', RESULT:'result' };
-
-function StarRow({ count }) {
-  return (
-    <div style={{ display: 'flex', gap: 6, justifyContent: 'center' }}>
-      {[1, 2, 3].map(i => (
-        <span key={i} style={{ fontSize: 36, filter: i <= count ? 'none' : 'grayscale(1) opacity(0.25)' }}>⭐</span>
-      ))}
-    </div>
-  );
-}
-
-export default function GameScreen({ state, maxLevel, onBack, onEarnCoins, onLevelUp, onSaveStars, onBestCombo, onIncPlayed }) {
-  const { level, coins } = state;
+export default function GameScreen({ state, maxLevel, mode = 'practice', onBack, onComplete, onGrowth }) {
+  const level = state.level;
   const config = getLevelConfig(level);
-  const levelPlayCount = state.levelPlayCount?.[String(level)] ?? 0;
-  const isMaxLevel = level >= (maxLevel ?? level);
+  const [sessionMode, setSessionMode] = useState(mode);
+  const rules = getSessionRules(level, sessionMode);
+  const [phase, setPhase] = useState('ready');
+  const [countdown, setCountdown] = useState(3);
+  const [problem, setProblem] = useState(null);
+  const [choices, setChoices] = useState([]);
+  const [frame, setFrame] = useState({ index: 0, visible: true });
+  const [answer, setAnswer] = useState('');
+  const [remaining, setRemaining] = useState(ANSWER_SECONDS);
+  const [history, setHistory] = useState([]);
+  const [sound, setSound] = useState(true);
+  const [review, setReview] = useState(false);
+  const [unlockedNext, setUnlockedNext] = useState(false);
+  const [retryKey, setRetryKey] = useState(0);
+  const [sessionId, setSessionId] = useState(() => crypto.randomUUID());
+  const submitted = useRef(false);
+  const answerDeadline = useRef(0);
+  const resultSaved = useRef(false);
+  const soundRef = useRef(sound);
+  soundRef.current = sound;
+  const submitRef = useRef(null);
+  const buddy = getBuddy(state.buddyId);
+  const correctCount = history.filter(h => h.correct).length;
+  const passed = correctCount >= rules.passCount;
+  const last = history.at(-1);
 
-  const [phase, setPhase]               = useState(Phase.COUNTDOWN);
-  const [countdown, setCountdown]       = useState(3);
-  const [problem, setProblem]           = useState(null);
-  const [choices, setChoices]           = useState([]);
-  const [flashIdx, setFlashIdx]         = useState(0);
-  const [questionNum, setQuestionNum]   = useState(1);
-  const [correctCount, setCorrectCount] = useState(0);
-  const [selected, setSelected]         = useState(null);
-  const [isCorrect, setIsCorrect]       = useState(null);
-  const [shakeKey, setShakeKey]         = useState(0);
-  const [combo, setCombo]               = useState(0);
-  const [maxCombo, setMaxCombo]         = useState(0);
-  const [showConfetti, setShowConfetti] = useState(false);
-  const [answerTimer, setAnswerTimer]   = useState(10);
-  const [earnedCoins, setEarnedCoins]   = useState(0);
-  const [showInsectFlash, setShowInsectFlash] = useState(false);
-
-  const countdownRef     = useRef(null);
-  const flashRef         = useRef(null);
-  const blankRef         = useRef(null);
-  const answerRef        = useRef(null);
-  const feedbackRef      = useRef(null);
-  const confettiTimerRef = useRef(null);
-  const insectTimerRef   = useRef(null);
-  const correctCountRef  = useRef(0);
-
-  const calcStars = (correct) => correct === 5 ? 3 : correct === 4 ? 2 : correct >= 3 ? 1 : 0;
-
-  const startQuestion = useCallback((isFirst = false) => {
-    const p = generateFlashProblem(level);
-    setProblem(p);
-    setChoices(generateChoices(p.answer, config.digits));
-    setFlashIdx(0);
-    setSelected(null);
-    setIsCorrect(null);
-    if (isFirst) {
-      setPhase(Phase.COUNTDOWN);
-      setCountdown(3);
-    } else {
-      setPhase(Phase.FLASH);
-    }
-  }, [level, config.digits]);
+  function startQuestion() {
+    const next = generateFlashProblem(level);
+    setProblem(next);
+    setChoices(generateChoices(next.answer, config.digits));
+    setAnswer('');
+    submitted.current = false;
+    setFrame({ index: 0, visible: true });
+    setCountdown(3);
+    setPhase('countdown');
+  }
 
   useEffect(() => {
-    startQuestion(true);
-    return () => {
-      clearTimeout(countdownRef.current);
-      clearTimeout(flashRef.current);
-      clearTimeout(blankRef.current);
-      clearTimeout(answerRef.current);
-      clearTimeout(feedbackRef.current);
-      clearTimeout(confettiTimerRef.current);
-      clearTimeout(insectTimerRef.current);
-    };
-  }, []);
-
-  useEffect(() => {
-    if (phase !== Phase.COUNTDOWN) return;
-    if (countdown <= 0) { playGo(); setPhase(Phase.FLASH); return; }
-    playCountdown();
-    countdownRef.current = setTimeout(() => setCountdown(c => c - 1), 700);
-    return () => clearTimeout(countdownRef.current);
+    if (phase !== 'countdown') return;
+    if (soundRef.current) playCountdown();
+    const timer = setTimeout(() => {
+      if (countdown === 1) setPhase('flash');
+      else setCountdown(n => n - 1);
+    }, 700);
+    return () => clearTimeout(timer);
   }, [phase, countdown]);
 
+  // 経過時間から表示位置を計算するため、口ごとに遅延が積み重ならない。
   useEffect(() => {
-    if (phase !== Phase.FLASH || !problem) return;
-    playFlash();
-    flashRef.current = setTimeout(() => setPhase(Phase.BLANK), config.ms);
-    return () => clearTimeout(flashRef.current);
-  }, [phase, problem, flashIdx, config.ms]);
+    if (phase !== 'flash') return;
+    let request;
+    let started = null;
+    let previousIndex = -1;
+    const tick = timestamp => {
+      if (started === null) started = timestamp;
+      const nextFrame = getFlashFrame(config, timestamp - started);
+      if (nextFrame.done) {
+        answerDeadline.current = performance.now() + ANSWER_SECONDS * 1000;
+        setRemaining(ANSWER_SECONDS);
+        setPhase('answer');
+        return;
+      }
+      if (nextFrame.index !== previousIndex && soundRef.current) playFlash();
+      previousIndex = nextFrame.index;
+      setFrame(current => current.index === nextFrame.index && current.visible === nextFrame.visible ? current : nextFrame);
+      request = requestAnimationFrame(tick);
+    };
+    request = requestAnimationFrame(tick);
+    return () => cancelAnimationFrame(request);
+  }, [phase, config.totalMs, config.count, retryKey]);
+
+  function submit(value) {
+    if (phase !== 'answer' || submitted.current) return;
+    submitted.current = true;
+    const timedOut = performance.now() >= answerDeadline.current;
+    const chosen = timedOut ? null : value;
+    const correct = chosen !== null && chosen === problem.answer;
+    setHistory(rows => [...rows, { ...problem, chosen, correct }]);
+    if (rules.mode === 'practice' && soundRef.current) (correct ? playCorrect : playWrong)();
+    setPhase('feedback');
+  }
+  submitRef.current = submit;
 
   useEffect(() => {
-    if (phase !== Phase.BLANK || !problem) return;
-    blankRef.current = setTimeout(() => {
-      if (flashIdx + 1 < problem.numbers.length) {
-        setFlashIdx(i => i + 1);
-        setPhase(Phase.FLASH);
-      } else {
-        setAnswerTimer(10);
-        setPhase(Phase.ANSWER);
-      }
-    }, 150);
-    return () => clearTimeout(blankRef.current);
-  }, [phase, flashIdx, problem]);
+    if (phase !== 'answer') return;
+    const tick = () => {
+      const left = Math.max(0, (answerDeadline.current - performance.now()) / 1000);
+      setRemaining(left);
+      if (left === 0) submitRef.current(null);
+    };
+    const timer = setInterval(tick, 50);
+    return () => clearInterval(timer);
+  }, [phase]);
 
   useEffect(() => {
-    if (phase !== Phase.ANSWER) return;
-    if (answerTimer <= 0) { handleAnswer(-1); return; }
-    answerRef.current = setTimeout(() => setAnswerTimer(t => t - 1), 1000);
-    return () => clearTimeout(answerRef.current);
-  }, [phase, answerTimer]);
+    const hide = () => {
+      if (document.hidden && ['countdown', 'flash', 'answer'].includes(phase)) setPhase('paused');
+    };
+    document.addEventListener('visibilitychange', hide);
+    return () => document.removeEventListener('visibilitychange', hide);
+  }, [phase]);
 
-  function handleAnswer(choice) {
-    if (phase !== Phase.ANSWER || selected !== null) return;
-    clearTimeout(answerRef.current);
-    setSelected(choice);
-    const ok = choice === problem.answer;
-    setIsCorrect(ok);
-
-    if (ok) {
-      const newCombo = combo + 1;
-      setCombo(newCombo);
-      setMaxCombo(m => Math.max(m, newCombo));
-      setCorrectCount(c => { correctCountRef.current = c + 1; return c + 1; });
-      playCorrect();
-      if (newCombo >= 3) {
-        setShowConfetti(true);
-        clearTimeout(confettiTimerRef.current);
-        confettiTimerRef.current = setTimeout(() => setShowConfetti(false), 2000);
-      }
-      setShowInsectFlash(true);
-      clearTimeout(insectTimerRef.current);
-      insectTimerRef.current = setTimeout(() => setShowInsectFlash(false), 500);
-    } else {
-      setCombo(0);
-      playWrong();
-      setShakeKey(k => k + 1);
-    }
-
-    setPhase(Phase.FEEDBACK);
-    feedbackRef.current = setTimeout(() => {
-      const isLast = questionNum >= QUESTIONS_PER_LEVEL;
-      if (isLast) {
-        const finalCorrect = correctCountRef.current;
-        const stars = calcStars(finalCorrect);
-        onSaveStars(level, stars);
-        onBestCombo(Math.max(maxCombo, combo + (ok ? 1 : 0)));
-        onIncPlayed(level);
-        if (stars >= 1) {
-          const reward = calcPlayReward(finalCorrect, levelPlayCount, isMaxLevel, level);
-          onEarnCoins(reward);
-          setEarnedCoins(reward);
-          if (finalCorrect === 5) { playPerfect(); setTimeout(() => playCoinGet(), 800); }
-          else { playLevelUp(); if (reward > 0) setTimeout(() => playCoinGet(), 800); }
-          if (level < 50 && level >= (maxLevel ?? level)) onLevelUp();
-          setPhase(Phase.LEVELUP);
-        } else {
-          setPhase(Phase.RESULT);
-        }
-      } else {
-        setQuestionNum(n => n + 1);
-        startQuestion(false);
-      }
-    }, 1400);
+  function finishOrNext() {
+    if (history.length < rules.questions) { startQuestion(); return; }
+    if (resultSaved.current) return;
+    resultSaved.current = true;
+    let combo = 0, best = 0;
+    history.forEach(h => { combo = h.correct ? combo + 1 : 0; best = Math.max(best, combo); });
+    setUnlockedNext(passed && level === maxLevel && level < TOTAL_LEVELS);
+    onComplete({ id: sessionId, level, mode: rules.mode, correct: correctCount, maxCombo: best });
+    if (passed && soundRef.current) playPerfect();
+    setPhase('result');
   }
 
-  // ===== LEVELUP 画面 =====
-  if (phase === Phase.LEVELUP) {
-    const finalCorrect = correctCountRef.current;
-    const stars = calcStars(finalCorrect);
-    const reward = calcPlayReward(finalCorrect, levelPlayCount, isMaxLevel, level);
-    const isPerfect = finalCorrect === QUESTIONS_PER_LEVEL;
-    return (
-      <div
-        className="flex flex-col items-center justify-center min-h-screen gap-5 p-6 text-center"
-        style={{ background: 'linear-gradient(168deg, #fdf2f8 0%, #fce7f3 40%, #f5f0ff 100%)' }}
-      >
-        <Confetti active={true} />
-        <div style={{ fontSize: '5rem', animation: 'scaleIn 0.5s cubic-bezier(0.175,0.885,0.32,1.275)' }}>
-          {isPerfect ? '🌟' : '💕'}
-        </div>
-        <h2
-          className="font-black text-4xl animate-scale-in"
-          style={{ color: 'var(--pink-600)', letterSpacing: '-0.02em' }}
-        >
-          {isPerfect ? 'パーフェクト！' : 'クリア！'}
-        </h2>
-        <StarRow count={stars} />
-
-        <div
-          className="glass w-full max-w-xs rounded-2xl p-4 animate-slide-up"
-          style={{ boxShadow: 'var(--shadow-lg)' }}
-        >
-          {[
-            { label: 'せいかい', value: `${finalCorrect}/${QUESTIONS_PER_LEVEL}もん` },
-            { label: 'さいこうコンボ', value: `🔥 ×${maxCombo}` },
-          ].map(({ label, value }) => (
-            <div
-              key={label}
-              className="flex justify-between font-bold py-1.5"
-              style={{ color: 'var(--pink-800)', fontSize: '0.95rem' }}
-            >
-              <span>{label}</span><span>{value}</span>
-            </div>
-          ))}
-          <div
-            className="flex justify-between font-black text-xl pt-3 mt-1"
-            style={{ borderTop: '1px solid var(--pink-100)', color: 'var(--pink-600)' }}
-          >
-            <span>🪙 コイン</span><span>+{reward}</span>
-          </div>
-        </div>
-
-        {isPerfect && (
-          <p className="font-black text-sm" style={{ color: 'var(--pink-600)', animation: 'fadeIn 0.5s 0.3s both' }}>
-            🎊 全問せいかい！ {reward}コインゲット！
-          </p>
-        )}
-        {level < 50 && (
-          <p className="font-bold text-sm" style={{ color: '#16a34a', animation: 'fadeIn 0.5s 0.4s both' }}>
-            Lv.{level} → Lv.{level + 1} へ！
-          </p>
-        )}
-
-        <button
-          onClick={onBack}
-          className="btn-primary px-12 py-4 text-xl text-white rounded-3xl"
-          style={{
-            background: 'linear-gradient(135deg, var(--pink-400), var(--pink-500))',
-            boxShadow: '0 6px 0 var(--pink-700), var(--shadow-glow-pink)',
-            animation: 'slideUp 0.5s 0.5s both',
-          }}
-        >
-          つぎへ！
-        </button>
-      </div>
-    );
+  function restart() {
+    resultSaved.current = false;
+    setSessionId(crypto.randomUUID());
+    setHistory([]);
+    setReview(false);
+    setUnlockedNext(false);
+    startQuestion();
+  }
+  function goBack() {
+    if (!['ready', 'result'].includes(phase) && !window.confirm('途中の記録は残りません。レベルえらびにもどりますか？')) return;
+    onBack();
   }
 
-  // ===== RESULT（失敗）画面 =====
-  if (phase === Phase.RESULT) {
-    return (
-      <div
-        className="flex flex-col items-center justify-center min-h-screen gap-5 p-6 text-center"
-        style={{ background: 'linear-gradient(168deg, #fdf2f8 0%, #fce7f3 40%, #f5f0ff 100%)' }}
-      >
-        <div style={{ fontSize: '5rem', animation: 'scaleIn 0.4s cubic-bezier(0.175,0.885,0.32,1.275)' }}>🥺</div>
-        <h2 className="font-black text-3xl animate-scale-in" style={{ color: 'var(--pink-600)' }}>
-          もう一回！
-        </h2>
-        <p className="animate-fade-in" style={{ color: '#9ca3af', fontWeight: 700 }}>
-          {correctCountRef.current}/{QUESTIONS_PER_LEVEL}もんせいかい
-        </p>
-        <p className="text-sm animate-fade-in" style={{ color: '#d1d5db', fontWeight: 600 }}>
-          3もん以上せいかいでクリア！
-        </p>
-        <button
-          onClick={onBack}
-          className="btn-primary px-12 py-4 text-xl text-white rounded-3xl"
-          style={{
-            background: 'linear-gradient(135deg, var(--purple-400), var(--purple-500))',
-            boxShadow: '0 6px 0 var(--purple-600), var(--shadow-glow-purple)',
-          }}
-        >
-          もどる
-        </button>
-      </div>
-    );
-  }
-
-  // ===== メインゲーム画面 =====
-  const timerPct = answerTimer * 10;
-  const timerColor = answerTimer > 6 ? 'var(--pink-300)' : answerTimer > 3 ? 'var(--pink-500)' : '#e11d48';
-
-  return (
-    <div
-      className="flex flex-col min-h-screen"
-      style={{ background: 'linear-gradient(168deg, #fdf2f8 0%, #fce7f3 40%, #f5f0ff 100%)' }}
-    >
-      <Confetti active={showConfetti} />
-
-      {showInsectFlash && (
-        <div className="fixed inset-0 pointer-events-none flex items-center justify-center z-40">
-          <div style={{ fontSize: '5rem', opacity: 0.18, animation: 'silhouettePulse 0.5s ease' }}>💕</div>
-        </div>
-      )}
-
-      {/* ヘッダー */}
-      <div
-        className="flex items-center justify-between px-4 pt-4 pb-2"
-        style={{ flexShrink: 0 }}
-      >
-        <button
-          aria-label="もどる"
-          onClick={() => {
-            if (phase === Phase.FLASH || phase === Phase.ANSWER || phase === Phase.FEEDBACK) {
-              if (!window.confirm('ゲームをやめますか？')) return;
-            }
-            onBack();
-          }}
-          style={{
-            width: 36, height: 36, borderRadius: '50%',
-            background: 'white', border: '1.5px solid var(--pink-200)',
-            display: 'flex', alignItems: 'center', justifyContent: 'center',
-            fontSize: 18, cursor: 'pointer', boxShadow: 'var(--shadow-sm)',
-          }}
-        >←</button>
-
-        <div
-          className="glass rounded-full px-4 py-1.5 font-bold text-xs"
-          style={{ color: '#9ca3af' }}
-        >
-          {config.label} · {config.ms / 1000}秒/こ
-        </div>
-
-        <div
-          className="glass rounded-full px-3 py-1.5 font-black text-sm flex items-center gap-1"
-          style={{ color: 'var(--pink-700)' }}
-        >
-          🪙 {coins}
-        </div>
-      </div>
-
-      {/* プログレスバー */}
-      <div className="px-4 pb-2" style={{ flexShrink: 0 }}>
-        <div
-          className="w-full h-2 rounded-full overflow-hidden"
-          style={{ background: 'var(--pink-100)' }}
-          role="progressbar"
-          aria-valuenow={questionNum - 1}
-          aria-valuemin={0}
-          aria-valuemax={QUESTIONS_PER_LEVEL}
-        >
-          <div
-            className="h-full rounded-full transition-all duration-500"
-            style={{
-              width: `${((questionNum - 1) / QUESTIONS_PER_LEVEL) * 100}%`,
-              background: 'linear-gradient(90deg, var(--pink-300), var(--pink-500))',
-              boxShadow: 'inset 0 1px 0 rgba(255,255,255,0.4)',
-            }}
-          />
-        </div>
-      </div>
-
-      {/* バッジ行 */}
-      <div className="flex gap-2 flex-wrap justify-center px-4 pb-2" style={{ flexShrink: 0 }}>
-        <span
-          className="rounded-full px-3 py-1 font-black text-sm"
-          style={{ background: 'var(--pink-100)', color: 'var(--pink-700)' }}
-        >
-          Lv.{level}
-        </span>
-        <span
-          className="glass rounded-full px-3 py-1 font-bold text-sm"
-          style={{ color: 'var(--pink-800)' }}
-        >
-          {questionNum}/{QUESTIONS_PER_LEVEL}もん
-        </span>
-        {combo >= 2 && (
-          <span
-            className="rounded-full px-3 py-1 font-black text-sm text-white"
-            style={{ background: 'linear-gradient(135deg, var(--pink-400), var(--pink-500))', animation: 'scaleIn 0.3s cubic-bezier(0.175,0.885,0.32,1.275)' }}
-          >
-            🔥 コンボ ×{combo}
-          </span>
-        )}
-      </div>
-
-      {/* メインエリア */}
-      <div className="flex-1 flex flex-col items-center justify-center gap-6 px-4 pb-4">
-
-        {/* カウントダウン */}
-        {phase === Phase.COUNTDOWN && (
-          <div className="flex flex-col items-center gap-4 animate-fade-in">
-            <p className="font-bold" style={{ color: '#9ca3af', fontSize: '1rem' }}>
-              {config.count}つの数字を足してね！
-            </p>
-            <div
-              key={countdown}
-              className="font-black"
-              style={{
-                fontSize: '7rem', lineHeight: 1,
-                color: countdown === 1 ? '#e11d48' : countdown === 2 ? 'var(--pink-600)' : 'var(--purple-500)',
-                animation: 'scaleIn 0.3s cubic-bezier(0.175,0.885,0.32,1.275)',
-              }}
-            >
-              {countdown > 0 ? countdown : 'GO!'}
-            </div>
-          </div>
-        )}
-
-        {/* フラッシュ */}
-        {(phase === Phase.FLASH || phase === Phase.BLANK) && problem && (
-          <div className="flex flex-col items-center gap-5">
-            {/* 進行ドット */}
-            <div className="flex gap-2.5">
-              {problem.numbers.map((_, i) => (
-                <div
-                  key={i}
-                  className="rounded-full transition-all duration-100"
-                  style={{
-                    width: 14, height: 14,
-                    background: i < flashIdx
-                      ? 'var(--pink-500)'
-                      : i === flashIdx && phase === Phase.FLASH
-                      ? 'var(--pink-300)'
-                      : 'var(--pink-100)',
-                    transform: i === flashIdx && phase === Phase.FLASH ? 'scale(1.4)' : 'scale(1)',
-                    boxShadow: i === flashIdx && phase === Phase.FLASH ? '0 0 0 3px rgba(236,72,153,0.2)' : 'none',
-                  }}
-                />
-              ))}
-            </div>
-
-            {/* 数字ボックス */}
-            <div
-              className="flex items-center justify-center rounded-3xl overflow-hidden"
-              style={{
-                width: 260, height: 180,
-                background: 'white',
-                boxShadow: 'var(--shadow-lg), inset 0 1px 0 rgba(255,255,255,0.8)',
-                border: '1.5px solid var(--pink-100)',
-              }}
-            >
-              {phase === Phase.FLASH ? (
-                <div
-                  key={`${questionNum}-${flashIdx}`}
-                  className="font-black sheet-flip-in tabular-nums"
-                  style={{
-                    fontSize: config.digits === 1 ? '7rem' : config.digits === 2 ? '5rem' : '3.5rem',
-                    color: 'var(--pink-800)',
-                    display: 'inline-block',
-                    letterSpacing: '-0.02em',
-                  }}
-                >
-                  {problem.numbers[flashIdx]}
-                </div>
-              ) : (
-                <div
-                  className="text-5xl sheet-flip-out"
-                  style={{ color: 'var(--pink-100)' }}
-                >···</div>
-              )}
-            </div>
-
-            <p className="font-bold text-sm" style={{ color: '#9ca3af' }}>
-              {flashIdx + 1} / {problem.numbers.length}
-            </p>
-          </div>
-        )}
-
-        {/* 答え入力 */}
-        {(phase === Phase.ANSWER || phase === Phase.FEEDBACK) && (
-          <div className="flex flex-col items-center gap-5 w-full">
-            <div className="font-black text-3xl" style={{ color: 'var(--pink-800)', letterSpacing: '-0.02em' }}>
-              ぜんぶで いくつ？
-            </div>
-
-            {/* タイマーバー */}
-            {phase === Phase.ANSWER && (
-              <div className="w-full max-w-xs rounded-full overflow-hidden" style={{ height: 10, background: 'var(--pink-100)' }}>
-                <div
-                  className="h-full rounded-full transition-all duration-1000"
-                  style={{ width: `${timerPct}%`, background: timerColor, boxShadow: 'inset 0 1px 0 rgba(255,255,255,0.3)' }}
-                />
-              </div>
-            )}
-
-            {/* 選択肢 */}
-            <div
-              key={shakeKey}
-              className={`grid grid-cols-2 gap-3.5 w-full max-w-xs ${isCorrect === false ? 'animate-shake' : ''}`}
-            >
-              {choices.map(c => {
-                let bg = 'white';
-                let border = 'var(--pink-200)';
-                let color = 'var(--pink-800)';
-                let shadow = 'var(--shadow-sm)';
-                let extraStyle = {};
-
-                if (selected === c) {
-                  if (isCorrect) {
-                    bg = '#22c55e'; border = '#16a34a'; color = 'white';
-                    shadow = '0 4px 12px rgba(34,197,94,0.4)';
-                  } else {
-                    bg = '#ef4444'; border = '#b91c1c'; color = 'white';
-                    shadow = '0 4px 12px rgba(239,68,68,0.3)';
-                  }
-                } else if (selected !== null && c === problem?.answer) {
-                  bg = '#bbf7d0'; border = '#16a34a'; color = '#166534';
-                }
-
-                return (
-                  <button
-                    key={c}
-                    onClick={() => handleAnswer(c)}
-                    disabled={selected !== null}
-                    aria-label={`こたえ ${c}`}
-                    className="btn-primary rounded-2xl py-5 font-black"
-                    style={{
-                      fontSize: config.digits === 1 ? '2.4rem' : config.digits === 2 ? '1.8rem' : '1.3rem',
-                      background: bg,
-                      border: `2px solid ${border}`,
-                      color,
-                      boxShadow: shadow,
-                      transition: 'transform 0.12s ease, box-shadow 0.12s ease',
-                      ...extraStyle,
-                    }}
-                  >
-                    {c}
-                  </button>
-                );
-              })}
-            </div>
-
-            {selected !== null && (
-              <div
-                role="alert"
-                aria-live="assertive"
-                className="font-black text-2xl animate-scale-in"
-                style={{ color: isCorrect ? '#22c55e' : '#ef4444' }}
-              >
-                {isCorrect
-                  ? combo >= 3 ? `🔥 ${combo}れんぞく！` : '🎉 せいかい！'
-                  : `😢 こたえは ${problem?.answer}`}
-              </div>
-            )}
-          </div>
-        )}
-      </div>
+  return <main className={`game-page ${rules.mode === 'exam' ? 'exam-playing' : ''}`}>
+    <header className="learning-header"><button className="round-back" aria-label="レベルえらびにもどる" onClick={goBack}>←</button><div><small>{rules.mode === 'exam' ? '検定チャレンジ' : '5問れんしゅう'}</small><h1>Lv.{level}{config.examGrade ? ` ・ ${config.examGrade}の条件` : ''}</h1></div><button className="sound-toggle" onClick={() => setSound(v => !v)} aria-label={sound ? '音をオフにする' : '音をオンにする'} aria-pressed={sound}>{sound ? '🔊' : '🔇'}</button></header>
+    <div className="game-content">
+      <p className="game-spec">{config.digits}けた <b>・</b> {config.count}口 <b>・</b> 合計 {Number((config.totalMs / 1000).toFixed(2))}秒</p>
+      {phase === 'ready' && <section className="game-ready">
+        <img className="game-buddy" src={buddy.imagePath} alt={buddy.name} />
+        <h2>{rules.mode === 'exam' ? 'いまの力を、ためしてみよう。' : 'ひとつずつ、できるを増やそう。'}</h2>
+        <p>順番に出てくる{config.count}この数字を、ぜんぶ足してね。</p>
+        {config.examGrade && <div className="mode-tabs"><button aria-pressed={rules.mode === 'practice'} onClick={() => setSessionMode('practice')}>5問・えらぶ</button><button aria-pressed={rules.mode === 'exam'} onClick={() => setSessionMode('exam')}>15問・数字入力</button></div>}
+        <div className="lesson-note"><p>{rules.questions}問中{rules.passCount}問せいかいで{rules.mode === 'exam' ? '目標達成！ 結果は最後に発表。' : 'クリア！'}</p><p>答える時間は1問10秒。数字の合間の空白も、合計時間にふくまれます。</p>{rules.mode === 'exam' && <small>検定の条件を参考にした練習です。正式な合格認定ではありません。</small>}</div>
+        <button className="room-start" onClick={startQuestion}>はじめる →</button>
+      </section>}
+      {!['ready', 'result'].includes(phase) && <><div className="question-progress"><span>第{Math.min(history.length + (phase === 'feedback' ? 0 : 1), rules.questions)}問 / {rules.questions}問</span><progress aria-label="回答済み問題数" value={history.length} max={rules.questions} /></div>
+        {phase === 'countdown' && <section className="flash-stage"><p>じゅんびはいい？</p><strong className="countdown-number">{countdown}</strong></section>}
+        {phase === 'flash' && <section className="flash-stage"><div className="flash-number" data-testid="flash-number">{frame.visible ? problem.numbers[frame.index] : '\u00a0'}</div><p>{frame.index + 1} / {config.count}口</p></section>}
+        {phase === 'paused' && <section className="game-ready"><h2>ひとやすみ中</h2><p>画面をはなれたので、この問題を最初からやり直せます。</p><button className="room-start" onClick={() => { setRetryKey(k => k + 1); setAnswer(''); setFrame({ index: 0, visible: true }); setCountdown(3); setPhase('countdown'); }}>この問題をもう一度</button></section>}
+        {phase === 'answer' && <section className="answer-stage"><h2>ぜんぶで、いくつ？</h2><div className="answer-time"><span>あと {Math.ceil(remaining)}秒</span><progress max={ANSWER_SECONDS} value={remaining} aria-label="解答の残り時間" /></div>
+          {rules.input === 'number' ? <form onSubmit={e => { e.preventDefault(); if (answer !== '') submit(Number(answer)); }} className="answer-form"><input autoFocus aria-label="答え" inputMode="numeric" pattern="[0-9]*" autoComplete="off" value={answer} onChange={e => setAnswer(e.target.value.replace(/[^0-9]/g, '').slice(0, 6))} /><button type="submit" className="room-start" disabled={answer === ''}>決定</button><div className="number-pad">{[1,2,3,4,5,6,7,8,9,'消す',0,'⌫'].map(n => <button type="button" key={n} aria-label={n === '⌫' ? '1文字消す' : String(n)} onClick={() => setAnswer(a => n === '消す' ? '' : n === '⌫' ? a.slice(0, -1) : (a + n).slice(0, 6))}>{n}</button>)}</div></form> : <div className="answer-choices">{choices.map(choice => <button key={choice} onClick={() => submit(choice)}>{choice}</button>)}</div>}
+          <button className="text-button" onClick={() => submit(null)}>わからないので次へ</button>
+        </section>}
+        {phase === 'feedback' && last && <section className="feedback-stage" aria-live="polite">{rules.mode === 'exam' ? <><span className="feedback-symbol">✉</span><h2>答えを記録したよ</h2><p>結果は15問終わったら発表するね。</p></> : <><img className="game-buddy" src={buddy.imagePath} alt="" /><h2>{last.correct ? 'できたね！' : last.chosen === null ? 'だいじょうぶ。いっしょに確認しよう。' : 'おしい！ ここを見てみよう。'}</h2><p className="review-equation">{last.numbers.join(' + ')} = <strong>{last.answer}</strong></p><p>{last.correct ? 'この調子で、次の一歩へ。' : `きみの答え：${last.chosen ?? '未回答'}`}</p></>}<button className="room-start" onClick={finishOrNext}>{history.length === rules.questions ? '結果を見る' : 'つぎの問題へ →'}</button></section>}
+      </>}
+      {phase === 'result' && <section className="result-stage">
+        <Confetti active={passed} /><img className="game-buddy" src={buddy.imagePath} alt={buddy.name} /><h2>{passed ? rules.mode === 'exam' ? '目標クリア、おめでとう！' : 'できた！ がまた増えたね。' : '最後まで、よくがんばったね。'}</h2>
+        <div className="result-score">{correctCount}<small> / {rules.questions}問</small></div>
+        {rules.mode === 'exam' ? <p>{correctCount * 10} / 150点 ・ 目標100点<br /><small>練習の記録です。正式な検定結果ではありません。</small></p> : <p className="result-stars">{'★'.repeat(sessionStars(correctCount, rules.questions))}{'☆'.repeat(3 - sessionStars(correctCount, rules.questions))}</p>}
+        {!passed && <p>あと{rules.passCount - correctCount}問で目標達成。自分のペースで大丈夫。</p>}
+        {unlockedNext && <p>Lv.{level + 1} が開いたよ！</p>}
+        {state.lastSession?.id === sessionId && <div className="result-reward">🪙 れんしゅう ＋{state.lastSession.reward}コイン{state.lastSession.bonus > 0 && <strong>きょうのスタンプ ＋{state.lastSession.bonus}コイン</strong>}<small>お部屋の「きせかえ」で、かざりもチェックしてね。</small></div>}
+        <button className="room-start" onClick={restart}>もう一度れんしゅう</button><button className="secondary-button" onClick={onBack}>レベルえらびへ</button>{onGrowth && <button className="secondary-button" onClick={onGrowth}>せいちょうノートを見る</button>}<button className="text-button" onClick={() => setReview(v => !v)} aria-expanded={review}>{review ? 'ふりかえりを閉じる' : 'まちがえた問題をふりかえる'}</button>
+        {review && <div className="review-list">{history.every(h => h.correct) ? <p>ぜんぶせいかい！</p> : history.map((h, i) => !h.correct && <article key={i}><h3>第{i + 1}問</h3><p>{h.numbers.join(' + ')} = <b>{h.answer}</b></p><small>きみの答え：{h.chosen ?? '未回答'}</small></article>)}</div>}
+      </section>}
     </div>
-  );
+  </main>;
 }

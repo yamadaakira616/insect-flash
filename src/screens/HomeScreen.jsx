@@ -1,27 +1,9 @@
+import GrowthCard from '../components/GrowthCard.jsx';
+import MyRoom from '../components/MyRoom.jsx';
 import { STICKERS } from '../data/stickers.js';
 import { GACHA_COST, SQUEEZE_GACHA_COST, TOTAL_LEVELS } from '../utils/gameLogic.js';
 
-const stickerMap = Object.fromEntries(STICKERS.map(s => [s.id, s]));
-
-// トップ画面に浮かべるシール（上段・中段・下段）
-const SHOWCASE = [
-  { id: 'nm-quokka',       x: '1%',  y: '2%',  size: 68, rotate: -12, delay: '0s'   },
-  { id: 'sp-velvet-bunny', x: '22%', y: '0%',  size: 64, rotate:   7, delay: '0.4s' },
-  { id: 'nm-mendako',      x: '43%', y: '2%',  size: 66, rotate:  -5, delay: '0.8s' },
-  { id: 'nm-kitsune',      x: '64%', y: '0%',  size: 62, rotate:  14, delay: '0.2s' },
-  { id: 'bd-ghost',        x: '83%', y: '3%',  size: 60, rotate:  -8, delay: '1.1s' },
-  { id: 'ss-ame-chan',     x: '0%',  y: '40%', size: 58, rotate:  11, delay: '0.6s' },
-  { id: 'mm-cream-soda',   x: '20%', y: '38%', size: 62, rotate: -14, delay: '0.9s' },
-  { id: 'ws-neko-chan',    x: '41%', y: '41%', size: 60, rotate:   6, delay: '0.1s' },
-  { id: 'sp-velvet-cat',   x: '62%', y: '38%', size: 58, rotate: -10, delay: '1.3s' },
-  { id: 'os-axolotl',      x: '82%', y: '40%', size: 56, rotate:  13, delay: '0.5s' },
-  { id: 'nm-axolotl',      x: '7%',  y: '74%', size: 58, rotate:  -7, delay: '0.7s' },
-  { id: 'bd-crystal',      x: '29%', y: '72%', size: 60, rotate:   9, delay: '1.0s' },
-  { id: 'sp-puni-animals', x: '52%', y: '74%', size: 58, rotate: -11, delay: '0.3s' },
-  { id: 'nm-kappa',        x: '76%', y: '72%', size: 56, rotate:   4, delay: '1.4s' },
-];
-
-export default function HomeScreen({ state, onPlay, onEncyclopedia, onGacha, onStickerBook, onExchange, onSqueezeGacha, onSqueezeShelf }) {
+export default function HomeScreen({ state, onPlay, onEncyclopedia, onGacha, onStickerBook, onExchange, onSqueezeGacha, onSqueezeShelf, onUpdateRoom, today, onClaimLogin, onGrowth, storageError }) {
   const owned = state.collection.length;
   const total = STICKERS.length;
   const pct = Math.round((owned / total) * 100);
@@ -40,37 +22,12 @@ export default function HomeScreen({ state, onPlay, onEncyclopedia, onGacha, onS
         className="text-2xl font-black tracking-tight animate-fade-in"
         style={{ color: 'var(--pink-800)', letterSpacing: '-0.02em' }}
       >
-        かわいいシールずかん
+        シールとあんざんのアトリエ
       </h1>
 
-      {/* シールショーケース */}
-      <div
-        className="animate-fade-in"
-        style={{ position: 'relative', width: '100%', maxWidth: 420, height: 185, flexShrink: 0, margin: '8px 0' }}
-      >
-        {SHOWCASE.map((s) => {
-          const sticker = stickerMap[s.id];
-          if (!sticker) return null;
-          return (
-            <img
-              key={s.id}
-              src={sticker.imagePath}
-              alt={sticker.name}
-              style={{
-                position: 'absolute',
-                left: s.x, top: s.y,
-                width: s.size, height: s.size,
-                objectFit: 'contain',
-                '--rot': `${s.rotate}deg`,
-                animation: `stickerFloat 3s ease-in-out infinite`,
-                animationDelay: s.delay,
-                filter: 'drop-shadow(0 3px 8px rgba(0,0,0,0.15))',
-                pointerEvents: 'none',
-              }}
-            />
-          );
-        })}
-      </div>
+      <GrowthCard state={state} today={today} onClaim={onClaimLogin} onOpen={onGrowth} storageError={storageError} />
+
+      <MyRoom state={state} onUpdate={onUpdateRoom} onPlay={onPlay} />
 
       {/* ふきだし */}
       <div

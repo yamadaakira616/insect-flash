@@ -2,12 +2,24 @@ import { useState, useEffect, useRef } from 'react';
 import { GACHA_COST, SQUEEZE_GACHA_COST, TOTAL_LEVELS } from '../utils/gameLogic.js';
 import { getSeriesValue, STICKERS } from '../data/stickers.js';
 
+import useLocalDate from './useLocalDate.js';
+import { initializeGrowth, registerVisit, claimLoginBonus as applyLoginBonus } from '../utils/growthProgress.js';
+import { localDateKey } from '../data/room.js';
+import { applySessionResult } from '../utils/sessionProgress.js';
+import { ROOM_THEMES, ROOM_DECORATIONS, STARTER_BUDDIES } from '../data/room.js';
+
 const KEY = 'sticker-book-v2';
 const KEY_V1 = 'sticker-book-v1';
 
 const stickerSeriesMap = Object.fromEntries(STICKERS.map(s => [s.id, s.series]));
 
 const DEFAULT_STATE = {
+  buddyId: STARTER_BUDDIES[0],
+  roomTheme: 'rose',
+  roomDecorations: [],
+  daily: null,
+  examRecords: {},
+  lastSessionId: null,
   level: 1,
   coins: 100,
   stickerCounts: {},   // { [stickerId]: number } 枚数管理
@@ -47,7 +59,10 @@ export function getLevelCoinMultiplier(playCount) {
 }
 
 export function useGameState() {
+  const today = useLocalDate();
+  const [storageError, setStorageError] = useState(false);
   const [state, setState] = useState(() => {
+    const load = () => {
     try {
       // v1データをv2へ移行（bookPagesは新フォーマットにリセット、それ以外は引き継ぎ）
       const rawV2 = localStorage.getItem(KEY);
@@ -82,7 +97,13 @@ export function useGameState() {
       });
       return { ...DEFAULT_STATE, ...migrated, level, coins, stickerCounts, squeezeCounts, bookPages };
     } catch { return DEFAULT_STATE; }
+    };
+    return initializeGrowth(load());
   });
+
+  useEffect(() => {
+    setState(s => registerVisit(s, today));
+  }, [today]);
 
   // collectionはstickerCountsから導出してstateに含める（既存コードとの互換性）
   const stateWithCollection = {
@@ -94,7 +115,7 @@ export function useGameState() {
   useEffect(() => {
     // localStorageにはカウントのみ保存（導出値collection/squeezeCollectionは保存しない）
     const { collection: _col, squeezeCollection: _sq, ...toSave } = stateWithCollection;
-    localStorage.setItem(KEY, JSON.stringify(toSave));
+    try { localStorage.setItem(KEY, JSON.stringify(toSave)); setStorageError(false); } catch { setStorageError(true); }
   }, [state]);
 
   function addCoins(n) {
@@ -206,8 +227,34 @@ export function useGameState() {
     });
   }
 
+  function completeSession(result) {
+    const date = localDateKey();
+    setState(s => applySessionResult(s, result, date));
+  }
+
+  function claimLoginBonus() {
+    const date = localDateKey();
+    setState(s => applyLoginBonus(s, date));
+  }
+
+  function updateRoom(update) {
+    setState(s => {
+      const next = { ...s };
+      if (ROOM_THEMES.some(t => t.id === update.roomTheme)) next.roomTheme = update.roomTheme;
+      if (STARTER_BUDDIES.includes(update.buddyId) || (s.stickerCounts[update.buddyId] ?? 0) > 0) next.buddyId = update.buddyId;
+      if (Array.isArray(update.roomDecorations)) next.roomDecorations = [...new Set(update.roomDecorations)].filter(id =>
+        ROOM_DECORATIONS.some(d => d.id === id && s.totalPlayed >= d.sessions));
+      return next;
+    });
+  }
+
   return {
     state: stateWithCollection,
+    today,
+    storageError,
+    claimLoginBonus,
+    completeSession,
+    updateRoom,
     addCoins,
     spendCoins,
     levelUp,

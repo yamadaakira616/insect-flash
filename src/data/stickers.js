@@ -12,6 +12,10 @@ export const SERIES = [
 ];
 
 export const STICKERS = [
+  // お部屋の相棒。相棒としては最初から使え、シールとしても集められる。
+  { id:'room-bunny', name:'ほしのミルク', series:'normal', imagePath:B+'assets/room/buddy-bunny.webp' },
+  { id:'room-kitten', name:'おはなのラテ', series:'normal', imagePath:B+'assets/room/buddy-kitten.webp' },
+  { id:'room-penguin', name:'つきのソーダ', series:'normal', imagePath:B+'assets/room/buddy-penguin.webp' },
   // ===== シャカシャカシール (8枚) =====
   { id:'ss-ame-chan',    name:'あめちゃん',     series:'shaka-shaka', imagePath:B+'assets/shaka-shaka/ame-chan.png' },
   { id:'ss-kagu-chan',   name:'かぐちゃん',     series:'shaka-shaka', imagePath:B+'assets/shaka-shaka/kagu-chan.png' },

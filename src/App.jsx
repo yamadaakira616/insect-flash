@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import { useGameState } from './hooks/useGameState.js';
+import GrowthScreen from './screens/GrowthScreen.jsx';
 import HomeScreen from './screens/HomeScreen.jsx';
 import LevelSelectScreen from './screens/LevelSelectScreen.jsx';
 import GameScreen from './screens/GameScreen.jsx';
@@ -12,6 +13,7 @@ import SqueezeShelfScreen from './screens/SqueezeShelfScreen.jsx';
 
 const SCREEN = {
   HOME: 'HOME',
+  GROWTH: 'GROWTH',
   LEVEL_SELECT: 'LEVEL_SELECT',
   GAME: 'GAME',
   GACHA: 'GACHA',
@@ -25,11 +27,17 @@ const SCREEN = {
 export default function App() {
   const [screen, setScreen] = useState(SCREEN.HOME);
   const [selectedLevel, setSelectedLevel] = useState(null);
-  const { state, addCoins, spendCoins, levelUp, saveStars, updateBestCombo, incLevelPlayCount, pullGacha, pullSqueezeGacha, exchangeStickers, updateBookPage } = useGameState();
+  const [gameMode, setGameMode] = useState('practice');
+  const { state, today, storageError, claimLoginBonus, completeSession, updateRoom, pullGacha, pullSqueezeGacha, exchangeStickers, updateBookPage } = useGameState();
 
   if (screen === SCREEN.HOME) return (
     <HomeScreen
       state={state}
+      today={today}
+      storageError={storageError}
+      onClaimLogin={claimLoginBonus}
+      onGrowth={() => setScreen(SCREEN.GROWTH)}
+      onUpdateRoom={updateRoom}
       onPlay={() => setScreen(SCREEN.LEVEL_SELECT)}
       onEncyclopedia={() => setScreen(SCREEN.ENCYCLOPEDIA)}
       onGacha={() => setScreen(SCREEN.GACHA)}
@@ -40,11 +48,16 @@ export default function App() {
     />
   );
 
+  if (screen === SCREEN.GROWTH) return (
+    <GrowthScreen state={state} today={today} storageError={storageError}
+      onClaim={claimLoginBonus} onBack={() => setScreen(SCREEN.HOME)} />
+  );
+
   if (screen === SCREEN.LEVEL_SELECT) return (
     <LevelSelectScreen
       state={state}
       onBack={() => setScreen(SCREEN.HOME)}
-      onSelect={lvl => { setSelectedLevel(lvl); setScreen(SCREEN.GAME); }}
+      onSelect={(lvl, mode = 'practice') => { setSelectedLevel(lvl); setGameMode(mode); setScreen(SCREEN.GAME); }}
     />
   );
 
@@ -53,11 +66,9 @@ export default function App() {
       state={{ ...state, level: selectedLevel || state.level }}
       maxLevel={state.level}
       onBack={() => setScreen(SCREEN.LEVEL_SELECT)}
-      onEarnCoins={addCoins}
-      onLevelUp={levelUp}
-      onSaveStars={saveStars}
-      onBestCombo={updateBestCombo}
-      onIncPlayed={lvl => incLevelPlayCount(lvl)}
+      mode={gameMode}
+      onComplete={completeSession}
+      onGrowth={() => setScreen(SCREEN.GROWTH)}
     />
   );
 

@@ -1,3 +1,5 @@
+import { EXAM_BY_LEVEL, EXAM_QUESTIONS, EXAM_PASS_COUNT } from '../data/examStandards.js';
+
 // 59レベル分のテーブル
 const LEVEL_TABLE = [
   // 1桁
@@ -68,7 +70,13 @@ export const TOTAL_LEVELS = LEVEL_TABLE.length;
 
 export function getLevelConfig(level) {
   const idx = Math.max(0, Math.min(level - 1, LEVEL_TABLE.length - 1));
-  return { ...LEVEL_TABLE[idx], level };
+  const base = LEVEL_TABLE[idx];
+  const exam = EXAM_BY_LEVEL[idx + 1];
+  const digits = exam?.digits ?? base.digits;
+  const count = exam?.count ?? base.count;
+  const totalMs = exam ? exam.totalSeconds * 1000 : base.ms * count;
+  return { ...base, digits, count, level: idx + 1, totalMs, ms: totalMs / count,
+    label: `${digits}けた ${count}口`, examGrade: exam?.grade ?? null };
 }
 
 function randomNum(digits) {
@@ -122,3 +130,23 @@ export function calcPlayReward(correctCount, playCount = 0, isMaxLevel = false, 
 }
 
 export function starsCoins(stars) { return [0, 3, 6, 10][stars] || 0; }
+
+// 空白も含めて合計時間を配分。最後の数字には末尾の空白を付けない。
+export function getFlashFrame(config, elapsedMs) {
+  if (elapsedMs >= config.totalMs) return { done: true };
+  const slotMs = config.totalMs / config.count;
+  const index = Math.min(config.count - 1, Math.floor(Math.max(0, elapsedMs) / slotMs));
+  const blankMs = Math.min(100, slotMs * 0.15);
+  const visible = index === config.count - 1 || elapsedMs - index * slotMs < slotMs - blankMs;
+  return { done: false, index, visible };
+}
+
+export function getSessionRules(level, mode = 'practice') {
+  const exam = mode === 'exam' && Boolean(getLevelConfig(level).examGrade);
+  return { mode: exam ? 'exam' : 'practice', questions: exam ? EXAM_QUESTIONS : QUESTIONS_PER_LEVEL,
+    passCount: exam ? EXAM_PASS_COUNT : 3, input: exam ? 'number' : 'choices' };
+}
+
+export function sessionStars(correct, total) {
+  return correct === total ? 3 : correct / total >= 0.8 ? 2 : correct / total >= 0.6 ? 1 : 0;
+}
