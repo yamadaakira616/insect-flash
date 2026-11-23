@@ -1,0 +1,633 @@
+.worksheet-shell,
+.worksheet-home-invite {
+  --worksheet-ink: #582d51;
+  --worksheet-muted: #75556f;
+  --worksheet-accent: #8a3e77;
+  --worksheet-outline: #e2cfe0;
+  --worksheet-focus: #6350a4;
+  --worksheet-surface: #fff;
+  --worksheet-tint: #fcf4fa;
+}
+
+.worksheet-home-invite {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  width: 100%;
+  max-width: 540px;
+  min-height: 69px;
+  margin-top: 12px;
+  padding: 11px 16px;
+  border: 1px solid #e1bed3;
+  border-radius: 18px;
+  background: linear-gradient(115deg, #fff1f7 0%, #fff6e6 100%);
+  color: var(--worksheet-ink);
+  text-align: left;
+  box-shadow: 0 4px 16px #78576811;
+  cursor: pointer;
+}
+
+.worksheet-home-invite > span:first-child { font-size: 28px; line-height: 1; }
+.worksheet-home-invite > span:nth-child(2) { flex: 1; min-width: 0; }
+.worksheet-home-invite strong { display: block; font-size: 16px; font-weight: 900; }
+.worksheet-home-invite small { display: block; margin-top: 2px; font-size: 12px; line-height: 1.45; }
+.worksheet-home-invite > b { color: var(--worksheet-accent); font-size: 21px; }
+
+.worksheet-shell {
+  min-height: 100vh;
+  min-height: 100dvh;
+  padding: 18px clamp(10px, 3.5vw, 25px) 42px;
+  background: linear-gradient(160deg, #fff1f7 0%, #fff8fb 45%, #f1ecfc 100%);
+  color: var(--worksheet-ink);
+}
+
+:where(.worksheet-shell) :is(button, select) {
+  font: inherit;
+}
+
+.worksheet-shell :is(button, input, select, summary):focus-visible,
+.worksheet-home-invite:focus-visible {
+  outline: 3px solid var(--worksheet-focus);
+  outline-offset: 3px;
+}
+
+.worksheet-top,
+.worksheet-content {
+  width: min(100%, 720px);
+  margin-inline: auto;
+}
+
+.worksheet-top {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  min-height: 44px;
+  margin-bottom: 13px;
+}
+
+.worksheet-top h1,
+.worksheet-top > span:not(.worksheet-timer) {
+  font-size: clamp(17px, 4.5vw, 23px);
+  font-weight: 900;
+  line-height: 1.25;
+  text-align: center;
+}
+
+.worksheet-content { display: grid; gap: 14px; }
+
+.worksheet-panel {
+  min-width: 0;
+  padding: clamp(15px, 4vw, 26px);
+  border: 1px solid #ead8e7;
+  border-radius: 23px;
+  background: var(--worksheet-surface);
+  box-shadow: 0 6px 24px #72435f0d;
+}
+
+.worksheet-panel h2,
+.worksheet-panel h3 {
+  font-weight: 900;
+  line-height: 1.4;
+}
+
+.worksheet-panel h2 { font-size: clamp(17px, 4vw, 20px); }
+.worksheet-panel h3 { font-size: 15px; }
+
+.worksheet-intro {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 12px;
+  border-color: #eed0da;
+  background: linear-gradient(125deg, #fddce9 0%, #fff0e6 75%, #fff7dc 100%);
+}
+
+.worksheet-intro h1 {
+  font-size: clamp(25px, 6vw, 38px);
+  line-height: 1.2;
+  font-weight: 900;
+}
+
+.worksheet-intro p {
+  margin-top: 8px;
+  color: var(--worksheet-muted);
+  font-size: 14px;
+  font-weight: 700;
+  line-height: 1.65;
+}
+
+.worksheet-intro img {
+  width: clamp(66px, 18vw, 128px);
+  object-fit: contain;
+  filter: drop-shadow(0 6px 9px #8b566e2d);
+}
+
+.worksheet-button,
+.worksheet-shell button.worksheet-primary {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 5px;
+  min-height: 44px;
+  padding: 8px 13px;
+  border: 1px solid var(--worksheet-outline);
+  border-radius: 12px;
+  background: #fff;
+  color: var(--worksheet-ink);
+  font-size: 14px;
+  font-weight: 900;
+  line-height: 1.3;
+  text-align: center;
+  cursor: pointer;
+  touch-action: manipulation;
+}
+
+.worksheet-shell button.worksheet-primary {
+  border-color: transparent;
+  background: linear-gradient(125deg, #aa4a88, #803e85);
+  color: #fff;
+  box-shadow: 0 2px 0 #683569;
+}
+
+.worksheet-shell button:disabled {
+  opacity: .52;
+  cursor: default;
+}
+
+@media (hover: hover) {
+  .worksheet-home-invite:hover { border-color: #bd7aa7; }
+  .worksheet-button:hover:not(:disabled),
+  .worksheet-mode:hover,
+  .worksheet-number:hover {
+    border-color: #b777a9;
+    background-color: var(--worksheet-tint);
+  }
+  .worksheet-shell button.worksheet-primary:hover:not(:disabled) { filter: brightness(1.08); }
+}
+
+.worksheet-mode-grid,
+.worksheet-controls,
+.worksheet-actions {
+  display: grid;
+  gap: 9px;
+}
+
+.worksheet-mode-grid {
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  margin-bottom: 6px;
+}
+
+.worksheet-mode {
+  display: grid;
+  align-content: start;
+  justify-items: start;
+  gap: 4px;
+  padding: 12px;
+  border: 1px solid var(--worksheet-outline);
+  border-radius: 15px;
+  background: #fff;
+  color: var(--worksheet-ink);
+  text-align: left;
+  cursor: pointer;
+  touch-action: manipulation;
+}
+
+.worksheet-mode strong { font-size: 16px; font-weight: 900; }
+.worksheet-mode small { color: var(--worksheet-muted); font-size: 12px; line-height: 1.5; }
+.worksheet-mode[aria-pressed="true"] {
+  border-color: #ae6a9a;
+  background: #fbeaf7;
+  box-shadow: inset 0 0 0 1px #ae6a9a;
+}
+
+.worksheet-controls > label,
+.worksheet-controls legend {
+  font-size: 14px;
+  font-weight: 900;
+}
+
+.worksheet-set-select {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.worksheet-controls select {
+  min-height: 44px;
+  padding: 7px 12px;
+  border: 1px solid #cbaaca;
+  border-radius: 10px;
+  background: #fff;
+  color: var(--worksheet-ink);
+}
+
+.worksheet-sections {
+  min-width: 0;
+  margin: 2px 0;
+  padding: 0;
+  border: 0;
+}
+
+.worksheet-section-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 170px), 1fr));
+  gap: 6px;
+  margin-block: 7px 4px;
+}
+
+.worksheet-section-grid label {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  min-height: 42px;
+  padding: 5px 8px;
+  border: 1px solid var(--worksheet-outline);
+  border-radius: 9px;
+  font-size: 13px;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.worksheet-section-grid label:has(:checked) { background: var(--worksheet-tint); }
+.worksheet-section-grid input { width: 16px; height: 16px; flex: none; accent-color: var(--worksheet-accent); }
+
+.worksheet-controls small,
+.worksheet-hint,
+.worksheet-note {
+  color: var(--worksheet-muted);
+  font-size: 12px;
+  font-weight: 700;
+  line-height: 1.6;
+}
+
+.worksheet-actions {
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 115px), 1fr));
+}
+
+.worksheet-resume {
+  display: grid;
+  gap: 8px;
+  padding: 12px;
+  border: 1px solid #e5cbbd;
+  border-radius: 13px;
+  background: #fff6e9;
+}
+
+.worksheet-play {
+  scroll-margin-block-start: 10px;
+}
+
+.worksheet-play .worksheet-actions {
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+}
+
+.worksheet-session-status {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 3px 8px;
+  font-size: 13px;
+  font-weight: 800;
+  color: var(--worksheet-muted);
+}
+
+.worksheet-play progress {
+  display: block;
+  width: 100%;
+  height: 8px;
+  margin-top: 7px;
+  accent-color: var(--worksheet-accent);
+}
+
+.worksheet-play progress::-webkit-progress-bar { background: #f2e7f0; border-radius: 99px; }
+.worksheet-play progress::-webkit-progress-value { background: #a55695; border-radius: 99px; }
+
+.worksheet-timer {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  padding: 4px 12px;
+  border-radius: 999px;
+  background: #eee8f8;
+  color: #5d3b78;
+  font-size: clamp(16px, 4vw, 21px);
+  font-weight: 900;
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+}
+
+.worksheet-timer[data-urgent="true"] {
+  background: #ffe5e7;
+  color: #9a2e48;
+}
+
+.worksheet-equation {
+  min-width: 0;
+  margin-block: 8px 12px;
+  color: #35213a;
+  font: 750 clamp(21px, 5.9vw, 36px)/1.55 ui-rounded, system-ui, sans-serif;
+  font-variant-numeric: tabular-nums lining-nums;
+  text-align: center;
+  overflow-wrap: break-word;
+}
+
+.worksheet-answer {
+  inline-size: 4.2ch;
+  min-inline-size: 70px;
+  max-inline-size: 100%;
+  min-height: 48px;
+  margin-inline: .15em;
+  padding: 3px 4px;
+  box-sizing: content-box;
+  border: 2px solid #ba8ab6;
+  border-radius: 10px;
+  background: #fcf4fc;
+  color: #4d2460;
+  font: inherit;
+  text-align: center;
+  vertical-align: baseline;
+  appearance: none;
+}
+
+.worksheet-answer:focus {
+  border-color: var(--worksheet-focus);
+  outline: 2px solid #b4a4d8;
+  outline-offset: 1px;
+  background: #fff;
+}
+
+.worksheet-answer[aria-invalid="true"] { border-color: #ad3855; }
+
+.worksheet-navigation summary,
+.worksheet-breakdown summary {
+  min-height: 44px;
+  padding-block: 10px;
+  font-size: 14px;
+  font-weight: 900;
+  cursor: pointer;
+}
+
+.worksheet-navigation .worksheet-actions {
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  align-items: center;
+}
+
+.worksheet-question-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(38px, 1fr));
+  gap: 5px;
+  margin-block: 9px;
+}
+
+.worksheet-shell button.worksheet-number {
+  min-width: 0;
+  min-height: 44px;
+  padding: 3px;
+  border: 1px solid var(--worksheet-outline);
+  border-radius: 8px;
+  background: #fff;
+  color: var(--worksheet-ink);
+  font-size: 13px;
+  font-weight: 900;
+  font-variant-numeric: tabular-nums;
+  cursor: pointer;
+  touch-action: manipulation;
+}
+
+.worksheet-shell button.worksheet-number[data-status="answered"] {
+  border-color: #bcabd9;
+  background: #ece6f8;
+  color: #574079;
+}
+
+.worksheet-shell button.worksheet-number[data-status="skipped"] {
+  border-color: #d9b78b;
+  border-style: dashed;
+  background: #fff4df;
+  color: #75491b;
+}
+
+.worksheet-shell button.worksheet-number[aria-current="step"] {
+  border-color: #803e85;
+  box-shadow: inset 0 0 0 1px #803e85;
+}
+
+.worksheet-score {
+  display: grid;
+  gap: 12px;
+  background: linear-gradient(148deg, #fffaf2, #fff 45%, #fbf1fa);
+  text-align: center;
+  font-variant-numeric: tabular-nums;
+}
+
+.worksheet-score h1,
+.worksheet-history h1 {
+  font-size: clamp(23px, 5.2vw, 29px);
+  font-weight: 900;
+}
+
+.worksheet-score p { color: var(--worksheet-muted); font-size: 13px; }
+
+.worksheet-score .worksheet-points {
+  color: #78356c;
+  line-height: 1.1;
+  font-size: clamp(42px, 11vw, 65px);
+  font-weight: 900;
+}
+
+.worksheet-points :is(small, span) {
+  color: var(--worksheet-muted);
+  font-size: 16px;
+}
+
+.worksheet-score time { color: var(--worksheet-muted); font-size: 12px; }
+
+.worksheet-counts {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 7px;
+}
+
+.worksheet-counts > * {
+  min-width: 0;
+  padding: 8px 4px;
+  border-radius: 11px;
+  background: var(--worksheet-tint);
+  text-align: center;
+}
+
+.worksheet-counts dt {
+  color: var(--worksheet-muted);
+  font-size: 12px;
+  font-weight: 800;
+}
+
+.worksheet-counts dd {
+  color: var(--worksheet-ink);
+  font-size: clamp(17px, 4.5vw, 22px);
+  font-weight: 900;
+  font-variant-numeric: tabular-nums;
+}
+
+.worksheet-history .worksheet-counts { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+
+.worksheet-breakdown {
+  padding-inline: 10px;
+  border: 1px solid var(--worksheet-outline);
+  border-radius: 12px;
+  background: #fff;
+  text-align: left;
+}
+
+.worksheet-breakdown :is(li, dl > div) {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: space-between;
+  gap: 4px 10px;
+  padding: 7px 2px;
+  border-top: 1px solid #f2e7f0;
+  font-size: 13px;
+}
+
+.worksheet-review,
+.worksheet-history { display: grid; gap: 10px; min-width: 0; }
+
+.worksheet-filters {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+
+.worksheet-filters [aria-pressed="true"] {
+  border-color: #b47aa8;
+  background: #f8eaf5;
+  color: #663154;
+}
+
+.worksheet-results-list,
+.worksheet-history-list {
+  display: grid;
+  gap: 8px;
+  padding: 0;
+  list-style: none;
+}
+
+.worksheet-result-row {
+  display: grid;
+  gap: 5px;
+  padding: 10px 12px;
+  border: 1px solid var(--worksheet-outline);
+  border-radius: 11px;
+}
+
+.worksheet-result-row > p:first-child {
+  color: var(--worksheet-result-color, var(--worksheet-muted));
+  font-size: 13px;
+  font-weight: 900;
+}
+
+.worksheet-result-equation {
+  min-width: 0;
+  color: #35213a;
+  font-size: clamp(15px, 4vw, 20px);
+  font-weight: 900;
+  font-variant-numeric: tabular-nums;
+  line-height: 1.6;
+  overflow-wrap: break-word;
+}
+
+.worksheet-result-equation strong {
+  display: inline-block;
+  margin-inline: 2px;
+  padding-inline: 5px;
+  border-radius: 5px;
+  background: #eae0f3;
+  color: #60386f;
+}
+
+.worksheet-result-answers {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 3px 14px;
+  color: var(--worksheet-muted);
+  font-size: 13px;
+  line-height: 1.55;
+}
+
+.worksheet-review [data-status="correct"] { --worksheet-result-color: #245e52; }
+.worksheet-review [data-status="wrong"] { --worksheet-result-color: #8c3254; }
+.worksheet-review [data-status="blank"] { --worksheet-result-color: #745630; }
+
+.worksheet-result-row[data-status="wrong"] { background: #fff6f8; }
+.worksheet-result-row[data-status="blank"] { background: #fffaf3; }
+
+.worksheet-history-item {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  width: 100%;
+  min-height: 53px;
+  gap: 10px;
+  padding: 8px 12px;
+  border: 1px solid var(--worksheet-outline);
+  border-radius: 11px;
+  background: #fff;
+  color: var(--worksheet-ink);
+  text-align: left;
+  cursor: pointer;
+}
+
+.worksheet-history-item small { display: block; color: var(--worksheet-muted); font-size: 12px; }
+.worksheet-history-item > strong { flex: none; color: #78356c; font-weight: 900; font-variant-numeric: tabular-nums; }
+
+.worksheet-notice {
+  padding: 8px 10px;
+  border: 1px solid #edc992;
+  border-radius: 9px;
+  background: #fff7e4;
+  color: #75491b;
+  font-size: 13px;
+  font-weight: 800;
+}
+
+.worksheet-dialog::backdrop { background: #301d3f7d; }
+
+.worksheet-dialog {
+  position: fixed;
+  inset: 0;
+  width: min(calc(100% - 28px), 420px);
+  max-height: calc(100% - 28px);
+  margin: auto;
+  padding: 20px;
+  border: 1px solid var(--worksheet-outline);
+  border-radius: 19px;
+  background: #fff;
+  color: var(--worksheet-ink);
+  box-shadow: 0 20px 65px #38213b42;
+  z-index: 50;
+}
+
+.worksheet-dialog h2 { font-size: 19px; font-weight: 900; }
+.worksheet-dialog p { margin-block: 8px 15px; color: var(--worksheet-muted); font-size: 14px; }
+.worksheet-dialog .worksheet-actions { grid-template-columns: 1fr; }
+
+@media (max-width: 540px) {
+  .worksheet-shell { padding-top: 10px; }
+  .worksheet-top { gap: 8px; margin-bottom: 10px; }
+  .worksheet-top .worksheet-button { padding-inline: 8px; }
+  .worksheet-mode-grid { grid-template-columns: 1fr; gap: 6px; }
+  .worksheet-mode { padding: 8px 10px; }
+  .worksheet-mode strong { font-size: 15px; }
+  .worksheet-answer { min-height: 44px; }
+  .worksheet-play .worksheet-actions { gap: 6px; }
+  .worksheet-play .worksheet-actions button { padding-inline: 4px; font-size: 13px; }
+}
+
+@media (max-width: 359px) {
+  .worksheet-equation { font-size: 19px; }
+  .worksheet-answer { min-inline-size: 59px; }
+  .worksheet-panel { padding-inline: 12px; }
+}

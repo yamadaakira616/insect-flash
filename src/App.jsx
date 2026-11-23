@@ -1,7 +1,9 @@
 import { useState } from 'react';
 import { useGameState } from './hooks/useGameState.js';
+import { useWorksheetSession } from './hooks/useWorksheetSession.js';
 import GrowthScreen from './screens/GrowthScreen.jsx';
 import AbacusStudyScreen from './screens/AbacusStudyScreen.jsx';
+import WorksheetScreen from './screens/WorksheetScreen.jsx';
 import HomeScreen from './screens/HomeScreen.jsx';
 import LevelSelectScreen from './screens/LevelSelectScreen.jsx';
 import GameScreen from './screens/GameScreen.jsx';
@@ -17,6 +19,7 @@ const SCREEN = {
   HOME: 'HOME',
   GROWTH: 'GROWTH',
   ABACUS: 'ABACUS',
+  WORKSHEET: 'WORKSHEET',
   LEVEL_SELECT: 'LEVEL_SELECT',
   GAME: 'GAME',
   GACHA: 'GACHA',
@@ -31,6 +34,8 @@ export default function App() {
   const [screen, setScreen] = useState(SCREEN.HOME);
   const [selectedLevel, setSelectedLevel] = useState(null);
   const [gameMode, setGameMode] = useState('practice');
+  const [worksheetEntry, setWorksheetEntry] = useState('menu');
+  const worksheet = useWorksheetSession();
   const { state, today, storageError, claimLoginBonus, completeSession, completeAbacusStudy, updateRoom, pullGacha, pullSqueezeGacha, exchangeStickers, updateBookPage } = useGameState();
 
   if (screen === SCREEN.HOME) return (
@@ -43,6 +48,7 @@ export default function App() {
       onUpdateRoom={updateRoom}
       onPlay={() => setScreen(SCREEN.LEVEL_SELECT)}
       onStudy={() => setScreen(SCREEN.ABACUS)}
+      onWorksheet={() => { setWorksheetEntry('menu'); setScreen(SCREEN.WORKSHEET); }}
       onEncyclopedia={() => setScreen(SCREEN.ENCYCLOPEDIA)}
       onGacha={() => setScreen(SCREEN.GACHA)}
       onStickerBook={() => setScreen(SCREEN.STICKER_BOOK)}
@@ -54,7 +60,14 @@ export default function App() {
 
   if (screen === SCREEN.GROWTH) return (
     <GrowthScreen state={state} today={today} storageError={storageError}
-      onClaim={claimLoginBonus} onBack={() => setScreen(SCREEN.HOME)} />
+      onClaim={claimLoginBonus} onBack={() => setScreen(SCREEN.HOME)}
+      worksheetHistory={worksheet.history}
+      onWorksheetHistory={() => { setWorksheetEntry('history'); setScreen(SCREEN.WORKSHEET); }} />
+  );
+
+  if (screen === SCREEN.WORKSHEET) return (
+    <WorksheetScreen worksheet={worksheet} initialView={worksheetEntry} buddyImage={getBuddy(state.buddyId).imagePath}
+      onExit={() => setScreen(worksheetEntry === 'history' ? SCREEN.GROWTH : SCREEN.HOME)} />
   );
 
   if (screen === SCREEN.ABACUS) return (
