@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from 'react';
 import { WORKSHEET_SECTIONS, WORKSHEET_SET_COUNT } from '../utils/worksheetQuestions.js';
-import { isWorksheetAnswered, WORKSHEET_MODE_LABELS } from '../utils/worksheetProgress.js';
+import { isWorksheetAnswered, WORKSHEET_MODE_LABELS, WORKSHEET_TEST_REWARD } from '../utils/worksheetProgress.js';
 import '../worksheet.css';
 
 const MODES = [
@@ -137,7 +137,7 @@ function WorksheetMenu({ buddyImage, mode, setMode, setNumber, setSetNumber, sec
           </fieldset>
         )}
         <p className="worksheet-notice">{mode === 'test'
-          ? 'スタートから5分で自動提出されます。'
+          ? `5分で自動提出。1問でも答えると、点数にかかわらず＋${WORKSHEET_TEST_REWARD}コイン！`
           : '好きなペースで進めて、最後にまとめて採点します。'}</p>
         <button
           type="button"
@@ -255,6 +255,7 @@ function WorksheetResult({ record, onHistory, onRetry }) {
         <h1>採点結果</h1>
         <p>{WORKSHEET_MODE_LABELS[record.mode]}・セット{record.setNumber} ・ {formatElapsed(record.elapsedSeconds)}</p>
         <p className="worksheet-points"><strong>{record.score}</strong><span> / 100点</span></p>
+        {record.rewardCoins > 0 && <p className="worksheet-notice"><strong>🪙 ごほうび ＋{record.rewardCoins}コイン</strong></p>}
         {record.timedOut && <p>5分で時間切れ。そこまでに書いた答えを採点したよ。</p>}
         <ScoreCounts counts={[
           ['正解', `${record.correct}問`],
@@ -347,7 +348,7 @@ function WorksheetHistory({ history, onOpen }) {
   );
 }
 
-export default function WorksheetScreen({ onExit, initialView = 'menu', buddyImage, worksheet }) {
+export default function WorksheetScreen({ onExit, initialView = 'menu', buddyImage, worksheet, walletStorageError }) {
   const {
     session, questions, history, active, result, remainingSeconds, answeredCount, storageError,
     start, setAnswer, goTo, next, skip, nextUnanswered, submit, clear,
@@ -462,7 +463,7 @@ export default function WorksheetScreen({ onExit, initialView = 'menu', buddyIma
         ) : <span aria-hidden="true" />}
       </header>
       <div className="worksheet-content">
-        {storageError && <p className="worksheet-notice" role="alert">記録を保存できませんでした。この画面を閉じると記録が消える場合があります。</p>}
+        {(storageError || walletStorageError) && <p className="worksheet-notice" role="alert">記録を保存できませんでした。この画面を閉じると記録が消える場合があります。</p>}
         {isMenu && <WorksheetMenu
           buddyImage={buddyImage}
           mode={selectedMode}

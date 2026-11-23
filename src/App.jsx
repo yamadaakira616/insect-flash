@@ -36,7 +36,7 @@ export default function App() {
   const [gameMode, setGameMode] = useState('practice');
   const [worksheetEntry, setWorksheetEntry] = useState('menu');
   const worksheet = useWorksheetSession();
-  const { state, today, storageError, claimLoginBonus, completeSession, completeAbacusStudy, updateRoom, pullGacha, pullSqueezeGacha, exchangeStickers, updateBookPage } = useGameState();
+  const { state, today, storageError, claimLoginBonus, completeSession, completeAbacusStudy, updateRoom, pullGacha, pullSqueezeGacha, exchangeStickers, updateBookPage } = useGameState(worksheet.history);
 
   if (screen === SCREEN.HOME) return (
     <HomeScreen
@@ -66,7 +66,7 @@ export default function App() {
   );
 
   if (screen === SCREEN.WORKSHEET) return (
-    <WorksheetScreen worksheet={worksheet} initialView={worksheetEntry} buddyImage={getBuddy(state.buddyId).imagePath}
+    <WorksheetScreen worksheet={worksheet} walletStorageError={storageError} initialView={worksheetEntry} buddyImage={getBuddy(state.buddyId).imagePath}
       onExit={() => setScreen(worksheetEntry === 'history' ? SCREEN.GROWTH : SCREEN.HOME)} />
   );
 

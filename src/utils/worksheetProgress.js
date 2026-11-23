@@ -1,6 +1,7 @@
 import { getWorksheet, WORKSHEET_VERSION } from './worksheetQuestions.js';
 
 export const WORKSHEET_LIMIT_SECONDS = 300;
+export const WORKSHEET_TEST_REWARD = 500;
 
 export const WORKSHEET_MODE_LABELS = {
   test: '5分テスト',
@@ -49,6 +50,22 @@ export function gradeWorksheet(session, questions, now) {
     correct,
     incorrect,
     unanswered: items.length - correct - incorrect,
+    rewardCoins: session.mode === 'test' && correct + incorrect > 0 ? WORKSHEET_TEST_REWARD : 0,
     items,
   };
+}
+
+export function collectWorksheetRewards(state, history) {
+  const previousIds = Array.isArray(state.worksheetRewardIds) ? state.worksheetRewardIds : [];
+  const credited = new Set(previousIds);
+  let coins = state.coins;
+
+  for (const record of history) {
+    if (record.mode !== 'test' || record.rewardCoins !== WORKSHEET_TEST_REWARD || credited.has(record.id)) continue;
+    credited.add(record.id);
+    coins += WORKSHEET_TEST_REWARD;
+  }
+
+  if (coins === state.coins) return state;
+  return { ...state, coins, worksheetRewardIds: [...credited] };
 }

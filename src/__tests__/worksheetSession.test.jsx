@@ -1,6 +1,7 @@
 import { act, renderHook, cleanup } from '@testing-library/react';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { useWorksheetSession } from '../hooks/useWorksheetSession.js';
+import { useGameState } from '../hooks/useGameState.js';
 import { WORKSHEET_SECTIONS } from '../utils/worksheetQuestions.js';
 
 beforeEach(() => {
@@ -27,7 +28,7 @@ describe('100問けいさん', () => {
     expect(result.current.result).toBeNull();
     expect(result.current.remainingSeconds).toBeNull();
     act(() => result.current.submit());
-    expect(result.current.result).toMatchObject({ total: 100, score: 1, correct: 1, incorrect: 1, unanswered: 98 });
+    expect(result.current.result).toMatchObject({ total: 100, score: 1, correct: 1, incorrect: 1, unanswered: 98, rewardCoins: 0 });
     expect(result.current.result.items.slice(0, 3)).toMatchObject([
       { ...first, given: first.answer, status: 'correct' },
       { ...second, given: String(Number(second.answer) + 1), status: 'incorrect' },
@@ -51,7 +52,7 @@ describe('100問けいさん', () => {
     initial.unmount();
     vi.setSystemTime(deadline + 10000);
     const reopened = renderHook(useWorksheetSession);
-    expect(reopened.result.current.result).toMatchObject({ timedOut: true, endedAt: deadline, elapsedSeconds: 300, score: 1 });
+    expect(reopened.result.current.result).toMatchObject({ timedOut: true, endedAt: deadline, elapsedSeconds: 300, score: 1, rewardCoins: 500 });
     act(() => reopened.result.current.submit());
     expect(reopened.result.current.history).toHaveLength(1);
   });
@@ -68,7 +69,7 @@ describe('100問けいさん', () => {
     act(() => result.current.next());
     act(() => result.current.setAnswer('0'));
     act(() => result.current.submit());
-    expect(result.current.result).toMatchObject({ total: 10, score: 20, correct: 2, incorrect: 1, unanswered: 7 });
+    expect(result.current.result).toMatchObject({ total: 10, score: 20, correct: 2, incorrect: 1, unanswered: 7, rewardCoins: 0 });
   });
 
   it('二つのタブで同じ回を開いても、提出済みの結果を古い回答で上書きしない', () => {
@@ -80,5 +81,34 @@ describe('100問けいさん', () => {
     act(() => secondTab.result.current.submit());
     expect(secondTab.result.current.result).toEqual(firstTab.result.current.result);
     expect(renderHook(useWorksheetSession).result.current.history).toEqual([firstTab.result.current.result]);
+  });
+
+  it('手動提出と時間切れの両方で、回答した5分テストごとに500コインを一度だけ受け取る', () => {
+    function useWorksheetWithWallet() {
+      const worksheet = useWorksheetSession();
+      const wallet = useGameState(worksheet.history);
+      return { worksheet, wallet };
+    }
+    const first = renderHook(useWorksheetWithWallet);
+    act(() => first.result.current.worksheet.start({ mode: 'test', setNumber: 1 }));
+    act(() => first.result.current.worksheet.submit());
+    expect(first.result.current.wallet.state.coins).toBe(100);
+    expect(first.result.current.worksheet.result.rewardCoins).toBe(0);
+
+    act(() => first.result.current.worksheet.start({ mode: 'test', setNumber: 1 }));
+    act(() => first.result.current.worksheet.setAnswer('9999'));
+    act(() => first.result.current.worksheet.submit());
+    expect(first.result.current.worksheet.result).toMatchObject({ score: 0, rewardCoins: 500 });
+    expect(first.result.current.wallet.state.coins).toBe(600);
+    act(() => first.result.current.wallet.spendCoins(100));
+    first.unmount();
+
+    const reopened = renderHook(useWorksheetWithWallet);
+    expect(reopened.result.current.wallet.state.coins).toBe(500);
+    act(() => reopened.result.current.worksheet.start({ mode: 'test', setNumber: 1 }));
+    act(() => reopened.result.current.worksheet.setAnswer('9999'));
+    act(() => vi.advanceTimersByTime(300000));
+    expect(reopened.result.current.worksheet.result).toMatchObject({ timedOut: true, rewardCoins: 500 });
+    expect(reopened.result.current.wallet.state.coins).toBe(1000);
   });
 });
